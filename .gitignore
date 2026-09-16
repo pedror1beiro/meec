@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Build C/C++
+build/
+cmake-build-*/
+*.o
+*.obj
+*.out
+*.exe
+*.a
+*.so
+*.dll
+*.dylib
+
+# Configuração local e segredos
+.env
+.env.*
+
+# Editor / IDE
+.vscode/*
+!.vscode/settings.json
+.idea/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Datasets e ficheiros binários grandes
+data/
+datasets/
+*.csv
+*.tsv
+*.parquet
+*.npy
+*.npz
+*.h5
+*.hdf5
+*.zip
+*.tar.gz
+*.rar
+*.7z
