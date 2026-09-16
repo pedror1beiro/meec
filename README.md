@@ -6,7 +6,9 @@ Repositório para unidades curriculares do mestrado de Sistemas Autónomos.
 
 Este repositório reúne o trabalho desenvolvido pelo grupo (3 pessoas) ao
 longo do mestrado, organizando por unidade curricular o código, os
-relatórios, notebooks e outros materiais das diferentes disciplinas.
+relatórios, notebooks e outros materiais das diferentes disciplinas. Cada
+unidade curricular tem a sua pasta em
+[unidades-curriculares/](unidades-curriculares/).
 
 O repositório é público. Não devem ser adicionados dados pessoais, notas
 ou outra informação sensível; relatórios e código são partilháveis, mas
@@ -14,24 +16,25 @@ qualquer ficheiro desse tipo deve ser revisto antes do commit.
 
 ## Unidades curriculares
 
-Códigos oficiais usados na convenção de branches:
+Códigos oficiais usados na convenção de branches, com ligação para a
+respetiva pasta:
 
 | Código | Unidade curricular |
 |---|---|
-| `csiau` | Controlo de Sistemas Autónomos |
-| `estap` | Estimação Aplicada |
-| `dinav` | Dinâmica Avançada |
-| `fumac` | Fundamentos Matemáticos da Computação |
-| `laset` | Laboratório de Sistemas Embebidos e Tecnologias |
-| `lasir` | Laboratório de Sistemas Robóticos |
-| `perse` | Perceção e Sensores |
-| `prose` | Projeto de Sistemas Embebidos |
-| `psico` | Projeto de Sistemas de Controlo por Computador |
-| `romov` | Robótica Móvel |
-| `rsdis` | Redes de Sensores Distribuídos |
-| `sisem` | Sistemas Embebidos |
-| `soter` | Sistemas Operativos em Tempo Real |
-| `tavru` | Tópicos Avançados de Visão para Robótica |
+| [`csiau`](unidades-curriculares/csiau/) | Controlo de Sistemas Autónomos |
+| [`estap`](unidades-curriculares/estap/) | Estimação Aplicada |
+| [`dinav`](unidades-curriculares/dinav/) | Dinâmica Avançada |
+| [`fumac`](unidades-curriculares/fumac/) | Fundamentos Matemáticos da Computação |
+| [`laset`](unidades-curriculares/laset/) | Laboratório de Sistemas Embebidos e Tecnologias |
+| [`lasir`](unidades-curriculares/lasir/) | Laboratório de Sistemas Robóticos |
+| [`perse`](unidades-curriculares/perse/) | Perceção e Sensores |
+| [`prose`](unidades-curriculares/prose/) | Projeto de Sistemas Embebidos |
+| [`psico`](unidades-curriculares/psico/) | Projeto de Sistemas de Controlo por Computador |
+| [`romov`](unidades-curriculares/romov/) | Robótica Móvel |
+| [`rsdis`](unidades-curriculares/rsdis/) | Redes de Sensores Distribuídos |
+| [`sisem`](unidades-curriculares/sisem/) | Sistemas Embebidos |
+| [`soter`](unidades-curriculares/soter/) | Sistemas Operativos em Tempo Real |
+| [`tavru`](unidades-curriculares/tavru/) | Tópicos Avançados de Visão para Robótica |
 
 ## Convenção de branches
 
