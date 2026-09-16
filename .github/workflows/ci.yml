@@ -1,0 +1,98 @@
+# Integração contínua do repositório.
+# Corre em cada Pull Request e em cada push para a branch main.
+# Usa dorny/paths-filter para só executar os jobs das linguagens
+# que tiverem ficheiros alterados, poupando tempo de execução.
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+# Permissões mínimas necessárias: leitura do conteúdo do repositório e
+# da lista de ficheiros alterados no Pull Request, usada pelo
+# dorny/paths-filter.
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  # Deteta que tipo de ficheiros foram alterados, para decidir
+  # quais os jobs seguintes que devem correr.
+  alteracoes:
+    name: Detetar alterações
+    runs-on: ubuntu-latest
+    outputs:
+      python: ${{ steps.filtro.outputs.python }}
+      cpp: ${{ steps.filtro.outputs.cpp }}
+    steps:
+      - name: Obter código
+        uses: actions/checkout@v4
+
+      - name: Filtrar caminhos alterados
+        uses: dorny/paths-filter@v3
+        id: filtro
+        with:
+          filters: |
+            python:
+              - '**/*.py'
+              - '**/pyproject.toml'
+              - '**/requirements*.txt'
+            cpp:
+              - '**/*.c'
+              - '**/*.cc'
+              - '**/*.cpp'
+              - '**/*.h'
+              - '**/*.hpp'
+              - '**/.clang-format'
+
+  # Job de verificação para código Python.
+  python:
+    name: Python
+    needs: alteracoes
+    if: needs.alteracoes.outputs.python == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Obter código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar dependências
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff pytest
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Verificar estilo com ruff
+        run: ruff check .
+
+      - name: Executar testes com pytest
+        # O código de saída 5 significa "nenhum teste recolhido", o que é
+        # aceitável numa fase inicial em que ainda não existam testes.
+        run: pytest --no-header -q || [ $? -eq 5 ]
+
+  # Job de verificação para código C/C++.
+  cpp:
+    name: C/C++
+    needs: alteracoes
+    if: needs.alteracoes.outputs.cpp == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Obter código
+        uses: actions/checkout@v4
+
+      - name: Instalar clang-format
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-format
+
+      - name: Verificar formatação com clang-format
+        run: |
+          find . -regex '.*\.\(c\|cc\|cpp\|h\|hpp\)$' -print0 \
+            | xargs -0 -r clang-format --dry-run --Werror
