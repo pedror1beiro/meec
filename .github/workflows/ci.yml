@@ -11,6 +11,13 @@ on:
     branches:
       - main
 
+# Permissões mínimas necessárias: leitura do conteúdo do repositório e
+# da lista de ficheiros alterados no Pull Request, usada pelo
+# dorny/paths-filter.
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
   # Deteta que tipo de ficheiros foram alterados, para decidir
   # quais os jobs seguintes que devem correr.
