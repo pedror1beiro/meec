@@ -14,54 +14,69 @@ qualquer ficheiro desse tipo deve ser revisto antes do commit.
 
 ## Unidades curriculares
 
-Códigos usados na convenção de branches, referentes ao Mestrado em
-Engenharia Eletrotécnica e de Computadores, ramo de Sistemas Autónomos:
+Códigos oficiais usados na convenção de branches:
 
 | Código | Unidade curricular |
 |---|---|
-| `lset` | Laboratório de Sistemas Embebidos e Tecnologias |
-| `fims` | Fusão de Informação Multi-Sensorial |
-| `percsens` | Perceção e Sensores |
-| `pse` | Projeto de Sistemas Embebidos |
-| `rsd` | Redes de Sensores Distribuídos |
-| `robmov` | Robótica Móvel |
-| `se` | Sistemas Embebidos |
-| `smr` | Sistemas Multirobóticos |
-| `sort` | Sistemas Operativos em Tempo Real |
-| `tmsa` | Tópicos de Matemática para Sistemas Autónomos |
-| `ace` | Atividades Complementares em Engenharia |
-| `lsr` | Laboratório de Sistemas Robóticos |
-| `csa` | Controlo de Sistemas Autónomos |
-| `dinav` | Dinâmica Avançada |
+| `csiau` | Controlo de Sistemas Autónomos |
 | `estap` | Estimação Aplicada |
-| `fmc` | Fundamentos Matemáticos da Computação |
-| `pscc` | Projeto de Sistemas de Controlo por Computador |
-| `tavr` | Tópicos Avançados de Visão para Robótica |
-| `lsmr` | Laboratório de Sistemas Multirobóticos |
-| `tpd` | Trabalho Preparatório para Dissertação |
-| `dissertacao` | Dissertação |
+| `dinav` | Dinâmica Avançada |
+| `fumac` | Fundamentos Matemáticos da Computação |
+| `laset` | Laboratório de Sistemas Embebidos e Tecnologias |
+| `lasir` | Laboratório de Sistemas Robóticos |
+| `perse` | Perceção e Sensores |
+| `prose` | Projeto de Sistemas Embebidos |
+| `psico` | Projeto de Sistemas de Controlo por Computador |
+| `romov` | Robótica Móvel |
+| `rsdis` | Redes de Sensores Distribuídos |
+| `sisem` | Sistemas Embebidos |
+| `soter` | Sistemas Operativos em Tempo Real |
+| `tavru` | Tópicos Avançados de Visão para Robótica |
 
 ## Convenção de branches
 
 As branches seguem o formato:
 
 ```
-<unidade-curricular>/<tipo>/<descricao-curta>
+<unidade-curricular>/<tarefa>
 ```
 
-Exemplo: `robmov/feat/filtro-kalman`
+Onde `<unidade-curricular>` é o código da tabela acima, em minúsculas, e
+`<tarefa>` é uma descrição curta da tarefa, em minúsculas e com palavras
+separadas por hífen.
 
-Tipos possíveis: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`.
+Exemplo: `romov/filtro-kalman`
 
 ## Fluxo de trabalho
 
-1. Criar uma branch a partir de `main`, seguindo a convenção acima.
-2. Desenvolver o trabalho, fazendo commits de acordo com a convenção
+1. Atualizar a `main` local:
+
+   ```bash
+   git checkout main
+   git pull origin main
+   ```
+
+2. Criar a branch a partir da `main`, seguindo a convenção acima:
+
+   ```bash
+   git checkout -b romov/filtro-kalman
+   ```
+
+3. Desenvolver o trabalho, fazendo commits de acordo com a convenção
    descrita abaixo.
-3. Abrir um Pull Request para `main`, com pelo menos 1 aprovação de
+
+4. Enviar a branch para o GitHub:
+
+   ```bash
+   git push -u origin romov/filtro-kalman
+   ```
+
+5. Abrir um Pull Request para `main`, com pelo menos 1 aprovação de
    outro elemento do grupo.
-4. Fazer squash merge do Pull Request.
-5. Apagar a branch depois do merge.
+
+6. Fazer squash merge do Pull Request.
+
+7. Apagar a branch depois do merge (é feito automaticamente pelo GitHub).
 
 ## Convenção de commits
 
