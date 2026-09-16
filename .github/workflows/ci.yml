@@ -11,6 +11,12 @@ on:
     branches:
       - main
 
+# Cancela execuções anteriores do mesmo PR/branch quando há um push novo,
+# para não gastar minutos de Actions com execuções desatualizadas.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 # Permissões mínimas necessárias: leitura do conteúdo do repositório e
 # da lista de ficheiros alterados no Pull Request, usada pelo
 # dorny/paths-filter.
@@ -62,6 +68,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+          cache: 'pip'
 
       - name: Instalar dependências
         run: |
@@ -96,3 +103,33 @@ jobs:
         run: |
           find . -regex '.*\.\(c\|cc\|cpp\|h\|hpp\)$' -print0 \
             | xargs -0 -r clang-format --dry-run --Werror
+
+  # Impede que ficheiros grandes (datasets, binários, relatórios exportados)
+  # sejam adicionados ao repositório por engano. Corre sempre, independente
+  # da linguagem, porque este repositório também guarda documentos.
+  ficheiros-grandes:
+    name: Verificar ficheiros grandes
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Obter código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verificar tamanho dos ficheiros alterados
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          LIMITE_KB: 5120
+        run: |
+          falhou=0
+          while IFS= read -r ficheiro; do
+            [ -f "$ficheiro" ] || continue
+            tamanho_kb=$(du -k "$ficheiro" | cut -f1)
+            if [ "$tamanho_kb" -gt "$LIMITE_KB" ]; then
+              echo "::error file=$ficheiro::Ficheiro demasiado grande (${tamanho_kb} KB, limite ${LIMITE_KB} KB)"
+              falhou=1
+            fi
+          done < <(git diff --name-only --diff-filter=d "$BASE_SHA" "$HEAD_SHA")
+          exit $falhou
