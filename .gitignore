@@ -31,6 +31,34 @@ cmake-build-*/
 !.vscode/settings.json
 .idea/
 
+# LaTeX (relatórios)
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.lof
+*.log
+*.lot
+*.out
+*.run.xml
+*.synctex.gz
+*.toc
+
+# Jupyter
+.ipynb_checkpoints/
+
+# MATLAB
+*.asv
+*.m~
+slprj/
+
+# Ficheiros temporários do Office
+~$*.doc*
+~$*.xls*
+~$*.ppt*
+
 # Sistema operativo
 .DS_Store
 Thumbs.db

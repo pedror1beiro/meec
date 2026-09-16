@@ -1,0 +1,8 @@
+# Mantém as GitHub Actions usadas no workflow de CI atualizadas
+# automaticamente, através de Pull Requests semanais.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
