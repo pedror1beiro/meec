@@ -35,7 +35,7 @@ jobs:
       cpp: ${{ steps.filtro.outputs.cpp }}
     steps:
       - name: Obter código
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Filtrar caminhos alterados
         uses: dorny/paths-filter@v3
@@ -62,7 +62,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Obter código
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Configurar Python
         uses: actions/setup-python@v5
@@ -92,7 +92,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Obter código
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Instalar clang-format
         run: |
@@ -113,7 +113,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Obter código
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
