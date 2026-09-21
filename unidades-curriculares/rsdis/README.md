@@ -120,12 +120,9 @@ O `rostopic echo` deve apresentar todos os campos de `position` e `orientation`,
 
 ## Evidências e entrega
 
-Guardar em cada package as respetivas imagens, de preferência numa pasta `screenshots/`:
+As evidências de funcionamento encontram-se na pasta `screenshots/` de cada package:
 
-```text
-screenshots/
-├── rostopic_echo.png
-└── rqt_graph.png
-```
+- T1A: [`rostopic echo`](exercicio-1/ros1/rsdis_t1a/screenshots/rostopic_echo.png) e [`rqt_graph`](exercicio-1/ros1/rsdis_t1a/screenshots/rqt_graph.png);
+- T1B: [`rostopic echo`](exercicio-1/ros1/rsdis_t1b/screenshots/rostopic_echo.png) e [`rqt_graph`](exercicio-1/ros1/rsdis_t1b/screenshots/rqt_graph.png).
 
-Depois de adicionar as imagens, compactar cada package separadamente com os nomes exigidos no enunciado.
+Para a entrega, compactar cada package separadamente com os nomes `GX_t1a.zip` e `GX_t1b.zip`.
