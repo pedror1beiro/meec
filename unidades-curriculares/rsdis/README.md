@@ -58,7 +58,14 @@ source devel/setup.bash
 
 ### Execução
 
-Executar primeiro `roscore`. Depois, em terminais separados:
+Executar primeiro `roscore`. Em cada novo terminal, ativar o ambiente com:
+
+```bash
+source /opt/ros/noetic/setup.bash
+source ~/catkin_ws/devel/setup.bash
+```
+
+Depois, em terminais separados, executar para o T1A:
 
 ```bash
 rosrun rsdis_t1a talker_t1a
@@ -75,6 +82,8 @@ rostopic echo /pose_topic
 ```
 
 ## ROS2 Jazzy
+
+> Implementação testada em ROS2 Jazzy, utilizando APIs também compatíveis com ROS2 Humble.
 
 ### Compilação
 
