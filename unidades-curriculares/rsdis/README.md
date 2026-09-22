@@ -1,8 +1,8 @@
 # Redes de Sensores Distribuídos (RSDIS)
 
-Repositório de exercícios da unidade curricular de Redes de Sensores Distribuídos.
+Exercícios da unidade curricular de Redes de Sensores Distribuídos.
 
-> O Exercício 1 foi desenvolvido em **ROS1**, utilizando Catkin. Os exercícios seguintes poderão utilizar **ROS2**; por isso, cada exercício identifica explicitamente a versão de ROS utilizada.
+> O Exercício 1 contém implementações equivalentes em **ROS1 (Catkin)** e **ROS2 Jazzy (ament_cmake/colcon)**.
 
 ## Organização
 
@@ -10,69 +10,45 @@ Repositório de exercícios da unidade curricular de Redes de Sensores Distribu�
 rsdis/
 ├── README.md
 └── exercicio-1/
-    └── ros1/
+    ├── ros1/
+    │   ├── rsdis_t1a/
+    │   └── rsdis_t1b/
+    └── ros2/
         ├── rsdis_t1a/
         └── rsdis_t1b/
-```
-
-Para futuros trabalhos, deve manter-se a mesma convenção, por exemplo:
-
-```text
-exercicio-2/
-└── ros2/
 ```
 
 ## Exercício 1 — Enunciado
 
 ### T1A
 
-Criar o package `rsdis_t1a` com:
+Criar um package com:
 
-- um nó publicador de mensagens `std_msgs/Float32` a **50 Hz**;
-- um nó subscritor de mensagens `std_msgs/Float32`.
+- um nó publicador de mensagens `Float32` a **50 Hz**;
+- um nó subscritor das mesmas mensagens.
 
 ### T1B
 
-Criar o package `rsdis_t1b` com:
+Criar um package com:
 
-- um nó publicador de mensagens `geometry_msgs/Pose` a **1 Hz**;
+- um nó publicador de mensagens `Pose` a **1 Hz**;
 - todos os campos de posição e orientação preenchidos;
-- um nó subscritor de mensagens `geometry_msgs/Pose`.
+- um nó subscritor das mesmas mensagens.
 
-### Submissão
+## Solução
 
-Entregar os dois packages com screenshots de:
+| Parte | Tópico | Mensagem | Frequência | Executáveis |
+| --- | --- | --- | --- | --- |
+| T1A | `/float_topic` | `Float32` | 50 Hz | `talker_t1a`, `listener_t1a` |
+| T1B | `/pose_topic` | `Pose` | 1 Hz | `talker_t1b`, `listener_t1b` |
 
-- `rostopic echo`;
-- `rqt_graph`.
+O T1A publica o valor `3.14`. O T1B publica a posição `(1, 2, 0)` e a orientação `(0, 0, 0, 1)`, correspondente ao quaternion identidade.
 
-Os ficheiros finais pedidos são `GX_t1a.zip` e `GX_t1b.zip`.
+## ROS1
 
-## Resolução
+### Compilação
 
-### Package `rsdis_t1a`
-
-| Componente | Implementação |
-| --- | --- |
-| Publicador | Nó `talker`, tópico `/float_topic`, tipo `std_msgs/Float32`, frequência de 50 Hz |
-| Subscritor | Nó `listener`, subscrição do tópico `/float_topic` |
-| Executáveis | `talker_t1a` e `listener_t1a` |
-
-O publicador envia o valor de exemplo `3.14`. O subscritor apresenta cada valor recebido através de `ROS_INFO`.
-
-### Package `rsdis_t1b`
-
-| Componente | Implementação |
-| --- | --- |
-| Publicador | Nó `talker`, tópico `/pose_topic`, tipo `geometry_msgs/Pose`, frequência de 1 Hz |
-| Subscritor | Nó `listener`, subscrição do tópico `/pose_topic` |
-| Executáveis | `talker_t1b` e `listener_t1b` |
-
-O publicador preenche os campos `position.x`, `position.y`, `position.z`, `orientation.x`, `orientation.y`, `orientation.z` e `orientation.w`. A orientação `(0, 0, 0, 1)` corresponde ao quaternion identidade.
-
-## Compilação
-
-Colocar as pastas `rsdis_t1a` e `rsdis_t1b` dentro de `catkin_ws/src/`. Depois executar:
+Colocar os packages em `catkin_ws/src/` e executar:
 
 ```bash
 cd ~/catkin_ws
@@ -80,49 +56,80 @@ catkin_make
 source devel/setup.bash
 ```
 
-É necessário executar `source ~/catkin_ws/devel/setup.bash` em cada novo terminal usado para correr os nós.
+### Execução
 
-## Execução
-
-Iniciar primeiro o ROS Master:
-
-```bash
-roscore
-```
-
-### T1A
-
-Abrir terminais separados e executar:
+Executar primeiro `roscore`. Depois, em terminais separados:
 
 ```bash
 rosrun rsdis_t1a talker_t1a
 rosrun rsdis_t1a listener_t1a
 rostopic echo /float_topic
-rqt_graph
 ```
 
-O `rostopic echo` deve apresentar valores `3.14`, e o `rqt_graph` deve mostrar a comunicação do nó publicador para o subscritor através de `/float_topic`.
-
-### T1B
-
-Abrir terminais separados e executar:
+Para o T1B:
 
 ```bash
 rosrun rsdis_t1b talker_t1b
 rosrun rsdis_t1b listener_t1b
 rostopic echo /pose_topic
-rqt_graph
 ```
 
-O `rostopic echo` deve apresentar todos os campos de `position` e `orientation`, e o `rqt_graph` deve mostrar a comunicação através de `/pose_topic`.
+## ROS2 Jazzy
 
-> Executar T1A e T1B separadamente, porque ambos os packages usam os nomes de nós `talker` e `listener`.
+### Compilação
 
-## Evidências e entrega
+Colocar os packages em `ros2_ws/src/` e executar:
 
-As evidências de funcionamento encontram-se na pasta `screenshots/` de cada package:
+```bash
+source /opt/ros/jazzy/setup.bash
+cd ~/ros2_ws
+colcon build
+source install/setup.bash
+```
 
-- T1A: [`rostopic echo`](exercicio-1/ros1/rsdis_t1a/screenshots/rostopic_echo.png) e [`rqt_graph`](exercicio-1/ros1/rsdis_t1a/screenshots/rqt_graph.png);
-- T1B: [`rostopic echo`](exercicio-1/ros1/rsdis_t1b/screenshots/rostopic_echo.png) e [`rqt_graph`](exercicio-1/ros1/rsdis_t1b/screenshots/rqt_graph.png).
+Não é necessário executar `roscore` no ROS2.
 
-Para a entrega, compactar cada package separadamente com os nomes `GX_t1a.zip` e `GX_t1b.zip`.
+### Execução
+
+Em terminais separados, ativar primeiro o ambiente com:
+
+```bash
+source /opt/ros/jazzy/setup.bash
+source ~/ros2_ws/install/setup.bash
+```
+
+Para o T1A:
+
+```bash
+ros2 run rsdis_t1a talker_t1a
+ros2 run rsdis_t1a listener_t1a
+ros2 topic echo /float_topic
+ros2 topic hz /float_topic
+```
+
+Para o T1B:
+
+```bash
+ros2 run rsdis_t1b talker_t1b
+ros2 run rsdis_t1b listener_t1b
+ros2 topic echo /pose_topic
+ros2 topic hz /pose_topic
+```
+
+> Executar T1A e T1B separadamente, pois ambos usam os nomes de nós `talker` e `listener`.
+
+## Evidências
+
+### ROS1
+
+- T1A: [`rostopic echo`](exercicio-1/ros1/rsdis_t1a/screenshots/rostopic_echo.png) · [`rqt_graph`](exercicio-1/ros1/rsdis_t1a/screenshots/rqt_graph.png)
+- T1B: [`rostopic echo`](exercicio-1/ros1/rsdis_t1b/screenshots/rostopic_echo.png) · [`rqt_graph`](exercicio-1/ros1/rsdis_t1b/screenshots/rqt_graph.png)
+
+### ROS2
+
+- T1A: [`topic echo`](exercicio-1/ros2/rsdis_t1a/screenshots/topic_echo.png) · [`rqt_graph`](exercicio-1/ros2/rsdis_t1a/screenshots/rqt_graph.png) · [`50 Hz`](exercicio-1/ros2/rsdis_t1a/screenshots/frequency_50hz.png)
+- T1B: [`topic echo`](exercicio-1/ros2/rsdis_t1b/screenshots/topic_echo.png) · [`rqt_graph`](exercicio-1/ros2/rsdis_t1b/screenshots/rqt_graph.png) · [`1 Hz`](exercicio-1/ros2/rsdis_t1b/screenshots/frequency_1hz.png)
+
+## Entrega
+
+Para submeter cada parte separadamente, incluir o respetivo package e a pasta `screenshots/`, excluindo diretórios gerados como `build/`, `install/`, `log/` e `devel/`.
