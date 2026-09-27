@@ -4,8 +4,11 @@
 // Esta função é executada sempre que o subscritor recebe uma Pose.
 void poseCallback(const geometry_msgs::Pose& msg) {
     // A referência constante permite ler a mensagem sem a copiar nem alterar.
-    // Aqui são mostrados no terminal os três valores da posição recebida.
-    ROS_INFO("I heard pose: pos(%.2f, %.2f, %.2f)", msg.position.x, msg.position.y, msg.position.z);
+    // Mostra no terminal todos os campos da posição e da orientação recebida.
+    ROS_INFO("I heard pose: position(%.2f, %.2f, %.2f), "
+             "orientation(%.2f, %.2f, %.2f, %.2f)",
+             msg.position.x, msg.position.y, msg.position.z, msg.orientation.x,
+             msg.orientation.y, msg.orientation.z, msg.orientation.w);
 }
 
 int main(int argc, char** argv) {
