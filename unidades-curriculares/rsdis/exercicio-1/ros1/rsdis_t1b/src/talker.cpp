@@ -9,6 +9,7 @@ int main(int argc, char **argv) {
     ros::Publisher posePublisher = nh.advertise<geometry_msgs::Pose>("pose_topic", 1);
     ros::Rate loopRate(1);  // 1 Hz
 
+    // Publica uma nova Pose por segundo enquanto o ROS estiver ativo.
     while (ros::ok()) {
         geometry_msgs::Pose message;
 
