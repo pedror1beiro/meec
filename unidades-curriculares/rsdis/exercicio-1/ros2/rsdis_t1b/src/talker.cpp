@@ -11,6 +11,7 @@ int main(int argc, char* argv[]) {
 
     rclcpp::Rate rate(1.0);  // 1 Hz
 
+    // Publica uma nova Pose por segundo enquanto o ROS 2 estiver ativo.
     while (rclcpp::ok()) {
         geometry_msgs::msg::Pose message;
 
