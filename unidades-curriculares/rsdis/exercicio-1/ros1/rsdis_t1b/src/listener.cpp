@@ -3,10 +3,11 @@
 
 // Recebe e apresenta todos os campos da mensagem Pose.
 void poseCallback(const geometry_msgs::Pose& msg) {
-    ROS_INFO("I heard pose: position(%.2f, %.2f, %.2f), "
-             "orientation(%.2f, %.2f, %.2f, %.2f)",
-             msg.position.x, msg.position.y, msg.position.z, msg.orientation.x,
-             msg.orientation.y, msg.orientation.z, msg.orientation.w);
+    ROS_INFO(
+        "I heard pose: position(%.2f, %.2f, %.2f), "
+        "orientation(%.2f, %.2f, %.2f, %.2f)",
+        msg.position.x, msg.position.y, msg.position.z, msg.orientation.x, msg.orientation.y,
+        msg.orientation.z, msg.orientation.w);
 }
 
 int main(int argc, char** argv) {
