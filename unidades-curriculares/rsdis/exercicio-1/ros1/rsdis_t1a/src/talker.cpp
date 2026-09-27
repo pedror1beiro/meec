@@ -11,6 +11,7 @@ int main(int argc, char **argv) {
     // Mantém a publicação a 50 Hz.
     ros::Rate loopRate(50);
 
+    // Publica continuamente o valor 3.14 enquanto o ROS estiver ativo.
     while (ros::ok()) {
         std_msgs::Float32 msg;
         msg.data = 3.14;
