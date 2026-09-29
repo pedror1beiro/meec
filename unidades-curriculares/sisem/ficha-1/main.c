@@ -11,7 +11,7 @@
 #include "stm32f10x.h"
 
 
-/* Funcao de atraso por software */
+/* funcao atraso por software */
 void delay(uint32_t tempo)
 {
     volatile uint32_t i;
@@ -20,11 +20,11 @@ void delay(uint32_t tempo)
 }
 
 
-/* Exercicio 3 */
+/* exercicio 3 */
 
 void exercicio3(void)
 {
-    /* Ativa o clock do GPIOA */
+    /* ativa o clock do GPIOA */
     RCC->APB2ENR = 0x00000004;
 
     /* PA5 como saida push-pull 50 MHz */
@@ -33,27 +33,27 @@ void exercicio3(void)
 
     while(1)
     {
-        /* Liga o LED */
+        /* liga o LED */
         GPIOA->BSRR = 0x00000020;
         delay(1000000);
 
-        /* Desliga o LED */
+        /* desliga o LED */
         GPIOA->BSRR = 0x00200000;
         delay(1000000);
     }
 }
 
 
-/* Exercicio 4 - utilizacao da biblioteca de perifericos ST */
+/* exercicio 4 */
 
 void exercicio4(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
 
-    /* Ativa o clock do GPIOA */
+    /* ativa o clock do GPIOA */
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
 
-    /* Configura PA5 como saida push-pull 50 MHz */
+    /* configura PA5 como saida push-pull 50 MHz */
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
@@ -62,35 +62,35 @@ void exercicio4(void)
 
     while(1)
     {
-        /* Liga o LED */
+        /* liga o LED */
         GPIO_SetBits(GPIOA, GPIO_Pin_5);
         delay(1000000);
 
-        /* Desliga o LED */
+        /* desliga o LED */
         GPIO_ResetBits(GPIOA, GPIO_Pin_5);
         delay(1000000);
     }
 }
 
 
-/* Exercicio 5 */
+/* exercicio 5 */
 
 void exercicio5(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
 
-    /* Ativa os clocks do GPIOA e GPIOC */
+    /* ativa os clocks do GPIOA e GPIOC */
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA |
                            RCC_APB2Periph_GPIOC, ENABLE);
 
-    /* Configura PA5 como saida */
+    /* configura PA5 como saida */
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 
     GPIO_Init(GPIOA, &GPIO_InitStructure);
 
-    /* Configura PC13 como entrada para o botao */
+    /* configura PC13 como entrada para o botao */
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
 
@@ -100,7 +100,7 @@ void exercicio5(void)
     {
         GPIO_SetBits(GPIOA, GPIO_Pin_5);
 
-        /* Botao pressionado: reduz o atraso para metade */
+        /* botao pressionado: reduz o atraso para metade */
         if(GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_13) == 0)
             delay(500000);
         else
@@ -118,7 +118,7 @@ void exercicio5(void)
 
 int main(void)
 {
-    /* Descomentar apenas o exercicio que se pretende executar */
+    /* descomentar/comentar exercicio que se pretende executar */
     //exercicio3();
     //exercicio4();
     exercicio5();
