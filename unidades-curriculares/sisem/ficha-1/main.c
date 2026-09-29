@@ -11,6 +11,7 @@
 #include "stm32f10x.h"
 
 
+/* Funcao de atraso por software */
 void delay(uint32_t tempo)
 {
     volatile uint32_t i;
@@ -43,7 +44,7 @@ void exercicio3(void)
 }
 
 
-/* Exercicio 4 */
+/* Exercicio 4 - utilizacao da biblioteca de perifericos ST */
 
 void exercicio4(void)
 {
@@ -61,9 +62,11 @@ void exercicio4(void)
 
     while(1)
     {
+        /* Liga o LED */
         GPIO_SetBits(GPIOA, GPIO_Pin_5);
         delay(1000000);
 
+        /* Desliga o LED */
         GPIO_ResetBits(GPIOA, GPIO_Pin_5);
         delay(1000000);
     }
@@ -87,7 +90,7 @@ void exercicio5(void)
 
     GPIO_Init(GPIOA, &GPIO_InitStructure);
 
-    /* Configura PC13 como entrada */
+    /* Configura PC13 como entrada para o botao */
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
 
@@ -97,6 +100,7 @@ void exercicio5(void)
     {
         GPIO_SetBits(GPIOA, GPIO_Pin_5);
 
+        /* Botao pressionado: reduz o atraso para metade */
         if(GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_13) == 0)
             delay(500000);
         else
@@ -114,6 +118,7 @@ void exercicio5(void)
 
 int main(void)
 {
+    /* Descomentar apenas o exercicio que se pretende executar */
     //exercicio3();
     //exercicio4();
     exercicio5();
