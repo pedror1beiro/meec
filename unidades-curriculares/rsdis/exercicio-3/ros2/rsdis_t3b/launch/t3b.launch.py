@@ -36,8 +36,8 @@ def generate_launch_description():
             parameters=[
                 {'use_sim_time': True},
                 {'jump_threshold': 0.30},
-                {'min_width': 0.05},
-                {'max_width': 0.50}
+                {'min_width': 0.10},
+                {'max_width': 0.40}
             ]
         ),
 
