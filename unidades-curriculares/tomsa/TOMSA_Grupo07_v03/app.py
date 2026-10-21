@@ -37,89 +37,132 @@ def utc_timestamp(time_ns):
 
 
 app = Dash(__name__)
-app.title = 'TOMSA · Grupo 07 · Missão Real · v0.3'
-COLORS = {'text': '#e8edf4', 'muted': '#a7b4c4', 'bg': '#0b1220', 'panel': '#101827'}
-PANEL = {'background': COLORS['panel'], 'padding': '16px', 'borderRadius': '12px'}
+app.title = 'TOMSA · Grupo 07 · Mission Replay'
 
 app.layout = html.Div([
-    html.Div([
-        html.H1('TOMSA · Multi-Robot Mission Replay', style={'marginBottom': '5px'}),
-        html.Div('ISEP 2026 · Grupo 07 · Versão 0.3', style={'color': COLORS['muted']}),
-        html.P(MISSION.source, style={'fontWeight': 'bold', 'color': '#8ee7bc'}),
-        html.P(f'Intervalo comum: {utc_timestamp(MISSION.start_ns)} até '
-               f'{utc_timestamp(MISSION.end_ns)} UTC · duração {MISSION.duration_s / 60:.1f} min',
-               style={'color': COLORS['muted']}),
-    ]),
-    html.Div([
+    html.Header([
+        html.Div('ISEP · MEEC / Sistemas Autónomos', className='eyebrow'),
+        html.H1('Multi-Robot Mission Replay'),
+        html.P('TOMSA · Grupo 07 · Visualização de trajetórias e referenciais',
+               className='subtitle'),
         html.Div([
-            html.Label('Robô de referência'),
-            dcc.Dropdown(id='robot-choice', clearable=False, value=next(iter(MISSION.traces)),
-                         options=[{'label': trace.label, 'value': key}
-                                  for key, trace in MISSION.traces.items()],
-                         style={'color': '#1f2937'}),
-        ], style={'flex': '1 1 220px'}),
+            html.Span(MISSION.source, className='source-label'),
+            html.Span(
+                f'Intervalo comum · {utc_timestamp(MISSION.start_ns)}–'
+                f'{utc_timestamp(MISSION.end_ns)} UTC · {MISSION.duration_s / 60:.1f} min',
+                className='mission-range',
+            ),
+        ], className='hero-meta'),
+    ], className='hero'),
+
+    html.Section([
         html.Div([
-            html.Label('Raio de proximidade (m)'),
-            dcc.Slider(id='radius-slider', min=50, max=600, step=50,
-                       value=float(CFG['replay']['proximity_radius_m']),
-                       marks={int(x): f'{int(x)}' for x in range(100, 601, 100)}),
-        ], style={'flex': '1 1 230px'}),
+            html.Label('Robô de referência', htmlFor='robot-choice'),
+            dcc.Dropdown(
+                id='robot-choice', clearable=False, value=next(iter(MISSION.traces)),
+                options=[{'label': trace.label, 'value': key}
+                         for key, trace in MISSION.traces.items()],
+            ),
+        ], className='control-group'),
+        html.Div([
+            html.Label('Raio de proximidade', htmlFor='radius-slider'),
+            dcc.Slider(
+                id='radius-slider', min=50, max=600, step=50,
+                value=float(CFG['replay']['proximity_radius_m']),
+                marks={int(x): f'{int(x)}' for x in range(100, 601, 100)},
+            ),
+            html.P('Metros · filtra os outros robôs na vista local',
+                   className='helper-text'),
+        ], className='control-group'),
         html.Div([
             html.Label('Reprodução'),
             html.Div([
                 html.Button('▶ Play', id='play-pause', n_clicks=0,
-                            style={'padding': '10px 20px', 'cursor': 'pointer'}),
-                html.Span(id='clock-label', style={'marginLeft': '12px'}),
-            ]),
-        ], style={'flex': '2 1 320px'}),
-    ], style={**PANEL, 'display': 'flex', 'flexWrap': 'wrap', 'gap': '18px', 'marginBottom': '12px'}),
-    html.Div([
-        dcc.Slider(id='time-slider', min=0, max=TOTAL_STEPS, value=0, step=1,
-                   marks={int(i): f'{i*STEP/60:.0f} min' for i in
-                          np.linspace(0, TOTAL_STEPS, min(7, TOTAL_STEPS + 1), dtype=int)},
-                   updatemode='mouseup', tooltip={'placement': 'bottom', 'always_visible': False}),
-        dcc.Interval(id='replay-timer', interval=max(200, int(STEP * 1000)),
-                     n_intervals=0, disabled=True),
-    ], style={**PANEL, 'marginBottom': '12px', 'padding': '20px 25px'}),
-    html.Div([
-        html.Label('Vista global:'),
-        dcc.RadioItems(id='global-dimension',
-                       options=[{'label': ' 2D', 'value': '2d'},
-                                {'label': ' 3D', 'value': '3d'}],
-                       value='2d', inline=True,
-                       style={'display': 'inline-flex', 'gap': '18px', 'marginLeft': '12px'}),
-    ], style={**PANEL, 'marginBottom': '12px'}),
-    html.Div([
-        html.Div(dcc.Graph(id='global-view', style={'height': '510px'}), style={'flex': '1 1 430px'}),
-        html.Div(dcc.Graph(id='local-view', style={'height': '510px'}), style={'flex': '1 1 430px'}),
-    ], style={'display': 'flex', 'gap': '12px', 'flexWrap': 'wrap'}),
+                            className='button button-primary'),
+                html.Span(id='clock-label', className='clock-readout'),
+            ], className='playback-controls'),
+        ], className='control-group'),
+    ], className='card toolbar'),
+
+    html.Section([
+        html.Div([
+            html.H2('Linha temporal', className='section-title'),
+            html.Span('Arrasta para escolher um instante da missão',
+                      className='helper-text'),
+        ], className='section-heading'),
+        dcc.Slider(
+            id='time-slider', min=0, max=TOTAL_STEPS, value=0, step=1,
+            marks={int(i): f'{i*STEP/60:.0f} min' for i in
+                   np.linspace(0, TOTAL_STEPS, min(7, TOTAL_STEPS + 1), dtype=int)},
+            updatemode='mouseup',
+            tooltip={'placement': 'bottom', 'always_visible': False},
+        ),
+        dcc.Interval(
+            id='replay-timer', interval=max(200, int(STEP * 1000)),
+            n_intervals=0, disabled=True,
+        ),
+    ], className='card timeline-card'),
+
+    html.Section([
+        html.Span('Dimensão da vista global', className='section-title'),
+        dcc.RadioItems(
+            id='global-dimension',
+            options=[{'label': '2D', 'value': '2d'},
+                     {'label': '3D', 'value': '3d'}],
+            value='2d', inline=True,
+        ),
+    ], className='card view-options'),
+
+    html.Main([
+        html.Div([
+            dcc.Graph(
+                id='global-view',
+                config={'displaylogo': False, 'responsive': True},
+                style={'height': '560px', 'width': '100%'},
+            ),
+        ], className='graph-card'),
+        html.Div([
+            dcc.Graph(
+                id='local-view',
+                config={'displaylogo': False, 'responsive': True},
+                style={'height': '560px', 'width': '100%'},
+            ),
+        ], className='graph-card'),
+    ], className='graph-grid'),
+
     html.Details([
-        html.Summary('Informação adicional · Azimute, Elevação e Distância (AER)',
-                     style={'cursor': 'pointer'}),
-        html.P('Azimute desde Norte no sentido horário; elevação positiva para cima; '
-               'distância espacial 3D.', style={'color': COLORS['muted'], 'fontSize': '13px'}),
-        html.Div(id='aer-table', style={'marginTop': '10px'}),
-    ], style={**PANEL, 'marginTop': '12px'}),
-    html.Div([
-        html.Div(id='status-panel', style={'marginBottom': '10px', 'color': COLORS['muted']}),
-        html.Button('Exportar NED (CSV)', id='download-log-button', n_clicks=0),
-        html.Button('Exportar vista local (CSV)', id='download-local-button', n_clicks=0,
-                    style={'marginLeft': '10px'}),
-        html.Button('Exportar configuração (YAML)', id='download-yaml-button', n_clicks=0,
-                    style={'marginLeft': '10px'}),
+        html.Summary('Medições adicionais · Azimute, Elevação e Distância (AER)'),
+        html.P(
+            'Azimute desde Norte no sentido horário; elevação positiva para cima; '
+            'distância espacial 3D.', className='helper-text',
+        ),
+        html.Div(id='aer-table', className='table-wrap'),
+    ], className='card details-card'),
+
+    html.Section([
+        html.H2('Exportações', className='section-title'),
+        html.Div(id='status-panel', className='status-panel'),
+        html.Div([
+            html.Button('Exportar NED (CSV)', id='download-log-button', n_clicks=0,
+                        className='button button-secondary'),
+            html.Button('Exportar vista local (CSV)', id='download-local-button',
+                        n_clicks=0, className='button button-secondary'),
+            html.Button('Exportar configuração (YAML)', id='download-yaml-button',
+                        n_clicks=0, className='button button-secondary'),
+        ], className='export-buttons'),
         dcc.Download(id='download-log'),
         dcc.Download(id='download-local'),
         dcc.Download(id='download-config'),
-    ], style={**PANEL, 'marginTop': '12px'}),
-    html.P('ATENÇÃO: a posição foi interpretada como latitude/longitude/altitude em todos os logs, '
-           'conforme o README do conjunto de dados. Setas e coordenadas alinhadas com o corpo '
-           'são HIPÓTESES apenas para world_ned: o sentido dos quaterniões não foi confirmado. '
-           'Quando indisponível, a vista relativa mantém os eixos NED (sem rotação). '
-           'A exportação local indica explicitamente o referencial aplicado. '
-           'O datum vertical da altitude também permanece por confirmar.',
-           style={'fontSize': '12px', 'color': '#f4ce83', 'marginTop': '14px'}),
-], style={'background': COLORS['bg'], 'color': COLORS['text'], 'minHeight': '100vh',
-          'padding': '24px', 'fontFamily': 'Arial, sans-serif'})
+    ], className='card export-card'),
+
+    html.P(
+        'Nota técnica: as posições são latitude/longitude/altitude nos três logs, '
+        'segundo o README. As orientações do corpo em world_ned são hipóteses '
+        'não validadas; nos restantes referenciais a vista local usa apenas '
+        'translação NED. O datum vertical da altitude também carece de confirmação.',
+        className='technical-note',
+    ),
+], className='app-shell')
 
 
 @app.callback(Output('time-slider', 'value'), Output('replay-timer', 'disabled'),

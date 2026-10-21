@@ -6,24 +6,37 @@ from scipy.spatial.transform import Rotation
 from .coordinates import world_to_robot
 from .replay import orientation_is_usable
 
-BACKGROUND = '#101827'
-FG = '#e8edf4'
+BACKGROUND = '#ffffff'
+FG = '#17263c'
+GRID = '#e5eaf1'
 
 
 def _base_figure(title, xaxis, yaxis):
+    """Tema claro para as duas vistas 2D: alto contraste e legenda abaixo."""
     fig = go.Figure()
     fig.update_layout(
-        title=dict(text=title, x=0.03, font=dict(size=16)),
-        template='plotly_dark', paper_bgcolor=BACKGROUND, plot_bgcolor=BACKGROUND,
-        font=dict(color=FG), margin=dict(l=50, r=25, t=65, b=50),
-        showlegend=True, legend=dict(orientation='h', y=1.15, x=0),
-        xaxis=dict(title=xaxis, zeroline=True, zerolinecolor='#445468', gridcolor='#253245'),
-        yaxis=dict(title=yaxis, zeroline=True, zerolinecolor='#445468', gridcolor='#253245',
+        title=dict(text=title, x=0.04, y=0.97,
+                   font=dict(size=16, color=FG)),
+        template='plotly_white',
+        paper_bgcolor=BACKGROUND,
+        plot_bgcolor=BACKGROUND,
+        font=dict(color=FG, family='Arial, sans-serif', size=12),
+        margin=dict(l=76, r=24, t=88, b=105),
+        showlegend=True,
+        legend=dict(
+            orientation='h', x=0, y=-0.26,
+            yanchor='top', xanchor='left',
+            font=dict(size=11, color=FG),
+            bgcolor='rgba(255,255,255,0)',
+        ),
+        xaxis=dict(title=xaxis, showline=True, linecolor='#aab7ca',
+                   zeroline=True, zerolinecolor='#aab7ca', gridcolor=GRID),
+        yaxis=dict(title=yaxis, showline=True, linecolor='#aab7ca',
+                   zeroline=True, zerolinecolor='#aab7ca', gridcolor=GRID,
                    scaleanchor='x', scaleratio=1),
         uirevision='keep',
     )
     return fig
-
 
 def _history(trace, time_ns, max_points):
     end = int(np.searchsorted(trace.times_ns, time_ns, side='right'))
@@ -105,7 +118,8 @@ def local_figure(mission, state, time_ns, central_key, cfg, radius_override=None
         p = (world_to_robot(snap.position_ned, central.position_ned, central.quaternion_xyzw)
              if rotated else snap.position_ned - central.position_ned)
         fig.add_trace(go.Scatter(x=[p[1]], y=[p[0]], mode='markers+text',
-                        name=trace.label, marker=dict(color=trace.color, size=12,
+                        name=trace.label, showlegend=False,
+                        marker=dict(color=trace.color, size=12,
                                                        line=dict(color='white', width=1)),
                         text=[trace.label], textposition='top center',
                         hovertemplate=f'{trace.label}<br>X horizontal: %{{x:.2f}} m<br>Y vertical: %{{y:.2f}} m<extra></extra>'))
@@ -117,7 +131,7 @@ def local_figure(mission, state, time_ns, central_key, cfg, radius_override=None
     if not rotated:
         fig.add_annotation(text='Orientação desconhecida: apenas translação NED',
                            xref='paper', yref='paper', x=0.5, y=.01, showarrow=False,
-                           font=dict(color='#f4ce83', size=11), bgcolor=BACKGROUND)
+                           font=dict(color='#9a5a12', size=11), bgcolor='#fff4de')
     return fig
 
 
@@ -157,16 +171,25 @@ def global_figure_3d(mission, state, time_ns, cfg):
                 mode='lines', line=dict(color=trace.color, width=6),
                 showlegend=False, hoverinfo='skip'))
     fig.update_layout(
-        title=dict(text='Vista global · 3D NED (setas de orientação: hipótese)', x=0.03,
-                   font=dict(size=16)),
-        template='plotly_dark', paper_bgcolor=BACKGROUND, plot_bgcolor=BACKGROUND,
-        font=dict(color=FG), margin=dict(l=0, r=0, t=65, b=0),
-        legend=dict(orientation='h', y=1.12, x=0),
+        title=dict(text='Vista global · 3D NED (orientações provisórias)',
+                   x=0.04, y=0.97, font=dict(size=16, color=FG)),
+        template='plotly_white', paper_bgcolor=BACKGROUND, plot_bgcolor=BACKGROUND,
+        font=dict(color=FG, family='Arial, sans-serif', size=12),
+        margin=dict(l=18, r=18, t=85, b=100),
+        legend=dict(
+            orientation='h', x=0, y=-0.20, yanchor='top',
+            font=dict(size=11, color=FG),
+            bgcolor='rgba(255,255,255,0)',
+        ),
         scene=dict(
-            xaxis=dict(title='Este (m)', backgroundcolor=BACKGROUND, gridcolor='#253245'),
-            yaxis=dict(title='Norte (m)', backgroundcolor=BACKGROUND, gridcolor='#253245'),
-            zaxis=dict(title='Baixo (m)', backgroundcolor=BACKGROUND, gridcolor='#253245'),
+            xaxis=dict(title='Este (m)', backgroundcolor=BACKGROUND,
+                       gridcolor=GRID, zerolinecolor='#aab7ca', color=FG),
+            yaxis=dict(title='Norte (m)', backgroundcolor=BACKGROUND,
+                       gridcolor=GRID, zerolinecolor='#aab7ca', color=FG),
+            zaxis=dict(title='Baixo (m)', backgroundcolor=BACKGROUND,
+                       gridcolor=GRID, zerolinecolor='#aab7ca', color=FG),
             aspectmode='data',
+            camera=dict(eye=dict(x=1.35, y=1.35, z=1.1)),
         ),
         uirevision='keep-3d',
     )

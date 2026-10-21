@@ -9,13 +9,13 @@ Dashboard Python/Dash para visualizar trajetórias de três robôs com sincroniz
 No Windows, dentro desta pasta:
 
 ```cmd
-uv venv .venv
+python -m venv .venv
 .venv\Scripts\activate
-uv pip install -r requirements.txt
+python -m pip install -r requirements.txt
 python app.py
 ```
 
-Abrir http://127.0.0.1:8050.
+Abrir http://127.0.0.1:8050. A folha de estilos de alto contraste em \`assets/style.css\` é carregada automaticamente pelo Dash.
 
 ## Ficheiros de dados — não incluídos no repositório público
 
