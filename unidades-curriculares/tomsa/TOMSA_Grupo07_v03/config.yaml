@@ -1,0 +1,33 @@
+# Grupo 07 — TOMSA 2026
+# Ficheiros reais incluídos apenas para utilização na UC TOMSA (restrição INESC TEC).
+data:
+  mode: zip  # zip (dados originais) | demo (dados sintéticos)
+  zip_path: data/TL2026.zip
+  files:
+    robot1: robot1_s1.csv
+    robot4: robot4_s1.csv
+    robot7: robot7_s1.csv
+
+robots:
+  robot1: {label: 'Robô 1', color: '#db5661'}
+  robot4: {label: 'Robô 4', color: '#1f97a8'}
+  robot7: {label: 'Robô 7', color: '#c99b36'}
+
+reference:
+  # Origem indicada no README, transcrita na primeira entrega
+  latitude_deg: 41.45201666666667
+  longitude_deg: -8.81322222222222
+  altitude_m: 55.44791126176966
+  # A referência fornecida indica altitude em metros acima do nível do mar.
+  # A conversão ECEF assume alturas geodésicas comparáveis; datum vertical por confirmar.
+
+replay:
+  step_seconds: 0.5
+  tolerance_seconds: 0.3
+  proximity_radius_m: 450.0
+  max_plot_points_per_robot: 800
+
+orientation:
+  # HIPÓTESE NÃO VALIDADA: quaternião corpo -> NED apenas para este frame.
+  # O README NÃO confirma esta convenção; as setas são provisórias.
+  assumed_body_to_ned_frame_id: world_ned

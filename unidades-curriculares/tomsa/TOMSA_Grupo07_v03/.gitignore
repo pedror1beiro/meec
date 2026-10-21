@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+.pytest_cache/
+*.py[cod]
+# Ficheiros reais: uso restrito à UC (não publicar, nem derivados)
+data/
+TL2026.zip
+*.csv
+preview_real.html
