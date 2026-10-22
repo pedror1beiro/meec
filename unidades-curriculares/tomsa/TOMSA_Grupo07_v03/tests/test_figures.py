@@ -8,9 +8,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 @pytest.fixture(scope='module')
-def mission_and_config():
-    cfg=load_config(ROOT/'config.yaml')
-    return load_mission(cfg,ROOT), cfg
+def mission_and_config(real_mission_and_config):
+    return real_mission_and_config
 
 
 def test_global_and_local_figures_are_serializable(mission_and_config):

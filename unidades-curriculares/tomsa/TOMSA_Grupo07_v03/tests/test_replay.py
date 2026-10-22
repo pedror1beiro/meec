@@ -8,9 +8,8 @@ HERE = Path(__file__).resolve().parents[1]
 
 
 @pytest.fixture(scope='module')
-def mission():
-    cfg = load_config(HERE / 'config.yaml')
-    return load_mission(cfg, HERE)
+def mission(real_mission_and_config):
+    return real_mission_and_config[0]
 
 
 def test_nearest_timestamp_and_gap():

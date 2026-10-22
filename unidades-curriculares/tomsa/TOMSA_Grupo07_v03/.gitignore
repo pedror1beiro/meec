@@ -7,3 +7,7 @@ data/
 TL2026.zip
 *.csv
 preview_real.html
+# Pré-visualizações/capturas derivadas de trajetórias restritas
+previews/
+screenshots/
+artifacts/

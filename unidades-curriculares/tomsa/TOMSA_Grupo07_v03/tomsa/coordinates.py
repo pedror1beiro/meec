@@ -33,15 +33,37 @@ def ecef_to_ned(ecef, reference_lat_deg, reference_lon_deg, reference_alt_m):
     """ECEF (m) → NED (m) relativamente à origem geodésica fixa."""
     p = np.asarray(ecef, dtype=float)
     ref = geodetic_to_ecef(reference_lat_deg, reference_lon_deg, reference_alt_m)
-    lat, lon = np.deg2rad([reference_lat_deg, reference_lon_deg])
+    return (p - ref) @ ecef_to_ned_rotation(reference_lat_deg, reference_lon_deg).T
+
+
+def ecef_to_ned_rotation(latitude_deg, longitude_deg):
+    """Matriz ortonormal de mudança de base ECEF -> NED tangente local."""
+    lat, lon = np.deg2rad([latitude_deg, longitude_deg])
     sl, cl = np.sin(lat), np.cos(lat)
     so, co = np.sin(lon), np.cos(lon)
-    transform = np.array([
+    return np.array([
         [-sl * co, -sl * so, cl],
         [-so, co, 0.0],
         [-cl * co, -cl * so, -sl],
     ])
-    return (p - ref) @ transform.T
+
+
+def geographic_heading(quaternion_xyzw, latitude_deg, longitude_deg, ref_lat_deg, ref_lon_deg):
+    """Rumo horário desde Norte verdadeiro, para corpo -> NED FIXO confirmado.
+
+    Transporta o eixo X do corpo através de ECEF para o NED tangente no robô;
+    um eixo vertical não define rumo. Não é course-over-ground nem yaw ENU.
+    """
+    q = np.asarray(quaternion_xyzw, dtype=float)
+    norm = np.linalg.norm(q)
+    if not np.isfinite(norm) or norm < 1e-12:
+        raise ValueError('Quaternion inválido.')
+    forward_ned = Rotation.from_quat(q / norm).apply([1., 0., 0.])
+    forward_ecef = ecef_to_ned_rotation(ref_lat_deg, ref_lon_deg).T @ forward_ned
+    forward_local = ecef_to_ned_rotation(latitude_deg, longitude_deg) @ forward_ecef
+    if np.hypot(*forward_local[:2]) < 1e-8:
+        return None
+    return float(np.degrees(np.arctan2(forward_local[1], forward_local[0])) % 360)
 
 
 def geodetic_to_ned(lat_deg, lon_deg, altitude_m, ref_lat_deg, ref_lon_deg, ref_alt_m):

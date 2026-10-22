@@ -15,9 +15,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 @pytest.fixture(scope='module')
-def real_mission():
-    cfg = load_config(ROOT / 'config.yaml')
-    return load_mission(cfg, ROOT), cfg
+def real_mission(real_mission_and_config):
+    return real_mission_and_config
 
 
 def test_ecef_reference_invariant():

@@ -12,6 +12,7 @@ class Snapshot:
     position_ned: np.ndarray
     quaternion_xyzw: np.ndarray
     frame_id: str
+    body_to_ned_confirmed: bool = False
 
 
 def nearest_sample(trace, time_ns, tolerance_s):
@@ -24,7 +25,9 @@ def nearest_sample(trace, time_ns, tolerance_s):
     if abs(int(times[best]) - int(time_ns)) > tolerance_s * 1e9:
         return None
     return Snapshot(best, int(times[best]), trace.positions_ned[best],
-                    trace.quaternions_xyzw[best], str(trace.frames[best]))
+                    trace.quaternions_xyzw[best], str(trace.frames[best]),
+                    bool(trace.confirmed_body_to_ned_frame_id and
+                         trace.frames[best] == trace.confirmed_body_to_ned_frame_id))
 
 
 def mission_state(mission, time_ns, tolerance_s):
@@ -33,8 +36,12 @@ def mission_state(mission, time_ns, tolerance_s):
 
 
 def orientation_is_usable(snapshot, assumed_frame_id):
-    """Apenas seleção de uma HIPÓTESE de orientação, não validação física."""
-    return snapshot is not None and snapshot.frame_id == assumed_frame_id
+    """Aceita orientação confirmada ou a hipótese explicitamente configurada.
+
+    Esta seleção, por si só, não confirma fisicamente uma convenção.
+    """
+    return snapshot is not None and (snapshot.body_to_ned_confirmed or
+                                     bool(assumed_frame_id and snapshot.frame_id == assumed_frame_id))
 
 
 def local_positions(state, origin_key, assumed_frame_id):
@@ -95,7 +102,8 @@ def local_snapshot_rows(mission, time_ns, central_key, tolerance_s, assumed_fram
     if center is None:
         return []
     positions, rotated = local_positions(state, central_key, assumed_frame_id)
-    reference_name = 'robot_body_assumed' if rotated else 'ned_translated'
+    reference_name = ('robot_body_confirmed' if center.body_to_ned_confirmed else
+                      'robot_body_assumed') if rotated else 'ned_translated'
     rows = []
     for key, position in positions.items():
         snap = state[key]

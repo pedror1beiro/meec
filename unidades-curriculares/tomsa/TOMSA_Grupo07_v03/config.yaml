@@ -31,3 +31,25 @@ orientation:
   # HIPÓTESE NÃO VALIDADA: quaternião corpo -> NED apenas para este frame.
   # O README NÃO confirma esta convenção; as setas são provisórias.
   assumed_body_to_ned_frame_id: world_ned
+  # Só preencher após confirmar corpo -> NED FIXO COMUM e eixos do corpo.
+  confirmed_body_to_ned_frame_id: null
+
+kinematics:
+  # O README diz "normalmente" m/s e rad/s: interpretação SI indicada na UI.
+  # unknown: só norma da velocidade e d(norm(v))/dt; sem aceleração vetorial.
+  # ned: velocidade na base NED fixa comum, confirmada pelo produtor.
+  # body: exige também quaternion corpo -> NED confirmado e child_frame_id.
+  confirmed_velocity_frame: unknown
+  body_frame_id: body
+  max_gap_seconds: 2.0  # não derivar através de lacunas > 2 s
+
+map:
+  # Apenas os mosaicos da vista atual; sem descarregamentos em lote/offline.
+  base_tiles_url: https://tile.openstreetmap.org/{z}/{x}/{y}.png
+  base_attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
+  seamark_tiles_url: https://t1.openseamap.org/seamark/{z}/{x}/{y}.png
+  seamark_attribution: '© <a href="https://www.openseamap.org">OpenSeaMap contributors</a>'
+  # Material visual animado em 3D, recortado pelos polígonos ocean do OpenMapTiles.
+  # Não representa alturas de onda, estado do mar ou batimetria medidos.
+  ocean_surface: true
+  ocean_tiles_url: https://tiles.openfreemap.org/planet/latest

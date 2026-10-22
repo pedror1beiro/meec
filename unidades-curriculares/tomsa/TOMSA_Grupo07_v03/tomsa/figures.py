@@ -62,10 +62,18 @@ def _add_heading(fig, start_xy, direction_xy, color):
                        arrowcolor=color, showarrow=True)
 
 
+def _orientation_note(state, assumed_frame):
+    usable = [s for s in state.values() if orientation_is_usable(s, assumed_frame)]
+    if any(not s.body_to_ned_confirmed for s in usable):
+        return 'Setas: hipótese corpo→NED não validada'
+    return 'Setas: corpo→NED confirmado' if usable else 'Sem orientação utilizável'
+
+
 def global_figure(mission, state, time_ns, cfg):
     fig = _base_figure('Vista global · NED relativo à origem geográfica', 'Este (m)', 'Norte (m)')
     max_points = cfg['replay']['max_plot_points_per_robot']
     assumed_frame = cfg['orientation']['assumed_body_to_ned_frame_id']
+    fig.update_layout(title_text='Vista global · NED<br><sup>' + _orientation_note(state, assumed_frame) + '</sup>')
     for key, trace in mission.traces.items():
         past = _history(trace, time_ns, max_points)
         if len(past):
@@ -92,8 +100,10 @@ def local_figure(mission, state, time_ns, central_key, cfg, radius_override=None
     rotated = orientation_is_usable(central, assumed_frame)
     label = mission.traces[central_key].label
     if rotated:
-        fig = _base_figure(f'Local · corpo do {label} (hipótese não validada)',
-                           'Eixo Y do robô (m; hipótese)', 'Eixo X do robô (m; hipótese)')
+        qualifier = 'confirmado' if central.body_to_ned_confirmed else 'hipótese não validada'
+        suffix = '' if central.body_to_ned_confirmed else '; hipótese'
+        fig = _base_figure(f'Local · corpo do {label} ({qualifier})',
+                           f'Eixo Y do robô (m{suffix})', f'Eixo X do robô (m{suffix})')
     else:
         fig = _base_figure(f'Relativo · NED centrado no {label} (sem rotação)',
                            'Este relativo (m)', 'Norte relativo (m)')
@@ -101,6 +111,7 @@ def local_figure(mission, state, time_ns, central_key, cfg, radius_override=None
         fig.add_annotation(text='Sem amostra temporal do robô selecionado',
                            xref='paper', yref='paper', x=.5, y=.5, showarrow=False)
         return fig
+    fig.update_layout(title_text=fig.layout.title.text + '<br><sup>' + _orientation_note(state, assumed_frame) + '</sup>')
     max_points = cfg['replay']['max_plot_points_per_robot']
     for key, trace in mission.traces.items():
         snap = state[key]
@@ -123,15 +134,44 @@ def local_figure(mission, state, time_ns, central_key, cfg, radius_override=None
                                                        line=dict(color='white', width=1)),
                         text=[trace.label], textposition='top center',
                         hovertemplate=f'{trace.label}<br>X horizontal: %{{x:.2f}} m<br>Y vertical: %{{y:.2f}} m<extra></extra>'))
-        if rotated and orientation_is_usable(snap, assumed_frame):
+        if orientation_is_usable(snap, assumed_frame):
             heading_world = Rotation.from_quat(snap.quaternion_xyzw).apply([1.0, 0.0, 0.0])
-            tip = world_to_robot(snap.position_ned + heading_world,
-                                 central.position_ned, central.quaternion_xyzw)
-            _add_heading(fig, p[[1, 0]], (tip - p)[[1, 0]], trace.color)
+            heading_local = (Rotation.from_quat(central.quaternion_xyzw).inv().apply(heading_world)
+                             if rotated else heading_world)
+            _add_heading(fig, p[[1, 0]], heading_local[[1, 0]], trace.color)
     if not rotated:
         fig.add_annotation(text='Orientação desconhecida: apenas translação NED',
                            xref='paper', yref='paper', x=0.5, y=.01, showarrow=False,
                            font=dict(color='#9a5a12', size=11), bgcolor='#fff4de')
+    return fig
+
+
+def kinematics_figure(mission, quantity, cfg):
+    """Séries completas enviadas só no carregamento; depois atualizar via Patch."""
+    speed = quantity == 'speed'
+    fig = _base_figure('Rapidez linear · ‖v‖' if speed else 'Aceleração · análise temporal',
+                       'Tempo desde início comum (s)', 'Rapidez (m/s)' if speed else 'Aceleração (m/s²)')
+    fig.update_yaxes(scaleanchor=None, autorange=True)
+    fig.update_layout(legend=dict(y=-.22), margin=dict(l=65, r=20, t=65, b=100))
+    for trace in mission.traces.values():
+        k = trace.kinematics
+        values = k.speed_m_s if speed else k.speed_rate_m_s2
+        seconds = (trace.times_ns - mission.start_ns) / 1e9
+        # NaN explícito impede linhas sobre lacunas demasiado grandes.
+        gaps = np.flatnonzero(np.diff(trace.times_ns) / 1e9 > cfg.get('kinematics', {}).get('max_gap_seconds', 2.0)) + 1
+        x = np.insert(seconds, gaps, np.nan)
+        y = np.insert(values, gaps, np.nan)
+        name = trace.label if speed else f'{trace.label} · d‖v‖/dt'
+        fig.add_trace(go.Scattergl(x=x, y=y, mode='lines', name=name,
+                                   connectgaps=False, line=dict(color=trace.color, width=1.6),
+                                   hovertemplate='%{x:.2f} s<br>%{y:.4f} ' + ('m/s' if speed else 'm/s²') + '<extra>%{fullData.name}</extra>'))
+        if not speed and np.isfinite(k.acceleration_magnitude_m_s2).any():
+            fig.add_trace(go.Scattergl(x=x, y=np.insert(k.acceleration_magnitude_m_s2, gaps, np.nan),
+                                       mode='lines', name=f'{trace.label} · ‖a NED‖', connectgaps=False,
+                                       line=dict(color=trace.color, width=1.6, dash='dot')))
+    fig.add_vline(x=0, line_color='#17263c', line_width=1.5, line_dash='dash')
+    fig.update_xaxes(range=[0, mission.duration_s], autorange=False)
+    fig.update_layout(uirevision=f'kinematics-{quantity}')
     return fig
 
 
@@ -171,7 +211,7 @@ def global_figure_3d(mission, state, time_ns, cfg):
                 mode='lines', line=dict(color=trace.color, width=6),
                 showlegend=False, hoverinfo='skip'))
     fig.update_layout(
-        title=dict(text='Vista global · 3D NED (orientações provisórias)',
+        title=dict(text='Vista global · 3D NED<br><sup>' + _orientation_note(state, assumed_frame) + '</sup>',
                    x=0.04, y=0.97, font=dict(size=16, color=FG)),
         template='plotly_white', paper_bgcolor=BACKGROUND, plot_bgcolor=BACKGROUND,
         font=dict(color=FG, family='Arial, sans-serif', size=12),
