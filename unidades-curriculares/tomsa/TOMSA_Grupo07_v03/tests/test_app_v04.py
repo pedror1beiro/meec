@@ -32,6 +32,7 @@ def test_dash_routes_and_map_configuration(dashboard):
     assert b'map-mission' in layout.data and b'speed-view' in layout.data
     assert client.get('/_dash-dependencies').status_code == 200
     assert client.get('/assets/geography.js').status_code == 200
+    assert client.get('/assets/map_geometry.js').status_code == 200
     assert client.get('/assets/ocean.js').status_code == 200
 
 
@@ -39,7 +40,7 @@ def test_frame_callback_syncs_map_cursor_and_missing_samples(dashboard):
     for key in dashboard.MISSION.traces:
         for dimension in ('2d', '3d'):
             output = dashboard.render_frame(10, key, 450, dimension)
-            assert len(output) == 9
+            assert len(output) == 10
             assert output[5]['selected'] == key
             assert len(output[5]['robots']) == 3
             assert isinstance(output[6], Patch) and isinstance(output[7], Patch)
@@ -57,12 +58,14 @@ def test_dash_frame_callback_http_serialization(dashboard):
         'output': callback_key,
         'outputs': [{'id': o.component_id, 'property': o.component_property} for o in outputs],
         'inputs': [{'id': key, 'property': 'value', 'value': value} for key, value in [
-            ('time-slider', 8), ('robot-choice', 'robot7'), ('radius-slider', 450), ('global-dimension', '2d')]],
+            ('time-slider', 8), ('robot-choice', 'robot7'), ('radius-slider', 450), ('global-dimension', '2d')]]
+            + [{'id': 'math-panel', 'property': 'open', 'value': True}],
         'state': [], 'changedPropIds': ['time-slider.value']})
     assert response.status_code == 200, response.data
     data = response.get_json()['response']
     assert len(data['map-frame']['data']['robots']) == 3
     assert data['speed-view']['figure']['__dash_patch_update']
+    assert data['math-content']['children']
 
 
 def test_frame_callback_displays_unavailable_samples(dashboard, monkeypatch):
@@ -70,6 +73,20 @@ def test_frame_callback_displays_unavailable_samples(dashboard, monkeypatch):
     output = dashboard.render_frame(0, 'robot1', 450, '2d')
     assert output[5]['robots'] == []
     assert all('indisponível' in str(readout) for readout in output[8])
+
+
+def test_math_panel_has_qualified_claims_and_actual_sample_offsets(dashboard):
+    timestamp = dashboard.MISSION.start_ns+5_100_000_000
+    state = dashboard.mission_state(dashboard.MISSION, timestamp, .3)
+    panel = dashboard.mathematics_panel(state, timestamp, 'robot1')
+    assert '-100.000 ms' in str(panel)
+    assert 'não confirma a convenção física' in str(panel)
+    assert dashboard.render_frame(10, 'robot1', 450, '2d')[-1] is None
+    assert dashboard.render_frame(10, 'robot1', 450, '2d', True)[-1] is not None
+    for sample in state.values():
+        sample.body_to_ned_confirmed = False
+    assert 'hipótese não validada' in str(dashboard.mathematics_panel(state, timestamp, 'robot1'))
+    assert 'Sem amostra' in str(dashboard.mathematics_panel(dict.fromkeys(state), timestamp, 'robot1'))
 
 
 def test_static_kinematics_charts_have_consistent_colors_and_no_metric_axis_lock(dashboard):

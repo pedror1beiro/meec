@@ -13,10 +13,10 @@ import yaml
 from dash import Dash, ClientsideFunction, Input, Output, Patch, State, ctx, dcc, html
 from tomsa.data import load_config, load_mission
 from tomsa.figures import (global_figure, global_figure_3d, local_figure,
-                           kinematics_figure)
+                           kinematics_figure, frame_comparison_figure)
 from tomsa.geography import map_mission_data, map_frame_data
 from tomsa.replay import (mission_state, orientation_is_usable, relative_aer,
-                          local_snapshot_rows, next_step)
+                          local_snapshot_rows, next_step, frame_diagnostics)
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', type=Path, default=Path(__file__).resolve().parent / 'config.yaml')
@@ -139,6 +139,19 @@ app.layout = html.Div([
         ], className='section-heading'),
         html.P('Latitude/longitude originais · 3D com ondas e iluminação ilustrativas, sem batimetria ou alturas de onda medidas',
                className='helper-text'),
+        html.Div([
+            html.Label('Percurso', htmlFor='map-trails'),
+            dcc.Dropdown(id='map-trails', clearable=False, value='60', options=[
+                {'label': 'Rasto · últimos 60 s', 'value': '60'},
+                {'label': 'Rasto · últimos 30 s', 'value': '30'},
+                {'label': 'Trajetórias completas', 'value': 'full'},
+                {'label': 'Sem trajetórias', 'value': 'none'}]),
+            dcc.Checklist(id='map-effects', value=['icons', 'ring'], inline=True, options=[
+                {'label': 'Ícones de robô', 'value': 'icons'},
+                {'label': 'Anel de proximidade', 'value': 'ring'}]),
+        ], className='map-display-options'),
+        html.P('Rasto até à amostra visível · ícones ilustrativos; rumo só com convenção confirmada. '
+               'Anel horizontal aproximado; o filtro local usa distância 3D.', className='helper-text'),
         html.Div(id='geographical-map', role='region', **{'aria-label': 'Mapa das trajetórias dos robôs'}),
         html.P(id='map-status', role='status', className='helper-text'),
         html.Div([html.Span([html.Span(className='legend-dot', style={'background': trace.color}),
@@ -171,6 +184,14 @@ app.layout = html.Div([
             ),
         ], className='graph-card'),
     ], className='graph-grid'),
+
+    html.Details([
+        html.Summary('Mostrar a matemática · o que muda quando trocamos de referencial?',
+                     id='math-toggle', n_clicks=0),
+        html.P('As coordenadas mudam; uma transformação rígida preserva as distâncias 3D. '
+               'Os pontos são as mesmas amostras do replay, sem interpolação.', className='helper-text'),
+        html.Div(id='math-content'),
+    ], id='math-panel', open=False, className='card details-card math-panel'),
 
     html.Section([
         html.H2('Velocidade e aceleração', className='section-title'),
@@ -231,7 +252,14 @@ app.clientside_callback(
     ClientsideFunction(namespace='tomsaMap', function_name='render'),
     Output('map-status', 'children'), Input('map-mission', 'data'),
     Input('map-frame', 'data'), Input('map-dimension', 'value'),
-    Input('map-seamarks', 'value'), Input('map-reset', 'n_clicks'))
+    Input('map-seamarks', 'value'), Input('map-reset', 'n_clicks'),
+    Input('map-trails', 'value'), Input('map-effects', 'value'))
+
+# Native <details> toggles its DOM attribute, but does not notify Dash props.
+# Keep Dash's open state in sync so expensive diagnostics are built only on demand.
+app.clientside_callback(
+    'function(clicks) { return (clicks || 0) % 2 === 1; }',
+    Output('math-panel', 'open'), Input('math-toggle', 'n_clicks'))
 
 
 @app.callback(Output('time-slider', 'value'), Output('replay-timer', 'disabled'),
@@ -269,15 +297,71 @@ def aer_table(rows):
     ], style={'width': '100%', 'borderCollapse': 'collapse'}), style={'overflowX': 'auto'})
 
 
+def mathematics_panel(state, time_ns, central_key):
+    diagnostics = frame_diagnostics(state, central_key, CFG['orientation']['assumed_body_to_ned_frame_id'])
+    if diagnostics is None:
+        return html.P('Sem amostra do robô de referência dentro da tolerância temporal.', className='technical-note')
+    frame_label = {'robot_body_confirmed': 'Corpo → NED confirmado',
+                   'robot_body_assumed': 'Corpo → NED: hipótese não validada',
+                   'ned_translated': 'NED transladado: sem rotação do corpo'}[diagnostics['frame']]
+    def matrix_table(values):
+        return html.Table(html.Tbody([html.Tr([html.Td(f'{v:.6f}') for v in row]) for row in values]),
+                          className='matrix-table')
+    def table(headers, rows):
+        return html.Div(html.Table([html.Thead(html.Tr([html.Th(h) for h in headers])),
+                                    html.Tbody([html.Tr([html.Td(cell) for cell in row]) for row in rows])]),
+                        className='table-wrap')
+    position_rows = []
+    for key, world, local in zip(diagnostics['keys'], diagnostics['world'], diagnostics['local']):
+        position_rows.append([MISSION.traces[key].label,
+            f'{(state[key].time_ns-time_ns)/1e6:+.3f} ms',
+            ', '.join(f'{v:.3f}' for v in world), ', '.join(f'{v:.3f}' for v in local)])
+    pair_rows = [[' ↔ '.join(MISSION.traces[k].label for k in pair['robots']),
+                  f'{pair["ned_m"]:.6f}', f'{pair["local_m"]:.6f}', f'{pair["error_m"]:.3e}']
+                 for pair in diagnostics['pairs']]
+    return html.Div([
+        html.P(frame_label, className='math-frame-label'),
+        html.P('Uma verificação numérica bem-sucedida não confirma a convenção física dos quaterniões. '
+               'O NED mantém a hipótese documentada sobre o datum vertical.', className='helper-text'),
+        html.Div([
+            html.Div([html.Strong('T NED ← local'), matrix_table(diagnostics['transform'])]),
+            html.Div([html.Strong('T local ← NED = T⁻¹'), matrix_table(diagnostics['inverse'])]),
+        ], className='math-matrices'),
+        dcc.Markdown(r'$$p_{local}=R^T(p_{NED}-t),\qquad '
+                     r'T_{NED\leftarrow local}=\begin{bmatrix}R&t\\0&1\end{bmatrix}$$', mathjax=True),
+        html.Div([
+            html.Span(f'‖RᵀR − I‖F = {diagnostics["orthogonality_error"]:.3e}'),
+            html.Span(f'det(R) = {diagnostics["determinant"]:.12f}'),
+            html.Span(f'Erro máximo ida/volta = {diagnostics["roundtrip_error_m"]:.3e} m'),
+        ], className='math-checks'),
+        html.P('Invariantes numéricos respeitados' if diagnostics['checks_pass'] else 'Verificação numérica fora da tolerância',
+               className='math-check-result'),
+        html.P('Matrizes e coordenadas arredondadas só na apresentação. Verificação com precisão completa: '
+               'distâncias/ida-volta atol = 10⁻⁸ m, rtol = 10⁻¹²; ortogonalidade/determinante 10⁻¹².',
+               className='helper-text'),
+        dcc.Graph(id='math-comparison', figure=frame_comparison_figure(MISSION, diagnostics, central_key),
+                  config={'displaylogo': False, 'responsive': True}, style={'height': '440px'}),
+        html.P('Mesma escala métrica nos dois painéis. A projeção no ecrã pode alterar a forma aparente. '
+               'São mostradas todas as amostras disponíveis, independentemente do raio de proximidade.', className='helper-text'),
+        table(['Par', 'Distância NED (m)', 'Distância local (m)', '|Δd| (m)'], pair_rows)
+            if pair_rows else html.P('É necessária outra amostra para comparar distâncias.'),
+        table(['Robô', 'Δt amostra − instante', 'NED (N, E, D) · m', 'Local (x, y, z) · m'], position_rows),
+        html.P(f'Alinhamento por amostra mais próxima, ±{TOLERANCE:.3f} s: os timestamps podem diferir.',
+               className='helper-text'),
+    ])
+
+
 @app.callback(Output('global-view', 'figure'), Output('local-view', 'figure'),
               Output('clock-label', 'children'), Output('status-panel', 'children'),
               Output('aer-table', 'children'),
               Output('map-frame', 'data'),
               Output('speed-view', 'figure'), Output('acceleration-view', 'figure'),
               Output('kinematics-readouts', 'children'),
+              Output('math-content', 'children'),
               Input('time-slider', 'value'), Input('robot-choice', 'value'),
-              Input('radius-slider', 'value'), Input('global-dimension', 'value'))
-def render_frame(step_index, central_key, radius, dimension):
+              Input('radius-slider', 'value'), Input('global-dimension', 'value'),
+              Input('math-panel', 'open'))
+def render_frame(step_index, central_key, radius, dimension, math_open=False):
     time_ns = time_at(step_index or 0)
     state = mission_state(MISSION, time_ns, TOLERANCE)
     global_view = (global_figure_3d(MISSION, state, time_ns, CFG)
@@ -307,8 +391,9 @@ def render_frame(step_index, central_key, radius, dimension):
             html.Span('‖a NED‖: ' + value(trace.kinematics.acceleration_magnitude_m_s2, 'm/s²')),
         ], className='kinematics-readout'))
     return (global_view, local_view, label, ' | '.join(statuses),
-            aer_table(relative_aer(state, central_key)), map_frame_data(MISSION, state, central_key, CFG),
-            kinematics_cursor(elapsed), kinematics_cursor(elapsed), readouts)
+            aer_table(relative_aer(state, central_key)), map_frame_data(MISSION, state, central_key, CFG, radius),
+            kinematics_cursor(elapsed), kinematics_cursor(elapsed), readouts,
+            mathematics_panel(state, time_ns, central_key) if math_open else None)
 
 
 @app.callback(Output('download-log', 'data'), Input('download-log-button', 'n_clicks'),

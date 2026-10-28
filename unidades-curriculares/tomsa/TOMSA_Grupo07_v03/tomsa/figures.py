@@ -2,6 +2,7 @@
 from __future__ import annotations
 import numpy as np
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 from scipy.spatial.transform import Rotation
 from .coordinates import world_to_robot
 from .replay import orientation_is_usable
@@ -172,6 +173,52 @@ def kinematics_figure(mission, quantity, cfg):
     fig.add_vline(x=0, line_color='#17263c', line_width=1.5, line_dash='dash')
     fig.update_xaxes(range=[0, mission.duration_s], autorange=False)
     fig.update_layout(uirevision=f'kinematics-{quantity}')
+    return fig
+
+
+def frame_comparison_figure(mission, diagnostics, central_key):
+    """Dois referenciais em 3D; distâncias não são medidas nas projeções 2D."""
+    from itertools import combinations
+    points_world, points_local = diagnostics['world'], diagnostics['local']
+    keys = diagnostics['keys']
+    body = diagnostics['frame'] != 'ned_translated'
+    fig = make_subplots(rows=1, cols=2, specs=[[{'type': 'scene'}, {'type': 'scene'}]],
+                        subplot_titles=('NED comum · amostras selecionadas',
+                                        'Corpo · confirmado' if diagnostics['frame'] == 'robot_body_confirmed'
+                                        else 'Corpo · hipótese' if body else 'NED transladado'))
+    # Mesma escala métrica nos dois painéis; centragem diferente para legibilidade.
+    span = max(1., float(max(np.ptp(points_world, axis=0).max(),
+                            np.ptp(points_local, axis=0).max())) * .65)
+    for col, points in enumerate((points_world, points_local), 1):
+        for i, j in combinations(range(len(keys)), 2):
+            midpoint = (points[i] + points[j]) / 2
+            edge = np.array([points[i], midpoint, points[j]])
+            distance = np.linalg.norm(points[i]-points[j])
+            fig.add_trace(go.Scatter3d(x=edge[:, 0], y=edge[:, 1], z=edge[:, 2],
+                mode='lines+text', text=['', f'{distance:.3f} m', ''],
+                textfont=dict(size=11, color=FG), line=dict(color='#8193ad', width=4),
+                showlegend=False, hoverinfo='skip'), row=1, col=col)
+        if len(keys) == 3 and np.linalg.norm(np.cross(points[1]-points[0], points[2]-points[0])) > 1e-10:
+            fig.add_trace(go.Mesh3d(x=points[:, 0], y=points[:, 1], z=points[:, 2],
+                i=[0], j=[1], k=[2], color='#8eace3', opacity=.16,
+                showlegend=False, hoverinfo='skip'), row=1, col=col)
+        for index, key in enumerate(keys):
+            trace = mission.traces[key]
+            p = points[index]
+            fig.add_trace(go.Scatter3d(x=[p[0]], y=[p[1]], z=[p[2]], mode='markers',
+                name=trace.label, legendgroup=key, showlegend=col == 1,
+                marker=dict(color=trace.color, size=9 if key == central_key else 6),
+                hovertemplate=f'{trace.label}<br>x: %{{x:.4f}} m<br>y: %{{y:.4f}} m<br>z: %{{z:.4f}} m<extra></extra>'),
+                row=1, col=col)
+        center = np.mean(points, axis=0)
+        labels = ('X corpo (m)', 'Y corpo (m)', 'Z corpo (m)') if col == 2 and body else ('Norte (m)', 'Este (m)', 'Baixo (m)')
+        scene = {f'{axis}axis': dict(title=label, range=[float(c-span), float(c+span)], gridcolor=GRID)
+                 for axis, label, c in zip('xyz', labels, center)}
+        scene.update(aspectmode='cube', camera=dict(eye=dict(x=1.5, y=1.5, z=1.1)))
+        fig.update_layout(**{'scene' if col == 1 else 'scene2': scene})
+    fig.update_layout(template='plotly_white', paper_bgcolor=BACKGROUND,
+        font=dict(color=FG, size=11), margin=dict(l=0, r=0, t=35, b=30),
+        legend=dict(orientation='h', y=-.03), uirevision=f'math-{central_key}-{diagnostics["frame"]}')
     return fig
 
 
