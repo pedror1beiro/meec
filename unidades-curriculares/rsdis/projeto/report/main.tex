@@ -1,0 +1,218 @@
+\documentclass[conference]{IEEEtran}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{etoolbox}
+% Keep IEEE typography while using colons for the abstract and keyword labels.
+\patchcmd{\abstract}{---}{:\space}{}{\PackageError{rsdis}{Abstract separator patch failed}{}}
+\patchcmd{\IEEEkeywords}{---}{:\space}{}{\PackageError{rsdis}{Keyword separator patch failed}{}}
+\title{Energy-Aware Task Allocation for Cooperative Lunar Exploration\\
+\large Prototype Design and Evaluation Protocol}
+\author{\IEEEauthorblockN{Henrique Correia}
+\IEEEauthorblockA{Instituto Superior de\\Engenharia do Porto\\1221309}
+\and
+\IEEEauthorblockN{Pedro Ribeiro}
+\IEEEauthorblockA{Instituto Superior de\\Engenharia do Porto\\1231177}
+\and
+\IEEEauthorblockN{Francisco Liquito}
+\IEEEauthorblockA{Instituto Superior de\\Engenharia do Porto\\1231216}}
+\begin{document}
+\maketitle
+\begin{abstract}
+This draft describes a two-rover prototype for cooperative exploration of a
+lunar test field. Rovers detect visual scientific markers, share locations,
+allocate inspections, recover unfinished work after a rover becomes unavailable,
+and return to their bases. A nearest-rover policy and an energy-aware heuristic
+share the same battery feasibility constraints. The implementation includes
+typed ROS 2 interfaces, a generated Gazebo world, camera-based marker perception,
+mission telemetry, and a portable rehearsal of the coordination logic.
+Gazebo experiments have not yet been executed on the target Linux system.
+This document presents the design and evaluation protocol without claiming
+measured physical performance or an advantage over the baseline.
+\end{abstract}
+\begin{IEEEkeywords}
+multi-robot systems, lunar exploration, task allocation, ROS 2, Gazebo, energy
+\end{IEEEkeywords}
+
+\section{Introduction}
+Cooperative exploration requires both distributed observations and decisions
+about which robot should execute each task. Multi-robot task allocation provides
+a framework for separating missions, tasks and robot capabilities \cite{gerkey}.
+Here, two rovers search separate regions and exchange detections. An inspection
+can be assigned to a rover other than the observer when travel cost and energy
+availability favour that decision.
+
+The research question is whether including remaining energy in allocation
+improves target completion and safe return compared with a distance-only policy.
+The contribution is an integration and an experimental comparison of explicit
+heuristics, not a claim of a new optimal allocator or flight-ready lunar autonomy.
+
+\section{Related Software and Scope}
+The Space ROS lunar pole exploration demo provides a relevant reference with
+a VIPER-inspired rover, Mons Mouton terrain, cameras, solar-generation plugins
+and a rechargeable battery \cite{spacedemos,spacesim}. These sources are recorded
+at fixed revisions. The baseline uses lightweight models. An experimental adapter
+prepares the upstream rover geometry and steerable joints with namespaced Gazebo
+controllers. Physical validation, detailed terrain and solar integration remain
+pending.
+
+The target stack is ROS 2 Jazzy and Gazebo Harmonic, connected through
+\texttt{ros\_gz}. OpenCV performs colour segmentation. Ground-truth odometry
+removes localisation uncertainty from the first comparison. The current design
+cannot support conclusions about SLAM, arbitrary rough terrain, real mineral
+identification, or physical solar energy management.
+
+\section{Mission and Architecture}
+The mission comprises deployment, sector exploration, visual discovery, allocated
+inspection and return to base. Uniquely coloured spheres represent five points
+of scientific interest. The rovers have different routes and initial battery
+fractions. Success requires every target to be confirmed and both rovers parked
+at their respective bases.
+
+\subsection{ROS Components}
+Each rover has a custom agent and camera detector. A central coordinator receives
+shared detections and status, publishes leased inspection goals and records
+telemetry. The agent produces velocity commands, tracks its battery, confirms
+nearby targets from local camera observations and handles returning and charging.
+A monitoring node publishes RViz markers and paths.
+
+Typed messages separate observations, resource state, ownership and completion.
+Sensor and command topics are namespaced; mission topics are shared. All mission
+coordinates use the world frame.
+
+\subsection{Visual Perception}
+HSV masks and contour filters detect five marker colours. Small, clipped or
+strongly non-circular blobs are rejected. For marker diameter $D$, focal length
+$f_x$, observed width $w$, horizontal centre $u$, and principal point $c_x$,
+the planar estimate is
+\begin{equation}
+z_c \approx \frac{f_xD}{w}, \qquad
+y_c \approx -\frac{(u-c_x)z_c}{f_x}.
+\end{equation}
+The camera offset and closest timestamped rover pose transform the estimate
+into world coordinates. This approximation assumes a mostly level field.
+Detection error must be measured separately against simulator truth.
+
+An inspection requires the assigned rover to reach its stand-off, face the
+marker and receive recent local observations over a dwell period. A teammate's
+report alone cannot confirm a task.
+
+\subsection{Control}
+Agents follow sector waypoints until assigned an inspection. A heading controller
+generates forward and angular velocities. Planar A* detours avoid shared marker
+keep-out disks. A simple pairwise rule handles close rover encounters. These
+components target the supplied open field; general unknown-obstacle navigation
+and terrain traversability remain outside the current implementation.
+
+\section{Allocation and Energy}
+Each target has at most one owner, and each rover receives at most one inspection
+at a time. Unique target IDs suppress duplicates. Leases distinguish current
+assignments from expired work, and every reassignment receives a new task ID.
+
+Let $d_{ij}$ be rover $i$'s approximate distance to target $j$'s stand-off,
+$h_{ij}$ its estimated return distance, $b_i$ its battery fraction and $r$ a
+reserve. The synthetic energy estimate is
+\begin{equation}
+e_{ij}=k_d(d_{ij}+h_{ij})+
+k_t\left(\frac{d_{ij}+h_{ij}}{v_{\mathrm{ref}}}+t_s\right).
+\end{equation}
+Both policies require $b_i \geq e_{ij}+r$. The baseline minimises $d_{ij}$.
+The energy-aware policy minimises
+\begin{equation}
+J_{ij}=d_{ij}+\lambda\frac{e_{ij}+r}{\max(b_i,\epsilon)}.
+\end{equation}
+The recorded weight $\lambda$ has distance units. This greedy heuristic does not
+solve global scheduling and may increase distance.
+
+Energy decreases with measured distance and simulation time. Recharging at a
+base is accelerated for practical demonstrations. These fractions are not
+calibrated to a real rover. A* detours may exceed the straight-line estimate, so
+the agent also checks its own return budget and may release work.
+
+\subsection{Recovery}
+A missing heartbeat, unavailable or returning rover, or task timeout releases
+ownership. Failed tasks enter a cooldown and have bounded attempts. Results for
+an expired task ID are ignored. A service disables and restores a rover for
+repeatable failure interventions.
+
+\section{Evaluation Protocol}
+Run matched experiments with the same world, initial state, camera settings,
+mission duration, resource parameters and failure schedule. Only the policy
+changes. Scenarios should include nominal exploration, asymmetric batteries,
+temporary rover failure, and the combined energy/failure case.
+
+\begin{table}[t]
+\caption{Metrics required from actual Gazebo runs}
+\label{tab:metrics}
+\centering
+\begin{tabular}{p{0.33\columnwidth}p{0.55\columnwidth}}
+\toprule
+Metric & Definition\\
+\midrule
+Confirmed targets & Unique locally confirmed markers by deadline\\
+Mission success & All targets confirmed and both rovers returned\\
+Completion time & Simulation time to mission success\\
+Distance & Sum of measured rover paths\\
+Energy & Synthetic consumption; state units explicitly\\
+Recovery latency & Failure to reassignment and completion\\
+Detection error & Estimated location versus simulator truth\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Retain failed and timed-out runs. Report completion time alongside success rate
+instead of averaging only successful runs. Use distinct predefined layouts;
+record and pair random seeds if noise or randomisation is introduced. Retain
+software revisions, configuration, CSV telemetry, JSONL events and hardware
+details with each run.
+
+\subsection{Validation Boundary}
+Portable tests check ownership, feasibility, leases, recovery, detours and
+synthetic marker images. An offline rehearsal imports the same mission logic,
+but uses kinematic motion and oracle detections. It does not validate wheel
+contact, rendering, camera-based world positions or physical lunar operation.
+A Linux smoke test separately requires both rendered camera streams, odometry,
+a detection and an assignment.
+
+\section{Results: Pending Gazebo Experiments}
+\textbf{This section is intentionally incomplete.} After the Linux gate passes,
+add hardware and package versions, paired-run counts, successful and failed
+outcomes, distributions or paired differences for Table~\ref{tab:metrics}, and
+a recovery timeline. Include a Gazebo screenshot and a cross-rover assignment
+trace.
+
+Do not present offline rehearsal values as main experimental results. Equal
+performance or a trade-off between energy and time is a valid finding.
+
+\section{Discussion and Limitations}
+Ground-truth localisation, known-size coloured markers, planar control and an
+accelerated battery limit external validity. Report sensitivity to the heuristic
+weight and error in the return-budget estimate. The central coordinator is a
+single point of failure. Further work includes physical validation of the detailed
+rover adapter, uneven terrain, solar charging, terrain-aware navigation and richer
+perception.
+
+\section{Conclusion}
+A prototype and comparison protocol have been prepared for cooperative lunar
+exploration. Conclusions about the allocation policies remain pending actual
+Gazebo experiments. Replace this paragraph with findings supported by the final
+measurements.
+
+\begin{thebibliography}{9}
+\bibitem{gerkey}
+B. P. Gerkey and M. J. Matari\'c,
+\emph{A formal analysis and taxonomy of task allocation in multi-robot systems},
+International Journal of Robotics Research, vol. 23, no. 9,
+pp. 939-954, 2004, doi: 10.1177/0278364904045564.
+\bibitem{spacedemos}
+Space ROS contributors, \emph{Lunar pole exploration rover demo},
+\url{https://github.com/space-ros/demos}, revision
+\texttt{4b4eb8447423}, accessed Oct. 29, 2026.
+\bibitem{spacesim}
+Space ROS contributors, \emph{Simulation assets and plugins},
+\url{https://github.com/space-ros/simulation}, revision
+\texttt{13226b067d92}, accessed Oct. 29, 2026.
+\end{thebibliography}
+\end{document}
