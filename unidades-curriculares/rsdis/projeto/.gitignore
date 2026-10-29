@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.venv/
+build/
+install/
+log/
+results/
+third_party/
+*.zip
+.pytest_cache/
+.ruff_cache/
+tmp/
+*.aux
+*.log
+*.out
+# Small, labelled examples are versioned when this project sits inside the meec repository.
+!examples/**/*.csv

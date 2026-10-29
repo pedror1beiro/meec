@@ -1,0 +1,36 @@
+{
+  "mission_seconds": 600.0,
+  "status_timeout": 3.0,
+  "lease_seconds": 2.0,
+  "task_timeout": 90.0,
+  "inspection_seconds": 2.0,
+  "inspection_standoff": 1.25,
+  "camera_offset": 0.46,
+  "marker_diameter": 0.5,
+  "camera_hfov": 1.3962634,
+  "energy": {
+    "reserve": 0.15,
+    "idle_per_second": 0.0001,
+    "travel_per_metre": 0.006,
+    "charge_per_second": 0.025,
+    "resume_level": 0.85,
+    "risk_weight": 8.0
+  },
+  "rovers": [
+    {
+      "id": "rover1", "spawn": [-8.0, -3.0, 0.0], "battery": 0.95,
+      "waypoints": [[-4.0,-4.0], [0.0,-4.0], [5.0,-4.0], [7.0,-1.0], [2.0,-1.0], [-4.0,-1.0]]
+    },
+    {
+      "id": "rover2", "spawn": [-8.0, 3.0, 0.0], "battery": 0.55,
+      "waypoints": [[-4.0,4.0], [0.0,4.0], [5.0,4.0], [7.0,1.0], [2.0,1.0], [-4.0,1.0]]
+    }
+  ],
+  "targets": [
+    {"id":"red", "position":[-2.0,-2.5], "colour":[1.0,0.02,0.02,1.0]},
+    {"id":"green", "position":[3.0,-2.5], "colour":[0.02,1.0,0.02,1.0]},
+    {"id":"blue", "position":[-1.0,2.5], "colour":[0.02,0.02,1.0,1.0]},
+    {"id":"magenta", "position":[4.0,2.5], "colour":[1.0,0.02,1.0,1.0]},
+    {"id":"orange", "position":[7.5,0.0], "colour":[1.0,0.35,0.02,1.0]}
+  ]
+}

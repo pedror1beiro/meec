@@ -2,6 +2,19 @@
 
 Exercícios da unidade curricular de Redes de Sensores Distribuídos.
 
+## Projeto final: exploração lunar cooperativa
+
+O projeto de uma equipa de rovers em ROS 2 Jazzy e Gazebo Harmonic está em
+[`projeto/`](projeto/). Inclui o código, os testes, o artigo em formato IEEE e
+as instruções para continuar o desenvolvimento noutro computador.
+
+Equipa: Henrique Correia (1221309), Pedro Ribeiro (1231177) e Francisco Liquito
+(1231216). O protótipo tem testes locais e demonstrações offline; a validação
+com Gazebo em Linux e os resultados experimentais ainda estão pendentes.
+
+Consultar o [README do projeto](projeto/README.md) e as
+[instruções de continuação](projeto/docs/CONTINUATION.md).
+
 > O Exercício 1 contém implementações equivalentes em **ROS1 (Catkin)** e **ROS2 Jazzy (ament_cmake/colcon)**.
 
 ## Organização
