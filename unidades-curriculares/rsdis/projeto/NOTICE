@@ -1,0 +1,17 @@
+RSDIS Cooperative Lunar Exploration
+Copyright 2026 RSDIS project contributors
+
+This project includes independently authored mission logic and an optional
+download manifest for these external projects:
+
+Space ROS demos: https://github.com/space-ros/demos
+Space ROS simulation: https://github.com/space-ros/simulation
+
+The upstream lunar demo credits Robin Baran and Stevedan Ogochukwu Omodolor
+Omodia. External files remain under their original licences and notices.
+The default cooperative prototype uses its own lightweight SDF models. An optional
+experimental adapter reuses the upstream rover model with namespaced stock Gazebo
+joint controllers. Detailed terrain and power plugins remain reference assets.
+
+Gazebo system interface details were checked against the public Gazebo Harmonic
+documentation and the gz-sim8 source code, licensed by its contributors.

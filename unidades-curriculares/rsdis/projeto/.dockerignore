@@ -1,0 +1,8 @@
+.git
+.venv
+results
+third_party
+build
+install
+log
+**/__pycache__

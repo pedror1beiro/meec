@@ -1,0 +1,17 @@
+{
+  "checked_on": "2026-10-29",
+  "repositories": [
+    {
+      "name": "demos",
+      "url": "https://github.com/space-ros/demos.git",
+      "commit": "4b4eb844742307178c80237597b43f7364ddeb5d",
+      "lfs_include": "lunar_pole_exploration_rover/**"
+    },
+    {
+      "name": "simulation",
+      "url": "https://github.com/space-ros/simulation.git",
+      "commit": "13226b067d921ca88f40cd643a7b3ce4ae8de903",
+      "lfs_include": "models/lunar_pole_exploration_rover/**,models/moon_mons_mouton/**"
+    }
+  ]
+}

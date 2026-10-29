@@ -1,0 +1,39 @@
+{
+  "mode": "offline_kinematic_oracle_detection",
+  "strategy": "nearest",
+  "reason": "all_targets_confirmed_and_returned",
+  "elapsed_sim_seconds": 85.5,
+  "targets_expected": 5,
+  "targets_discovered": 5,
+  "targets_confirmed": 5,
+  "distance_m": 53.17536436616384,
+  "synthetic_energy_used": 0.33617218619698497,
+  "rovers": {
+    "rover1": {
+      "rover_id": "rover1",
+      "pose": [
+        -7.706772712815365,
+        -0.9999433584537147,
+        -3.1413994868085995
+      ],
+      "battery": 0.19812325979468884,
+      "mode": "parked",
+      "seen_at": 85.5,
+      "travelled": 29.302790034218198,
+      "energy_used": 0.18437674020530903
+    },
+    "rover2": {
+      "rover_id": "rover2",
+      "pose": [
+        -7.712780020889052,
+        1.0695413082677636,
+        -2.904045393635987
+      ],
+      "battery": 1.0,
+      "mode": "parked",
+      "seen_at": 85.5,
+      "travelled": 23.872574331945643,
+      "energy_used": 0.15179544599167596
+    }
+  }
+}

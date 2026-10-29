@@ -1,0 +1,5 @@
+# Only needed for image-detector tests on Windows. The offline demo uses stdlib only.
+numpy>=1.26,<3
+opencv-python-headless>=4.10,<5
+ruff>=0.9,<1
+xacro>=2.0,<3

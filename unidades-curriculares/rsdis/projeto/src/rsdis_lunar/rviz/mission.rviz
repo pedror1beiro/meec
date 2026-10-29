@@ -1,0 +1,48 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+Visualization Manager:
+  Class: ""
+  Global Options:
+    Fixed Frame: world
+    Background Color: 20; 23; 32
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Name: Grid
+      Enabled: true
+      Cell Size: 1
+      Plane Cell Count: 40
+    - Class: rviz_default_plugins/MarkerArray
+      Name: Mission markers
+      Enabled: true
+      Topic:
+        Value: /mission/markers
+        Reliability Policy: Reliable
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Depth: 10
+    - Class: rviz_default_plugins/Path
+      Name: Rover 1 path
+      Enabled: true
+      Color: 145; 187; 255
+      Topic:
+        Value: /rover1/path
+    - Class: rviz_default_plugins/Path
+      Name: Rover 2 path
+      Enabled: true
+      Color: 255; 190; 110
+      Topic:
+        Value: /rover2/path
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Distance: 30
+      Pitch: 1.2
+      Yaw: 0.2
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 0
+Window Geometry:
+  Width: 1280
+  Height: 800

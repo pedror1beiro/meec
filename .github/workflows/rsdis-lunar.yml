@@ -1,0 +1,70 @@
+name: RSDIS lunar exploration
+on:
+  push:
+    paths:
+      - "unidades-curriculares/rsdis/projeto/**"
+      - ".github/workflows/rsdis-lunar.yml"
+  pull_request:
+    paths:
+      - "unidades-curriculares/rsdis/projeto/**"
+      - ".github/workflows/rsdis-lunar.yml"
+  workflow_dispatch:
+    inputs:
+      viper:
+        description: Also download and smoke-test the detailed Space ROS rover
+        type: boolean
+        default: false
+permissions:
+  contents: read
+
+concurrency:
+  group: rsdis-lunar-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: unidades-curriculares/rsdis/projeto
+
+jobs:
+  jazzy:
+    runs-on: ubuntu-24.04
+    container: ros:jazzy-ros-base
+    timeout-minutes: 25
+    env:
+      LIBGL_ALWAYS_SOFTWARE: '1'
+      ROS_DOMAIN_ID: '42'
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install simulation dependencies
+        shell: bash
+        run: |
+          apt-get update
+          apt-get install -y git git-lfs ros-jazzy-ros-gz ros-jazzy-cv-bridge ros-jazzy-xacro ros-jazzy-rosidl-default-generators ros-jazzy-visualization-msgs python3-opencv python3-numpy python3-colcon-common-extensions
+      - name: Build ROS packages and run portable tests
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          colcon build
+          source install/setup.bash
+          python3 -m unittest discover -s tests -v
+      - name: Verify actual cameras and mission messages
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          source install/setup.bash
+          python3 scripts/smoke_test_ros.py --timeout 180
+      - name: Check the detailed rover on request
+        if: github.event_name == 'workflow_dispatch' && inputs.viper
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          source install/setup.bash
+          python3 scripts/fetch_upstream.py --assets
+          python3 -m unittest discover -s tests -p test_viper.py -v
+          python3 scripts/prepare_viper.py --validate-sdf
+          python3 scripts/smoke_test_ros.py --model viper --timeout 240
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: linux-integration-logs
+          path: unidades-curriculares/rsdis/projeto/results/
