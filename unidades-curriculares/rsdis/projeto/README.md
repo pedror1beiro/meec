@@ -15,7 +15,8 @@ allocation under the same safety rules.
 **Status: lightweight mission validated in Linux CI.** Both map sizes complete
 with real Gazebo cameras, and the expanded map recovers from a temporary rover
 failure. Mission logic, image tests and replays can also run on Windows.
-Allocation-policy comparisons, Docker and the optional VIPER physics remain
+The optional VIPER model also completes the compact mission with real wheel
+physics, cameras and lidar. Allocation-policy comparisons and Docker remain
 separate validation milestones. See [the retained evidence](examples/gazebo_validation_20261030/).
 
 ## Start here on the other PC
@@ -74,11 +75,13 @@ belonging to that experiment.
 | Completion | All five markers confirmed by camera, then both rovers parked at base |
 | Results | CSV telemetry, JSONL mission events, JSON run configuration and summary |
 
-The default world uses our lightweight rover models. An **experimental
+The default world uses our lightweight rover models. An **optional
 `model:=viper` option** adapts the actual Space ROS rover meshes, inertias and
 steerable wheels to the same mission, with namespaced Gazebo joint controllers
-and joint-feedback interlocks. Its structure and steering mathematics have been
-checked locally; physical execution remains unverified. The detailed terrain and
+and joint-feedback interlocks. Linux CI validates full-circle turning, translation,
+joint feedback, real cameras/lidar and a complete compact mission with no
+conservative footprint overlaps. This does not validate its enlarged-map mission,
+uneven terrain or physical solar/battery plugins. The detailed terrain and
 physical solar/battery plugins are later milestones. See [the upstream guide](docs/UPSTREAM.md).
 
 To prepare the detailed rover on Linux after the default smoke test passes:

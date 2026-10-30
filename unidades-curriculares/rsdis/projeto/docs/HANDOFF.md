@@ -10,7 +10,7 @@
 5. Verify both camera views, then run the smoke test after stopping the first launch.
 6. Execute one supervised experiment and inspect its logs and summary.
 7. Fetch the detailed upstream assets if the lightweight integration is stable.
-8. Use `model:=viper` for the experimental detailed-rover option and run its own
+8. Use `model:=viper` for the optional detailed-rover option and run its own
    smoke test before using that profile in experiments.
 9. Run the matched comparison and complete the paper/video from actual results.
 
@@ -41,12 +41,13 @@ known target coordinates to make the smoke test pass.
 
 ## Specific unverified boundaries
 
-The Linux build, Gazebo plugin loading, physical wheel behaviour, camera topic
-names, rendered marker visibility, RViz and Docker execution were not run on the
-Windows authoring machine. The Linux smoke test is the explicit gate for these
-interfaces. Upstream source pins and LFS assets have been downloaded on the
-authoring machine. The detailed rover adapter is prepared but physically untested;
-the uneven terrain and physical solar/battery plugins remain future steps.
+Linux CI validates the lightweight model on both maps, including failure recovery,
+and the detailed rover on the compact map. Both models pass physical full-circle
+turns, translation, real cameras/lidar and complete compact missions. The tests
+run headlessly with software rendering. RViz, Docker, hardware graphics behaviour,
+the detailed rover on the enlarged map, uneven terrain and physical solar/battery
+plugins remain separate checks. Read the exact run links and limits in
+`examples/gazebo_validation_20261030/README.md`.
 
 The built-in LaTeX preview compiler could not start in this Windows session, but
 the local MiKTeX installation compiled the draft successfully. The reviewed PDF

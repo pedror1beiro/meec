@@ -23,8 +23,9 @@ This record separates portable checks from actual ROS/Gazebo execution.
 - Ruff and byte compilation pass. Both real upstream URDFs still expand with
   29 links, 28 joints and 10 namespaced system plugins, plus the new range sensor.
 - The console layout and follow-rover selector were inspected in a browser using
-  explicitly labelled offline telemetry. Actual ROS service and image checks are
-  included in the Linux integration gate.
+  both explicitly labelled offline telemetry and a saved actual Gazebo checkpoint.
+  Recorded mission controls are disabled and both rendered camera images load.
+  Actual ROS service and image checks pass in the Linux integration gate.
 - The updated IEEE draft remains two pages, with the team author block and no
   en/em dashes. Both pages were rendered and checked.
 
@@ -49,7 +50,23 @@ service calls succeeded. Metadata records OpenCV 4.6.0, rclpy 7.1.12, ros_gz
 
 The retained evidence is in `examples/gazebo_validation_20261030/`, with the
 workflow link, configurations, events, telemetry, summaries and camera images.
-This is functional validation. Comparative experiments, detailed-rover physics,
+The optional VIPER gate at commit `8bcfb9a` also passed in
+[Linux CI](https://github.com/pedror1beiro/meec/actions/runs/41070906055). Both
+rover models rotate more than a full turn in opposite directions, translate and
+remain level. The detailed rover's compact mission confirms all five targets and
+returns both rovers in 171.5 simulation seconds, with minimum conservative
+obstacle gap 0.5218 m, peer gap 0.4489 m and zero overlaps. Real joint feedback,
+cameras, lidar, console controls and checkpoint export all passed.
+
+The final lightweight repeat at the same `8bcfb9a` runtime revision passes the
+entire [Linux gate](https://github.com/pedror1beiro/meec/actions/runs/41070832128).
+The compact mission again takes 116.0 simulation seconds, with minimum obstacle
+gap 0.5453 m. The expanded failure mission takes 631.5 seconds, with obstacle gap
+0.2804 m, peer gap 5.0920 m and zero overlaps. Both failure service calls succeed;
+the red inspection is released by rover1 and completed by rover2. These repeats
+demonstrate functional consistency, not a statistical policy comparison.
+
+This is functional validation. Comparative experiments, VIPER's expanded mission,
 Docker, the final paper results and the demonstration video remain pending.
 
 ## Historical baseline, 29 October 2026

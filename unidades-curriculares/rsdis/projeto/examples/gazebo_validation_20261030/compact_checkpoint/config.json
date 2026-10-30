@@ -1,0 +1,226 @@
+{
+  "mission_seconds": 600.0,
+  "status_timeout": 3.0,
+  "lease_seconds": 2.0,
+  "task_timeout": 90.0,
+  "inspection_seconds": 2.0,
+  "inspection_standoff": 1.85,
+  "camera_offset": 0.46,
+  "marker_diameter": 0.5,
+  "camera_hfov": 1.3962634,
+  "energy": {
+    "reserve": 0.15,
+    "idle_per_second": 0.0001,
+    "travel_per_metre": 0.006,
+    "charge_per_second": 0.025,
+    "resume_level": 0.85,
+    "risk_weight": 8.0
+  },
+  "rovers": [
+    {
+      "id": "rover1",
+      "spawn": [
+        -8.0,
+        -3.0,
+        0.0
+      ],
+      "battery": 0.95,
+      "waypoints": [
+        [
+          -4.0,
+          -4.0
+        ],
+        [
+          0.0,
+          -4.0
+        ],
+        [
+          5.0,
+          -4.0
+        ],
+        [
+          7.0,
+          -1.0
+        ],
+        [
+          2.0,
+          -1.0
+        ],
+        [
+          -4.0,
+          -1.0
+        ]
+      ]
+    },
+    {
+      "id": "rover2",
+      "spawn": [
+        -8.0,
+        3.0,
+        0.0
+      ],
+      "battery": 0.55,
+      "waypoints": [
+        [
+          -4.0,
+          4.0
+        ],
+        [
+          0.0,
+          4.0
+        ],
+        [
+          5.0,
+          4.0
+        ],
+        [
+          7.0,
+          1.0
+        ],
+        [
+          2.0,
+          1.0
+        ],
+        [
+          -4.0,
+          1.0
+        ]
+      ]
+    }
+  ],
+  "targets": [
+    {
+      "id": "red",
+      "position": [
+        -2.0,
+        -2.5
+      ],
+      "colour": [
+        1.0,
+        0.02,
+        0.02,
+        1.0
+      ]
+    },
+    {
+      "id": "green",
+      "position": [
+        3.0,
+        -2.5
+      ],
+      "colour": [
+        0.02,
+        1.0,
+        0.02,
+        1.0
+      ]
+    },
+    {
+      "id": "blue",
+      "position": [
+        -1.0,
+        2.5
+      ],
+      "colour": [
+        0.02,
+        0.02,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "id": "magenta",
+      "position": [
+        4.0,
+        2.5
+      ],
+      "colour": [
+        1.0,
+        0.02,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "id": "orange",
+      "position": [
+        7.5,
+        0.0
+      ],
+      "colour": [
+        1.0,
+        0.35,
+        0.02,
+        1.0
+      ]
+    }
+  ],
+  "map_name": "Compact integration field",
+  "map_bounds": [
+    -18.0,
+    18.0,
+    -13.0,
+    13.0
+  ],
+  "ground_size": [
+    40.0,
+    30.0
+  ],
+  "rover_radius": 0.72,
+  "safety_margin": 0.28,
+  "marker_uncertainty": 0.25,
+  "lidar_offset": 0.62,
+  "lidar_height": 0.65,
+  "lidar_range": 12.0,
+  "scan_timeout": 0.6,
+  "planner_resolution": 0.5,
+  "max_speed": 0.45,
+  "hazards": [
+    {
+      "id": "rock_0",
+      "kind": "rock",
+      "position": [
+        -5.0,
+        -8.0
+      ],
+      "radius": 0.8
+    },
+    {
+      "id": "rock_1",
+      "kind": "rock",
+      "position": [
+        2.0,
+        8.0
+      ],
+      "radius": 0.7
+    },
+    {
+      "id": "rock_2",
+      "kind": "rock",
+      "position": [
+        10.0,
+        5.0
+      ],
+      "radius": 1.0
+    },
+    {
+      "id": "rock_3",
+      "kind": "rock",
+      "position": [
+        10.0,
+        -6.0
+      ],
+      "radius": 0.6
+    },
+    {
+      "id": "rock_4",
+      "kind": "rock",
+      "position": [
+        -12.0,
+        2.0
+      ],
+      "radius": 0.9
+    }
+  ],
+  "sectors": []
+}

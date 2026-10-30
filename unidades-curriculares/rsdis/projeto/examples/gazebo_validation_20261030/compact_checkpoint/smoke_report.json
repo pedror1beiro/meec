@@ -1,0 +1,176 @@
+{
+  "passed": true,
+  "model": "lightweight",
+  "checks": {
+    "rover1/motion": true,
+    "rover1/odom": true,
+    "rover1/camera/image": true,
+    "rover1/camera/info": true,
+    "rover1/scan": true,
+    "rover2/motion": true,
+    "rover2/odom": true,
+    "rover2/camera/image": true,
+    "rover2/camera/info": true,
+    "rover2/scan": true,
+    "camera_detection": true,
+    "task_assignment": true,
+    "console_state": true,
+    "console_cameras": true,
+    "pause_resume": true,
+    "recorded_checkpoint": true
+  },
+  "clearance_audit": {
+    "minimum_obstacle_gap_m": 0.5453,
+    "minimum_peer_gap_m": 1.2316,
+    "footprint_overlap_samples": 0,
+    "method": "conservative planar geometry, not a physics contact measurement"
+  },
+  "complete_mission_requested": true,
+  "console_error": null,
+  "last_navigation": {
+    "rover1": {
+      "time": 116.0,
+      "pose": [
+        -7.649124148564395,
+        -3.1876518978348787,
+        2.6561734324371975
+      ],
+      "state": "driving",
+      "mode": "returning",
+      "task": null,
+      "dwell": 0.0,
+      "local_seen_age": null,
+      "requested": [
+        0.30826544123104477,
+        -0.009099228860841892
+      ],
+      "command": [
+        0.30826544123104477,
+        -0.009099228860841892
+      ],
+      "blocker": [
+        -5.0,
+        -8.0,
+        0.8
+      ],
+      "path": [
+        [
+          -8.0,
+          -3.0
+        ]
+      ],
+      "markers": {
+        "green": [
+          2.982358340126348,
+          -2.4491587976598845
+        ],
+        "blue": [
+          -0.9449712822897443,
+          2.4658795361257355
+        ],
+        "orange": [
+          7.471047820765257,
+          0.008093636004912039
+        ],
+        "red": [
+          -1.9699942362978442,
+          -2.4974340577719003
+        ],
+        "magenta": [
+          4.002813938857361,
+          2.4842955952074672
+        ]
+      },
+      "scan_age": 0.09999999999999432,
+      "scan_valid": true,
+      "memory_size": 0
+    },
+    "rover2": {
+      "time": 116.0,
+      "pose": [
+        -7.781230923903088,
+        2.872253760419012,
+        2.63809229406259
+      ],
+      "state": "parked",
+      "mode": "parked",
+      "task": null,
+      "dwell": 0.0,
+      "local_seen_age": null,
+      "requested": [
+        0.2548675860342706,
+        -0.001982838573290735
+      ],
+      "command": [
+        0.0,
+        0.0
+      ],
+      "blocker": [
+        -12.0,
+        2.0,
+        0.9
+      ],
+      "path": [
+        [
+          -8.0,
+          3.0
+        ]
+      ],
+      "markers": {
+        "green": [
+          2.982358340126348,
+          -2.4491587976598845
+        ],
+        "blue": [
+          -0.9449712822897443,
+          2.4658795361257355
+        ],
+        "orange": [
+          7.471047820765257,
+          0.008093636004912039
+        ],
+        "red": [
+          -1.9699942362978442,
+          -2.4974340577719003
+        ],
+        "magenta": [
+          4.002813938857361,
+          2.4842955952074672
+        ]
+      },
+      "scan_age": 0.09999999999999432,
+      "scan_valid": true,
+      "memory_size": 0
+    }
+  },
+  "stall": null,
+  "last_raw_motion": {
+    "rover2": {
+      "quaternion": [
+        5.442651883315698e-07,
+        -1.4002171149591759e-07,
+        0.9684779365770371,
+        0.2490993503868865
+      ],
+      "velocity": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "rover1": {
+      "quaternion": [
+        2.212929207890063e-05,
+        -5.505504251558851e-06,
+        0.9704260601934279,
+        0.24139855255872064
+      ],
+      "velocity": [
+        0.19625798419370136,
+        0.012838078712727768,
+        0.0070126944223523665
+      ]
+    }
+  },
+  "wall_seconds": 135.13
+}

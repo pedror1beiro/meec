@@ -38,7 +38,8 @@ do not require a UAV team, a maritime setting, SLAM, or a specific task allocato
 9. Every experimental run saves its configuration, telemetry, events and outcome.
 10. The paper distinguishes actual Gazebo experiments from offline debugging runs.
 
-The lightweight functional gates now have retained Linux evidence in
+The lightweight functional gates and the optional detailed-rover compact mission
+now have retained Linux evidence in
 `examples/gazebo_validation_20261030/`: real images, full missions, failure task
 transfer, return/recharge, telemetry and metadata. Final academic deliverables
 still need the allocation-policy comparison, completed results/conclusions,
