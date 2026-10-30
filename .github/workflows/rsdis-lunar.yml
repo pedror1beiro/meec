@@ -29,7 +29,7 @@ jobs:
   jazzy:
     runs-on: ubuntu-24.04
     container: ros:jazzy-ros-base
-    timeout-minutes: 25
+    timeout-minutes: 35
     env:
       LIBGL_ALWAYS_SOFTWARE: '1'
       ROS_DOMAIN_ID: '42'
@@ -65,6 +65,13 @@ jobs:
           source /opt/ros/jazzy/setup.bash
           source install/setup.bash
           python3 scripts/smoke_test_ros.py --config src/rsdis_lunar/config/mission_small.json --complete-mission --dashboard --timeout 600
+      - name: Complete the expanded map and recover from a rover failure
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          source install/setup.bash
+          python3 scripts/create_scenarios.py --count 1 --output results/ci_scenarios
+          python3 scripts/run_experiment_ros.py --config results/ci_scenarios/failure_00.json --strategy energy --wall-timeout 1000
       - name: Check the detailed rover on request
         if: github.event_name == 'workflow_dispatch' && inputs.viper
         shell: bash

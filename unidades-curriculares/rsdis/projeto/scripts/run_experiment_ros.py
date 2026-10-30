@@ -34,14 +34,19 @@ def main():
     from rosgraph_msgs.msg import Clock
     from std_msgs.msg import Bool
     from std_srvs.srv import SetBool
+    from nav_msgs.msg import Odometry
     from rsdis_lunar.common import load_config, stamp_seconds
     from rsdis_lunar.provenance import source_fingerprint
+    from rsdis_lunar.safety_audit import ClearanceAudit
+    from rsdis_lunar.viper import profile
     from ament_index_python.packages import get_package_share_directory
     import cv2
 
     root = Path(__file__).resolve().parents[1]
     config_path = args.config.resolve()
     config = load_config(config_path)
+    audit = ClearanceAudit(profile(config) if args.model == "viper" else config)
+    poses = {}
     output = (
         args.output
         or root
@@ -93,6 +98,20 @@ def main():
     )
     rclpy.init()
     node = Node("experiment_supervisor")
+    subscriptions = []
+
+    def on_odom(msg, name):
+        poses[name] = msg.pose.pose.position.x, msg.pose.pose.position.y
+        if len(poses) == len(config["rovers"]):
+            audit.sample(poses)
+
+    for spec in config["rovers"]:
+        name = spec["id"]
+        subscriptions.append(
+            node.create_subscription(
+                Odometry, f"/{name}/odom", lambda m, n=name: on_odom(m, n), qos_profile_sensor_data
+            )
+        )
     state = {"sim": 0.0, "finished": False}
     _clock_subscription = node.create_subscription(
         Clock,
@@ -157,6 +176,7 @@ def main():
                     os.killpg(process.pid, signal.SIGKILL)
                     process.wait()
         metadata["supervisor_outcome"] = outcome
+        metadata["clearance_audit"] = audit.report()
         metadata["wall_seconds"] = round(time.monotonic() - start, 3)
         metadata["failure_service_results"] = [
             bool(f.done() and f.exception() is None and f.result().success) for f in pending
@@ -181,7 +201,11 @@ def main():
                 file=sys.stderr,
             )
             return 2
-        return 0 if summary["reason"] == "all_targets_confirmed_and_returned" else 1
+        return (
+            0
+            if summary["reason"] == "all_targets_confirmed_and_returned" and not audit.violations
+            else 1
+        )
     print(f"No mission summary; supervisor outcome: {outcome}", file=sys.stderr)
     return 2
 

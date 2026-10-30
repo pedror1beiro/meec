@@ -171,6 +171,13 @@ class RoverAgent(Node):
                             state=nav.state,
                             mode=self.rover.mode,
                             task=self.rover.goal.task_id if self.rover.goal else None,
+                            dwell=self.rover.dwell,
+                            local_seen_age=(
+                                now
+                                - self.rover.observations.get(self.rover.goal.target_id, now - 999)
+                            )
+                            if self.rover.goal
+                            else None,
                             requested=nav.requested,
                             command=[command.linear.x, command.angular.z],
                             blocker=nav.blocker,

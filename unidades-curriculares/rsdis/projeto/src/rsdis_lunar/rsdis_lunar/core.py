@@ -197,6 +197,7 @@ class Rover:
         self.paused = False
         self.approach = None
         self.approach_centre = None
+        self.inspection_arrived = False
         self.blocked_since = None
         self.survey_started = None
         self.survey_yaw = None
@@ -218,6 +219,7 @@ class Rover:
                 for i in range(2)
             )
             self.approach_centre = tuple(goal.position)
+            self.inspection_arrived = False
             self.navigator.path = []
             self.navigator.pass_point = None
             self.survey_started = None
@@ -310,6 +312,13 @@ class Rover:
                 self.mode, destination, tolerance = "returning", self.home, 0.25
         error = wrap(math.atan2(destination[1] - pose[1], destination[0] - pose[0]) - pose[2])
         reached = distance(pose, destination) <= tolerance
+        if self.mode == "inspecting":
+            # Range quantisation must not alternate approach and camera aiming
+            # at the stand-off boundary. Once parked, retain the inspection zone
+            # until the estimate moves substantially farther away.
+            margin = 0.35 if self.inspection_arrived else 0.1
+            self.inspection_arrived = distance(pose, destination) <= tolerance + margin
+            reached = self.inspection_arrived
         if reached:
             if self.mode == "inspecting":
                 # Confirmation requires a recent detection by this rover, facing the marker.

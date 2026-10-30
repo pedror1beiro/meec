@@ -107,6 +107,24 @@ class NavigationTests(unittest.TestCase):
         self.assertGreater(rover.approach[0], 1)
         self.assertEqual(rover.dwell, 0)
 
+    def test_noisy_standoff_does_not_restart_approach_during_confirmation(self):
+        spec = copy.deepcopy(self.config["rovers"][0])
+        spec["spawn"] = [0, 0, 0]
+        rover = Rover(spec, self.config)
+        goal = Goal("red-1", "red", (2, 0), rover.id)
+        rover.assign(goal, 0)
+        for i in range(25):
+            now = i * 0.1
+            rover.assign(goal, now)
+            rover.known_targets["red"] = (2 + (0.08 if i % 2 else -0.08), 0)
+            rover.seen("red", now)
+            command = rover.step((0.2, 0, 0), 0.1, now)
+            self.assertEqual(command[0], 0)
+            if rover.results:
+                break
+        self.assertTrue(rover.results)
+        self.assertTrue(rover.results[0][2])
+
     def test_opposing_rovers_pass_and_can_exchange_start_positions(self):
         config = copy.deepcopy(self.config)
         config["hazards"] = []

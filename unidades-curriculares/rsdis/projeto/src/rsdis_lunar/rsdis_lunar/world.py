@@ -29,6 +29,8 @@ def geometry(parent, shape, size):
     elif shape == "cylinder":
         element(obj, "radius", size[0])
         element(obj, "length", size[1])
+    elif shape == "ellipsoid":
+        element(obj, "radii", size)
     return obj
 
 
@@ -91,7 +93,8 @@ def rover(world, spec, config):
     inertia = element(inertial, "inertia")
     for axis, value in (("ixx", 0.7), ("iyy", 1.0), ("izz", 1.4)):
         element(inertia, axis, value)
-    solid(base, "body", "0 0 0.22 0 0 0", "box", "0.9 0.58 0.3", "0.6 0.6 0.57 1")
+    colour = "0.52 0.62 0.72 1" if config["rovers"][0]["id"] == name else "0.70 0.63 0.52 1"
+    solid(base, "body", "0 0 0.22 0 0 0", "box", "0.9 0.58 0.3", colour)
     solid(
         base,
         "solar_panel",
@@ -205,7 +208,7 @@ def build_world(config, include_rovers=True):
     solid(
         ground_link, "ground", "0 0 -0.1 0 0 0", "box", f"{width} {height} 0.2", "0.35 0.34 0.32 1"
     )
-    for hazard in config.get("hazards", []):
+    for index, hazard in enumerate(config.get("hazards", [])):
         obj = element(world, "model", name=hazard["id"])
         element(obj, "static", "true")
         link = element(obj, "link", name="obstacle")
@@ -252,6 +255,24 @@ def build_world(config, include_rovers=True):
                 (radius * 0.85, 0.1),
                 "0.45 0.46 0.47 1",
             )
+            solid(
+                link,
+                "window_band",
+                f"{x} {y} 1.3 0 0 0",
+                "cylinder",
+                (radius * 0.805, 0.22),
+                "0.08 0.10 0.13 1",
+                False,
+            )
+            solid(
+                link,
+                "antenna",
+                f"{x} {y} 2.7 0 0 0",
+                "cylinder",
+                (0.035, 1.3),
+                "0.65 0.66 0.66 1",
+                False,
+            )
         elif kind == "solar":
             solid(
                 link,
@@ -262,14 +283,22 @@ def build_world(config, include_rovers=True):
                 "0.07 0.09 0.16 1",
             )
         else:
-            # Faceted primitive rock, fully enclosed by the configured circular radius.
+            # Low irregular rocks, enclosed by the configured circular radius.
             solid(
                 link,
                 "boulder",
-                f"{x} {y} {radius * 0.28} 0 0 0.3",
-                "sphere",
-                radius,
+                f"{x} {y} {radius * 0.25} 0 0 {index * 0.43}",
+                "ellipsoid",
+                f"{radius * 0.86} {radius} {radius * 0.6}",
                 "0.24 0.235 0.22 1",
+            )
+            solid(
+                link,
+                "cap",
+                f"{x + radius * 0.2} {y} {radius * 0.43} 0 0 {index * 0.43}",
+                "ellipsoid",
+                f"{radius * 0.52} {radius * 0.6} {radius * 0.5}",
+                "0.28 0.27 0.25 1",
             )
     # Surface patches give scale without introducing unmodelled collision objects.
     for i in range(65):
