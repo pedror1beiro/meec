@@ -6,6 +6,7 @@ turn directions, and raw attitudes expose tipping or joint-axis mistakes.
 """
 
 import json
+import argparse
 import math
 import os
 from pathlib import Path
@@ -15,6 +16,11 @@ import time
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--model", choices=["lightweight", "viper"], default="lightweight")
+    parser.add_argument("--simulation", type=Path)
+    parser.add_argument("--wall-timeout", type=float)
+    args = parser.parse_args()
     import rclpy
     from rclpy.node import Node
     from rclpy.parameter import Parameter
@@ -38,6 +44,9 @@ def main():
             "autonomy:=false",
             "dashboard:=false",
             "config:=" + str(root / "src/rsdis_lunar/config/mission_small.json"),
+            "model:=" + args.model,
+            "upstream_simulation:="
+            + str((args.simulation or root / "third_party/simulation").resolve()),
         ],
         stdout=log,
         stderr=subprocess.STDOUT,
@@ -68,7 +77,8 @@ def main():
         )
     started, sim_start, drive_starts, last_trace = time.monotonic(), None, {}, -1
     try:
-        while time.monotonic() - started < 150 and process.poll() is None:
+        limit = args.wall_timeout or (480 if args.model == "viper" else 150)
+        while time.monotonic() - started < limit and process.poll() is None:
             rclpy.spin_once(node, timeout_sec=0.02)
             now = node.get_clock().now().nanoseconds / 1e9
             if len(poses) != 2 or now <= 1:
@@ -117,6 +127,7 @@ def main():
         and all(abs(a["roll"]) < 0.15 and abs(a["pitch"]) < 0.15 for a in attitude.values()),
     )
     report = dict(
+        model=args.model,
         passed=all(checks.values()),
         checks=checks,
         rotation=rotation,

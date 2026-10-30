@@ -251,6 +251,9 @@ class Rover:
     def return_home(self):
         self.returning = self.park = True
         self.finish(False, "mission_return")
+        self.navigator.path = []
+        self.navigator.pass_point = None
+        self.navigator.state = "returning"
 
     def snapshot(self, now):
         return Snapshot(
@@ -262,21 +265,25 @@ class Rover:
         travelled = distance(self.pose, pose)
         self.travelled += travelled
         self.pose = tuple(pose)
-        if self.paused:
-            self.lease_until += dt
-            self.navigator.state = "paused"
-            return 0.0, 0.0
         # Distance comes from odometry, rather than requested velocity.
-        used = min(self.battery, self.energy.cost(travelled, dt))
+        used = min(self.battery, self.energy.cost(travelled, 0.0 if self.paused else dt))
         self.energy_used += used
         self.battery = max(0.0, self.battery - used)
         if not self.enabled:
             self.finish(False, "disabled")
             self.mode = "unavailable"
+            self.navigator.state = "disabled"
             return 0.0, 0.0
         if self.battery <= 0:
             self.finish(False, "depleted")
             self.mode = "depleted"
+            self.navigator.state = "depleted"
+            return 0.0, 0.0
+        if self.paused:
+            self.lease_until += dt
+            self.navigator.state = "paused"
+            if self.mode == "unavailable":
+                self.mode = "idle"
             return 0.0, 0.0
         if self.goal and now > self.lease_until:
             self.finish(False, "lease_expired")
@@ -288,6 +295,7 @@ class Rover:
         if self.returning:
             if home_distance < 0.3:
                 self.mode = "parked" if self.park else "charging"
+                self.navigator.state = self.mode
                 self.battery = min(1.0, self.battery + self.energy.charge_per_second * dt)
                 if self.battery >= self.energy.resume_level and not self.park:
                     self.returning = False

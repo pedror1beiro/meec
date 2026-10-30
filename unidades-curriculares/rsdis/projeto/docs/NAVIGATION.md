@@ -26,7 +26,16 @@ driving on slopes. All assets are generated locally without external downloads.
   The lightweight radius is 0.72 m; VIPER uses 1.35 m and a 2.7 m stand-off.
   Marker keep-outs also include 0.25 m of estimation allowance.
 - Routes and edges stay inside configured bounds. Inspection uses a fixed point
-  outside the pole keep-out, rather than chasing the marker centre.
+  outside the pole keep-out, rather than chasing the marker centre. Improved
+  camera estimates shift this point without changing its approach direction.
+  Arrival hysteresis prevents range jitter from alternating approach and camera
+  aiming at the stand-off boundary.
+- Sphere range uses silhouette tangent angles. A width-only estimate could
+  underestimate range for a target near the image edge and misplace its keep-out.
+- The lightweight wheel contacts use equal friction coefficients. The physical
+  regression exposed a heading-dependent steering lock with the original pair;
+  calibration now requires more than a full turn in both directions and measured
+  translation while the chassis stays level.
 - The follower turns before translation, slows near route corners, and checks
   the commanded curved sweep over reaction time plus stopping time. A scan older
   than 0.6 simulation seconds or invalid range data stops motion.
@@ -61,6 +70,11 @@ Use `dashboard:=false` or a different `dashboard_port` when needed. The server
 binds only to the simulation PC. When using Docker, publish the loopback port
 and adjust container networking deliberately; native Linux is the default path.
 
+Each console run saves a latest checkpoint and camera images in its output
+directory. `python scripts/view_recorded_console.py --run RUN_DIRECTORY` opens
+that checkpoint on Windows or Linux without ROS. It is visibly labelled as a
+recording, and all mission controls are disabled.
+
 ## Regression checks
 
 The portable tests include an unseen pole detour with no colour report, stale
@@ -71,7 +85,8 @@ nominal and failure rehearsals must confirm five sites, return both rovers, and
 record zero conservative footprint overlaps.
 
 The Linux CI builds Jazzy packages, requires real camera/laser/odometry streams,
-and runs the compact mission to completion. Its independent geometry audit uses
+checks full-circle steering, runs the compact mission with console pause/resume,
+and exercises the expanded map with a temporary rover failure. Its independent geometry audit uses
 actual Gazebo odometry and known test geometry; it does not feed truth to the
 controller or count as a force/contact measurement. Logs and audit values are
 saved under `results/smoke_.../`.

@@ -32,9 +32,10 @@ def main():
     from rclpy.node import Node
     from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy, qos_profile_sensor_data
     from rosgraph_msgs.msg import Clock
-    from std_msgs.msg import Bool
+    from std_msgs.msg import Bool, String
     from std_srvs.srv import SetBool
     from nav_msgs.msg import Odometry
+    from rsdis_interfaces.msg import RoverStatus, TaskGoal, TaskResult
     from rsdis_lunar.common import load_config, stamp_seconds
     from rsdis_lunar.provenance import source_fingerprint
     from rsdis_lunar.safety_audit import ClearanceAudit
@@ -55,6 +56,7 @@ def main():
     ).resolve()
     output.mkdir(parents=True, exist_ok=False)
     log = (output / "launch.log").open("w", encoding="utf-8")
+    navigation_log = (output / "navigation.jsonl").open("w", encoding="utf-8")
     command = [
         "ros2",
         "launch",
@@ -98,6 +100,7 @@ def main():
     )
     rclpy.init()
     node = Node("experiment_supervisor")
+    statuses, task_targets, confirmed = {}, {}, set()
     subscriptions = []
 
     def on_odom(msg, name):
@@ -105,11 +108,39 @@ def main():
         if len(poses) == len(config["rovers"]):
             audit.sample(poses)
 
+    def on_navigation(msg, name):
+        sample = json.loads(msg.data)
+        sample["rover"] = name
+        navigation_log.write(json.dumps(sample) + "\n")
+        navigation_log.flush()
+
+    def on_goal(msg):
+        task_targets[msg.task_id] = msg.target_id
+
+    def on_result(msg):
+        if msg.success and msg.task_id in task_targets:
+            confirmed.add(task_targets[msg.task_id])
+
+    subscriptions.extend(
+        [
+            node.create_subscription(
+                RoverStatus, "/mission/status", lambda m: statuses.__setitem__(m.rover_id, m), 10
+            ),
+            node.create_subscription(TaskGoal, "/mission/goals", on_goal, 10),
+            node.create_subscription(TaskResult, "/mission/results", on_result, 10),
+        ]
+    )
+
     for spec in config["rovers"]:
         name = spec["id"]
         subscriptions.append(
             node.create_subscription(
                 Odometry, f"/{name}/odom", lambda m, n=name: on_odom(m, n), qos_profile_sensor_data
+            )
+        )
+        subscriptions.append(
+            node.create_subscription(
+                String, f"/{name}/navigation_debug", lambda m, n=name: on_navigation(m, n), 10
             )
         )
     state = {"sim": 0.0, "finished": False}
@@ -133,12 +164,23 @@ def main():
     pending = []
     start = time.monotonic()
     outcome = "wall_timeout"
+    last_progress = -30.0
+    print(f"Run logs: {output}\nMission console: http://localhost:8765", flush=True)
     try:
         while time.monotonic() - start < args.wall_timeout:
             if process.poll() is not None:
                 outcome = "launch_exited"
                 break
             rclpy.spin_once(node, timeout_sec=0.1)
+            if state["sim"] - last_progress >= 30:
+                last_progress = state["sim"]
+                details = ", ".join(
+                    f"{name} {msg.mode} {msg.battery:.0%}" for name, msg in sorted(statuses.items())
+                )
+                print(
+                    f"sim {state['sim']:.1f}s | {len(confirmed)}/{len(config['targets'])} confirmed | {details}",
+                    flush=True,
+                )
             if failure and client.service_is_ready():
                 if not disabled and state["sim"] >= failure["at"]:
                     future = client.call_async(SetBool.Request(data=False))
@@ -190,6 +232,7 @@ def main():
         node.destroy_node()
         rclpy.shutdown()
         log.close()
+        navigation_log.close()
     print(output)
     summaries = list(output.glob("*/summary.json"))
     if summaries:

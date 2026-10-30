@@ -174,6 +174,7 @@ def configure(context):
                     "use_sim_time": True,
                     "config": config_path,
                     "port": int(LaunchConfiguration("dashboard_port").perform(context)),
+                    "output": output,
                 }
             ],
             condition=IfCondition(LaunchConfiguration("dashboard")),

@@ -21,7 +21,7 @@ do not require a UAV team, a maritime setting, SLAM, or a specific task allocato
 | Deliverable | Present state |
 | --- | --- |
 | World and robot models in SDF/URDF | Procedural SDF source and exported test world; optional adapter for detailed upstream rover URDFs |
-| ROS packages, launch files, README | Created; Linux build and runtime validation pending |
+| ROS packages, launch files, README | Built on Jazzy; lightweight compact and expanded missions validated in Linux CI |
 | Multi-robot mission video | Recording script/checklist prepared; capture after successful Gazebo integration |
 | Final report and presentation | Paper draft and presentation outline prepared; results and final slides pending |
 
@@ -38,5 +38,8 @@ do not require a UAV team, a maritime setting, SLAM, or a specific task allocato
 9. Every experimental run saves its configuration, telemetry, events and outcome.
 10. The paper distinguishes actual Gazebo experiments from offline debugging runs.
 
-These checks are a completion checklist, not a claim that Linux validation or the
-academic deliverables have already been completed.
+The lightweight functional gates now have retained Linux evidence in
+`examples/gazebo_validation_20261030/`: real images, full missions, failure task
+transfer, return/recharge, telemetry and metadata. Final academic deliverables
+still need the allocation-policy comparison, completed results/conclusions,
+demonstration recording and presentation.

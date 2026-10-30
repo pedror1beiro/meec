@@ -1,0 +1,18 @@
+{"time": 0.7, "event": "discovered", "target": "red", "rover": "rover1"}
+{"time": 1.0, "event": "assigned", "target": "red", "rover": "rover1", "task": "red-1"}
+{"time": 19.004, "event": "released", "target": "red", "rover": "rover1", "task": "red-1", "detail": "disabled"}
+{"time": 24.5, "event": "assigned", "target": "red", "rover": "rover2", "task": "red-2"}
+{"time": 70.1, "event": "discovered", "target": "green", "rover": "rover2"}
+{"time": 70.5, "event": "assigned", "target": "green", "rover": "rover1", "task": "green-3"}
+{"time": 82.3, "event": "confirmed", "target": "red", "rover": "rover2", "task": "red-2", "detail": "camera_confirmed"}
+{"time": 124.404, "event": "confirmed", "target": "green", "rover": "rover1", "task": "green-3", "detail": "camera_confirmed"}
+{"time": 250.1, "event": "discovered", "target": "blue", "rover": "rover2"}
+{"time": 250.5, "event": "assigned", "target": "blue", "rover": "rover2", "task": "blue-4"}
+{"time": 289.7, "event": "confirmed", "target": "blue", "rover": "rover2", "task": "blue-4", "detail": "camera_confirmed"}
+{"time": 290.9, "event": "discovered", "target": "magenta", "rover": "rover2"}
+{"time": 291.0, "event": "assigned", "target": "magenta", "rover": "rover2", "task": "magenta-5"}
+{"time": 338.9, "event": "confirmed", "target": "magenta", "rover": "rover2", "task": "magenta-5", "detail": "camera_confirmed"}
+{"time": 340.3, "event": "discovered", "target": "orange", "rover": "rover2"}
+{"time": 398.5, "event": "assigned", "target": "orange", "rover": "rover1", "task": "orange-6"}
+{"time": 528.6, "event": "confirmed", "target": "orange", "rover": "rover1", "task": "orange-6", "detail": "camera_confirmed"}
+{"time": 529.0, "event": "return_home_requested"}

@@ -28,6 +28,7 @@ class MissionDashboard(Node):
         super().__init__("mission_dashboard")
         self.declare_parameter("config", "")
         self.declare_parameter("port", 8765)
+        self.declare_parameter("output", "")
         config = load_config(self.get_parameter("config").value)
         port = self.get_parameter("port").value
         self.config = config
@@ -42,6 +43,11 @@ class MissionDashboard(Node):
         self.last_command = "Ready"
         self.cv = CvBridge()
         self.camera_at = {}
+        directory = self.get_parameter("output").value
+        self.snapshot_dir = Path(directory) if directory else None
+        self.snapshot_at = 0.0
+        if self.snapshot_dir:
+            self.snapshot_dir.mkdir(parents=True, exist_ok=True)
         self.pending = []
         self.service_clients = {
             "pause": self.create_client(SetBool, "/mission/set_paused"),
@@ -259,7 +265,7 @@ class MissionDashboard(Node):
             colours={t["id"]: t["colour"] for t in self.config["targets"]},
             expected=len(self.config["targets"]),
             time=round(self.get_clock().now().nanoseconds / 1e9, 1),
-            rovers=list(self.rovers.values()),
+            rovers=[self.rovers[r["id"]] for r in self.config["rovers"] if r["id"] in self.rovers],
             targets=self.targets,
             owners=self.owners,
             plans=self.plans,
@@ -272,8 +278,25 @@ class MissionDashboard(Node):
         )
         with self.lock:
             self.payload = json.dumps(payload).encode()
+        if self.snapshot_dir and time.monotonic() - self.snapshot_at > 5:
+            self.snapshot_at = time.monotonic()
+            self.save_snapshot()
+
+    def save_snapshot(self):
+        if not self.snapshot_dir:
+            return
+        with self.lock:
+            files = {
+                "console_state.json": self.payload,
+                **{f"camera_{name}.jpg": data for name, data in self.images.items()},
+            }
+        for name, data in files.items():
+            temporary = self.snapshot_dir / (name + ".tmp")
+            temporary.write_bytes(data)
+            temporary.replace(self.snapshot_dir / name)
 
     def close(self):
+        self.save_snapshot()
         self.server.shutdown()
         self.server.server_close()
         self.thread.join(timeout=2)

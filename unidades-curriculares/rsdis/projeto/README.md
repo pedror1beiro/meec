@@ -12,10 +12,11 @@ allocation under the same safety rules.
 | 1231177 | Pedro Ribeiro |
 | 1231216 | Francisco Liquito |
 
-**Status: prototype under integration testing.** Mission logic, marker-image tests and world
-generation can be checked on Windows. ROS package compilation, Gazebo physics,
-rendered-camera detection and the Docker image still require validation on a
-Linux machine. No Gazebo results or performance improvements are claimed.
+**Status: lightweight mission validated in Linux CI.** Both map sizes complete
+with real Gazebo cameras, and the expanded map recovers from a temporary rover
+failure. Mission logic, image tests and replays can also run on Windows.
+Allocation-policy comparisons, Docker and the optional VIPER physics remain
+separate validation milestones. See [the retained evidence](examples/gazebo_validation_20261030/).
 
 ## Start here on the other PC
 
@@ -58,7 +59,7 @@ belonging to that experiment.
 
 ## What is implemented
 
-| Feature | Initial implementation |
+| Feature | Implemented behavior |
 | --- | --- |
 | Simulation | 80 x 60 m outpost, lunar gravity, rock fields, crater exclusions, habitat, solar array, two rovers, cameras and laser scans |
 | Exploration | Separate survey sectors, longer routes, full camera sweeps at route stops |
@@ -184,8 +185,19 @@ python -m venv .venv
 The GitHub Actions workflow builds the ROS packages in a Jazzy container and runs
 the real sensor smoke test on Linux when this project is pushed to a repository.
 The project workflow also runs a complete compact mission and audits conservative
-footprint clearance. See [the validation record](docs/VALIDATION.md) for what was
+footprint clearance, then checks the expanded map with an injected rover failure.
+See [the validation record](docs/VALIDATION.md) for what was
 actually executed and what remains pending.
+
+The console saves its latest map, paths, site states and camera frames as a
+checkpoint in the run directory. To inspect a downloaded ROS run on Windows:
+
+```powershell
+python scripts/view_recorded_console.py --run path/to/the/run
+```
+
+Open the printed local address. Recorded checkpoints have disabled mission
+controls and a visible recorded-data label.
 
 ## Optional Docker build on Linux
 

@@ -180,7 +180,12 @@ def main():
     progress = {}
     stall = None
     if args.dashboard:
-        checks.update(console_state=False, console_cameras=False, pause_resume=False)
+        checks.update(
+            console_state=False,
+            console_cameras=False,
+            pause_resume=False,
+            recorded_checkpoint=False,
+        )
 
     def http(path, body=None):
         request = Request(
@@ -219,6 +224,12 @@ def main():
                         state.get("bounds")
                         and len(state.get("rovers", [])) == len(config["rovers"])
                     )
+                    snapshot = output / "console_state.json"
+                    if snapshot.is_file() and not checks["recorded_checkpoint"]:
+                        saved = json.loads(snapshot.read_text(encoding="utf-8"))
+                        checks["recorded_checkpoint"] = saved.get("bounds") == config[
+                            "map_bounds"
+                        ] and len(saved.get("rovers", [])) == len(config["rovers"])
                     if checks["console_state"] and not checks["console_cameras"]:
                         checks["console_cameras"] = all(
                             len(http(f"/camera/{r['id']}.jpg")) > 500 for r in config["rovers"]

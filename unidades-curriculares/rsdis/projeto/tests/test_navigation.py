@@ -125,6 +125,19 @@ class NavigationTests(unittest.TestCase):
         self.assertTrue(rover.results)
         self.assertTrue(rover.results[0][2])
 
+    def test_disabling_a_paused_rover_releases_its_task(self):
+        rover = Rover(self.config["rovers"][0], self.config)
+        rover.assign(Goal("red-1", "red", (-2, -2.5), rover.id), 0)
+        rover.paused = True
+        rover.enabled = False
+        self.assertEqual(rover.step(rover.pose, 1, 1), (0, 0))
+        self.assertEqual(rover.mode, "unavailable")
+        self.assertEqual(rover.results[0][3], "disabled")
+        rover.enabled = True
+        self.assertEqual(rover.step(rover.pose, 1, 2), (0, 0))
+        self.assertEqual(rover.mode, "idle")
+        self.assertEqual(rover.navigator.state, "paused")
+
     def test_opposing_rovers_pass_and_can_exchange_start_positions(self):
         config = copy.deepcopy(self.config)
         config["hazards"] = []

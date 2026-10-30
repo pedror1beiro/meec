@@ -136,6 +136,10 @@ class RoverAgent(Node):
         dt = 0.0 if self.last_time is None else max(0.0, now - self.last_time)
         self.last_time = now
         command = Twist()
+        if self.mission_finished:
+            self.rover.navigator.state = "finished"
+        elif self.pose is None or now - self.odom_received >= 0.5:
+            self.rover.navigator.state = "waiting_for_odometry"
         if self.pose is not None and now - self.odom_received < 0.5 and not self.mission_finished:
             command.linear.x, command.angular.z = self.rover.step(
                 self.pose, dt, now, self.peers.values()
