@@ -11,7 +11,9 @@ class ClearanceAudit:
     def __init__(self, config):
         self.radius = config.get("rover_radius", 0.72)
         self.obstacles = [(*h["position"], h["radius"]) for h in config.get("hazards", [])]
-        self.obstacles += [(*t["position"], config["marker_diameter"] / 2) for t in config["targets"]]
+        self.obstacles += [
+            (*t["position"], config["marker_diameter"] / 2) for t in config["targets"]
+        ]
         self.minimum, self.peer_minimum = math.inf, math.inf
         self.violations = 0
 
@@ -23,7 +25,7 @@ class ClearanceAudit:
                 self.minimum = min(self.minimum, gap)
                 self.violations += int(gap < -0.01)
         for i, a in enumerate(positions):
-            for b in positions[i + 1:]:
+            for b in positions[i + 1 :]:
                 gap = math.dist(a[:2], b[:2]) - 2 * self.radius
                 self.peer_minimum = min(self.peer_minimum, gap)
                 self.violations += int(gap < -0.01)
@@ -31,7 +33,9 @@ class ClearanceAudit:
     def report(self):
         return dict(
             minimum_obstacle_gap_m=round(self.minimum, 4) if math.isfinite(self.minimum) else None,
-            minimum_peer_gap_m=round(self.peer_minimum, 4) if math.isfinite(self.peer_minimum) else None,
+            minimum_peer_gap_m=round(self.peer_minimum, 4)
+            if math.isfinite(self.peer_minimum)
+            else None,
             footprint_overlap_samples=self.violations,
             method="conservative planar geometry, not a physics contact measurement",
         )
@@ -42,9 +46,15 @@ def simulated_scan(pose, config, poses, rover_id):
     offset = config.get("lidar_offset", 0.62)
     origin = pose[0] + offset * math.cos(pose[2]), pose[1] + offset * math.sin(pose[2])
     obstacles = [(*t["position"], config["marker_diameter"] / 2) for t in config["targets"]]
-    obstacles += [(*h["position"], h["radius"]) for h in config.get("hazards", []) if h["kind"] != "crater"]
-    obstacles += [(*p[:2], config.get("rover_radius", 0.72)) for name, p in poses.items() if name != rover_id]
-    nearby = [h for h in obstacles if math.dist(origin, h[:2]) < config.get("lidar_range", 12) + h[2]]
+    obstacles += [
+        (*h["position"], h["radius"]) for h in config.get("hazards", []) if h["kind"] != "crater"
+    ]
+    obstacles += [
+        (*p[:2], config.get("rover_radius", 0.72)) for name, p in poses.items() if name != rover_id
+    ]
+    nearby = [
+        h for h in obstacles if math.dist(origin, h[:2]) < config.get("lidar_range", 12) + h[2]
+    ]
     points = {}
     for i in range(181):
         angle = pose[2] - math.pi / 2 + math.pi * i / 180

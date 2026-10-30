@@ -49,7 +49,10 @@ class WorldTests(unittest.TestCase):
                 load_config(path)
 
     def test_large_world_and_hazards_match_the_config(self):
-        self.assertEqual(self.world.findtext("model[@name='regolith']/link/collision/geometry/box/size"), "80.0 60.0 0.2")
+        self.assertEqual(
+            self.world.findtext("model[@name='regolith']/link/collision/geometry/box/size"),
+            "80.0 60.0 0.2",
+        )
         for hazard in self.config["hazards"]:
             self.assertIsNotNone(self.world.find(f"model[@name='{hazard['id']}']"))
 

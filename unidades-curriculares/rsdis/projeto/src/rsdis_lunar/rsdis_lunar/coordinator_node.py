@@ -158,7 +158,9 @@ class MissionManager(Node):
             msg.lease_seconds = self.coordinator.config["lease_seconds"]
             self.goal_pub.publish(msg)
         self.metrics.record(self.coordinator, self.last_elapsed)
-        if self.operator_return and all(r.mode == "parked" for r in self.coordinator.rovers.values()):
+        if self.operator_return and all(
+            r.mode == "parked" for r in self.coordinator.rovers.values()
+        ):
             self.finish("operator_returned")
             return
         if self.expected and all(

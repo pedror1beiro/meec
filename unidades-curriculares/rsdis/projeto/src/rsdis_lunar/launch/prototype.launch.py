@@ -107,6 +107,7 @@ def configure(context):
         Node(
             package="rsdis_lunar",
             executable="mission_manager",
+            condition=IfCondition(LaunchConfiguration("autonomy")),
             parameters=[
                 {
                     "use_sim_time": True,
@@ -122,6 +123,7 @@ def configure(context):
         Node(
             package="rsdis_lunar",
             executable="mission_monitor",
+            condition=IfCondition(LaunchConfiguration("autonomy")),
             parameters=[{"use_sim_time": True, "config": config_path}],
             output="screen",
         )
@@ -132,6 +134,7 @@ def configure(context):
             Node(
                 package="rsdis_lunar",
                 executable="rover_agent",
+                condition=IfCondition(LaunchConfiguration("autonomy")),
                 namespace=rover["id"],
                 parameters=[{**shared, "config": config_path}],
                 output="screen",
@@ -139,6 +142,7 @@ def configure(context):
             Node(
                 package="rsdis_lunar",
                 executable="target_detector",
+                condition=IfCondition(LaunchConfiguration("autonomy")),
                 namespace=rover["id"],
                 parameters=[
                     {
@@ -163,10 +167,17 @@ def configure(context):
     actions = [gazebo, *nodes, *spawn_nodes]
     actions.append(
         Node(
-            package="rsdis_lunar", executable="mission_dashboard",
-            parameters=[{"use_sim_time": True, "config": config_path,
-                         "port": int(LaunchConfiguration("dashboard_port").perform(context))}],
-            condition=IfCondition(LaunchConfiguration("dashboard")), output="screen",
+            package="rsdis_lunar",
+            executable="mission_dashboard",
+            parameters=[
+                {
+                    "use_sim_time": True,
+                    "config": config_path,
+                    "port": int(LaunchConfiguration("dashboard_port").perform(context)),
+                }
+            ],
+            condition=IfCondition(LaunchConfiguration("dashboard")),
+            output="screen",
         )
     )
 
@@ -222,6 +233,7 @@ def generate_launch_description():
             ),
             DeclareLaunchArgument("headless", default_value="false", choices=["true", "false"]),
             DeclareLaunchArgument("rviz", default_value="false", choices=["true", "false"]),
+            DeclareLaunchArgument("autonomy", default_value="true", choices=["true", "false"]),
             DeclareLaunchArgument("dashboard", default_value="true", choices=["true", "false"]),
             DeclareLaunchArgument("dashboard_port", default_value="8765"),
             DeclareLaunchArgument(

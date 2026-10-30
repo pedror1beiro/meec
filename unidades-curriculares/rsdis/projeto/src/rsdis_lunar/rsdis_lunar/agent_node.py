@@ -68,10 +68,17 @@ class RoverAgent(Node):
             self.rover.navigator.scan_valid = False
             return
         points, valid = scan_points(
-            msg.ranges, msg.angle_min, msg.angle_increment, msg.range_min, msg.range_max,
-            self.pose, self.rover.config["lidar_offset"],
+            msg.ranges,
+            msg.angle_min,
+            msg.angle_increment,
+            msg.range_min,
+            msg.range_max,
+            self.pose,
+            self.rover.config["lidar_offset"],
         )
-        self.rover.navigator.update_scan(points, stamp_seconds(msg.header.stamp), valid, self.peers.values())
+        self.rover.navigator.update_scan(
+            points, stamp_seconds(msg.header.stamp), valid, self.peers.values()
+        )
 
     def on_pause(self, msg):
         self.rover.paused = msg.data
@@ -87,8 +94,11 @@ class RoverAgent(Node):
         )
 
     def on_detection(self, msg):
-        if (msg.header.frame_id != "world" or msg.confidence < 0.65 or
-                not 0 <= self.now_seconds() - stamp_seconds(msg.header.stamp) < 1.0):
+        if (
+            msg.header.frame_id != "world"
+            or msg.confidence < 0.65
+            or not 0 <= self.now_seconds() - stamp_seconds(msg.header.stamp) < 1.0
+        ):
             return
         self.rover.remember(msg.target_id, (msg.position.x, msg.position.y))
         if msg.observer == self.rover_id:
@@ -152,14 +162,27 @@ class RoverAgent(Node):
         self.nav_pub.publish(String(data=self.rover.navigator.state))
         if int(now * 10) % 5 == 0:
             nav = self.rover.navigator
-            self.debug_pub.publish(String(data=json.dumps(dict(
-                time=now, pose=self.pose, state=nav.state, mode=self.rover.mode,
-                task=self.rover.goal.task_id if self.rover.goal else None, requested=nav.requested,
-                command=[command.linear.x, command.angular.z], blocker=nav.blocker,
-                path=nav.path, markers=self.rover.known_targets,
-                scan_age=now - nav.scan_at if math.isfinite(nav.scan_at) else None,
-                scan_valid=nav.scan_valid, memory_size=len(nav.memory),
-            ))))
+            self.debug_pub.publish(
+                String(
+                    data=json.dumps(
+                        dict(
+                            time=now,
+                            pose=self.pose,
+                            state=nav.state,
+                            mode=self.rover.mode,
+                            task=self.rover.goal.task_id if self.rover.goal else None,
+                            requested=nav.requested,
+                            command=[command.linear.x, command.angular.z],
+                            blocker=nav.blocker,
+                            path=nav.path,
+                            markers=self.rover.known_targets,
+                            scan_age=now - nav.scan_at if math.isfinite(nav.scan_at) else None,
+                            scan_valid=nav.scan_valid,
+                            memory_size=len(nav.memory),
+                        )
+                    )
+                )
+            )
         path = Path()
         path.header = status.header
         for x, y in [self.pose[:2], *self.rover.navigator.path]:

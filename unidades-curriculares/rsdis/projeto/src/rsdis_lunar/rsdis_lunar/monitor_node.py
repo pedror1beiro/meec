@@ -37,7 +37,12 @@ class MissionMonitor(Node):
         self.create_subscription(TaskGoal, "/mission/goals", self.on_goal, 10)
         self.create_subscription(TaskResult, "/mission/results", self.on_result, 10)
         for name in self.ids:
-            self.create_subscription(String, f"/{name}/navigation_state", lambda msg, n=name: self.navigation.__setitem__(n, msg.data), 10)
+            self.create_subscription(
+                String,
+                f"/{name}/navigation_state",
+                lambda msg, n=name: self.navigation.__setitem__(n, msg.data),
+                10,
+            )
         self.create_timer(0.5, self.tick)
 
     def on_status(self, msg):
@@ -97,7 +102,9 @@ class MissionMonitor(Node):
             label.pose.position.z = self.marker_height + 0.52
             label.scale.z = 0.28
             label.color.r = label.color.g = label.color.b = 1.0
-            label.text = f"{name}: {status.mode} | {self.navigation.get(name, '')} | {status.battery:.0%}"
+            label.text = (
+                f"{name}: {status.mode} | {self.navigation.get(name, '')} | {status.battery:.0%}"
+            )
             markers.extend((body, label))
             path = Path()
             path.header = label.header
@@ -132,7 +139,10 @@ class MissionMonitor(Node):
         boundary = self.marker("map_bounds", 0, Marker.LINE_STRIP)
         boundary.scale.x = 0.08
         boundary.color.r = boundary.color.g = boundary.color.b = 0.6
-        boundary.points = [Point(x=float(x), y=float(y), z=0.05) for x, y in [(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax), (xmin, ymin)]]
+        boundary.points = [
+            Point(x=float(x), y=float(y), z=0.05)
+            for x, y in [(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax), (xmin, ymin)]
+        ]
         markers.append(boundary)
         self.pub.publish(MarkerArray(markers=markers))
 

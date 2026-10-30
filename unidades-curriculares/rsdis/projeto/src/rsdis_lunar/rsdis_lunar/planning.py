@@ -23,14 +23,17 @@ def segment_clear(start, end, obstacles, clearance=0.95):
     for obstacle in obstacles:
         ox, oy = obstacle[:2]
         radius = clearance + (obstacle[2] if len(obstacle) > 2 else 0.0)
-        t = 0.0 if length2 == 0 else max(
-            0.0, min(1.0, ((ox - start[0]) * dx + (oy - start[1]) * dy) / length2)
+        t = (
+            0.0
+            if length2 == 0
+            else max(0.0, min(1.0, ((ox - start[0]) * dx + (oy - start[1]) * dy) / length2))
         )
         separation = math.hypot(start[0] + t * dx - ox, start[1] + t * dy - oy)
         initial = math.hypot(start[0] - ox, start[1] - oy)
         # Only a monotonically outward escape from an inflated disk is permitted.
         escaping = (
-            initial < radius and length2 > 0
+            initial < radius
+            and length2 > 0
             and (start[0] - ox) * dx + (start[1] - oy) * dy >= 0
             and math.hypot(end[0] - ox, end[1] - oy) > initial
         )
@@ -92,7 +95,8 @@ def plan_path(start, goal, obstacles, resolution=0.5, clearance=0.95, bounds=DEF
     result, index = [start], 0
     while index < len(route) - 1:
         following = next(
-            j for j in range(len(route) - 1, index, -1)
+            j
+            for j in range(len(route) - 1, index, -1)
             if segment_clear(route[index], route[j], obstacles, clearance)
         )
         result.append(route[following])

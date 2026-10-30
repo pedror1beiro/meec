@@ -97,8 +97,14 @@ def rehearse(
                 {
                     "time": round(now, 2),
                     "rovers": [
-                        {"id": r.id, "pose": list(r.pose), "battery": r.battery, "mode": r.mode,
-                         "navigation": r.navigator.state, "plan": r.navigator.path}
+                        {
+                            "id": r.id,
+                            "pose": list(r.pose),
+                            "battery": r.battery,
+                            "mode": r.mode,
+                            "navigation": r.navigator.state,
+                            "plan": r.navigator.path,
+                        }
                         for r in rovers.values()
                     ],
                     "targets": {
@@ -137,7 +143,9 @@ def rehearse(
     import json
 
     summary["clearance_audit"] = audit.report()
-    (Path(output) / "summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+    (Path(output) / "summary.json").write_text(
+        json.dumps(summary, indent=2) + "\n", encoding="utf-8"
+    )
     (Path(output) / "trace.json").write_text(json.dumps(trace), encoding="utf-8")
     from playback import write_playback
 

@@ -43,7 +43,7 @@ class MissionDashboard(Node):
         self.cv = CvBridge()
         self.camera_at = {}
         self.pending = []
-        self.clients = {
+        self.service_clients = {
             "pause": self.create_client(SetBool, "/mission/set_paused"),
             "recall": self.create_client(Trigger, "/mission/recall"),
         }
@@ -51,16 +51,41 @@ class MissionDashboard(Node):
         self.create_subscription(Detection, "/mission/detections", self.on_detection, 10)
         self.create_subscription(TaskGoal, "/mission/goals", self.on_goal, 10)
         self.create_subscription(TaskResult, "/mission/results", self.on_result, 10)
-        latched = QoSProfile(depth=1, reliability=ReliabilityPolicy.RELIABLE, durability=DurabilityPolicy.TRANSIENT_LOCAL)
-        self.create_subscription(Bool, "/mission/paused", lambda m: setattr(self, "paused", m.data), latched)
-        self.create_subscription(Bool, "/mission/finished", lambda m: setattr(self, "finished", m.data), latched)
+        latched = QoSProfile(
+            depth=1,
+            reliability=ReliabilityPolicy.RELIABLE,
+            durability=DurabilityPolicy.TRANSIENT_LOCAL,
+        )
+        self.create_subscription(
+            Bool, "/mission/paused", lambda m: setattr(self, "paused", m.data), latched
+        )
+        self.create_subscription(
+            Bool, "/mission/finished", lambda m: setattr(self, "finished", m.data), latched
+        )
         self.trails = {r["id"]: deque(maxlen=2500) for r in config["rovers"]}
         for spec in config["rovers"]:
             name = spec["id"]
-            self.clients[name] = self.create_client(SetBool, f"/{name}/set_enabled")
-            self.create_subscription(String, f"/{name}/navigation_state", lambda m, n=name: self.navigation.__setitem__(n, m.data), 10)
-            self.create_subscription(NavPath, f"/{name}/plan", lambda m, n=name: self.plans.__setitem__(n, [[p.pose.position.x, p.pose.position.y] for p in m.poses]), 10)
-            self.create_subscription(Image, f"/{name}/camera/image", lambda m, n=name: self.on_image(n, m), qos_profile_sensor_data)
+            self.service_clients[name] = self.create_client(SetBool, f"/{name}/set_enabled")
+            self.create_subscription(
+                String,
+                f"/{name}/navigation_state",
+                lambda m, n=name: self.navigation.__setitem__(n, m.data),
+                10,
+            )
+            self.create_subscription(
+                NavPath,
+                f"/{name}/plan",
+                lambda m, n=name: self.plans.__setitem__(
+                    n, [[p.pose.position.x, p.pose.position.y] for p in m.poses]
+                ),
+                10,
+            )
+            self.create_subscription(
+                Image,
+                f"/{name}/camera/image",
+                lambda m, n=name: self.on_image(n, m),
+                qos_profile_sensor_data,
+            )
         page = (Path(get_package_share_directory("rsdis_lunar")) / "web/mission.html").read_bytes()
         dashboard = self
 
@@ -90,12 +115,15 @@ class MissionDashboard(Node):
                         image = dashboard.images.get(name)
                     self.respond(200 if image else 404, image or b"", "image/jpeg")
                 else:
-                    self.respond(404, b'{}')
+                    self.respond(404, b"{}")
 
             def do_POST(self):
                 # A local webpage from another site must not control a running mission.
                 origin = self.headers.get("Origin")
-                if origin and origin not in (f"http://localhost:{port}", f"http://127.0.0.1:{port}"):
+                if origin and origin not in (
+                    f"http://localhost:{port}",
+                    f"http://127.0.0.1:{port}",
+                ):
                     self.respond(403, b'{"error":"Origin rejected"}')
                     return
                 try:
@@ -106,7 +134,10 @@ class MissionDashboard(Node):
                     action = body["action"]
                     if action not in ("pause", "resume", "recall", "disable", "enable"):
                         raise ValueError("Unknown action")
-                    if action in ("disable", "enable") and body.get("rover") not in dashboard.trails:
+                    if (
+                        action in ("disable", "enable")
+                        and body.get("rover") not in dashboard.trails
+                    ):
                         raise ValueError("Unknown rover")
                     dashboard.commands.put_nowait(body)
                     self.respond(202, b'{"queued":true}')
@@ -123,19 +154,29 @@ class MissionDashboard(Node):
         self.get_logger().info(f"Mission console: http://localhost:{port}")
 
     def event(self, text):
-        self.events.appendleft(dict(time=round(self.get_clock().now().nanoseconds / 1e9, 1), text=text))
+        self.events.appendleft(
+            dict(time=round(self.get_clock().now().nanoseconds / 1e9, 1), text=text)
+        )
 
     def on_status(self, msg):
         if msg.rover_id not in self.trails:
             return
         pose = pose_tuple(msg.pose)
-        self.rovers[msg.rover_id] = dict(id=msg.rover_id, pose=pose, battery=msg.battery, mode=msg.mode, stamp=stamp_seconds(msg.header.stamp))
+        self.rovers[msg.rover_id] = dict(
+            id=msg.rover_id,
+            pose=pose,
+            battery=msg.battery,
+            mode=msg.mode,
+            stamp=stamp_seconds(msg.header.stamp),
+        )
         trail = self.trails[msg.rover_id]
         if not trail or abs(trail[-1][0] - pose[0]) + abs(trail[-1][1] - pose[1]) > 0.25:
             trail.append(pose[:2])
 
     def on_detection(self, msg):
-        if msg.header.frame_id != "world" or msg.target_id not in {t["id"] for t in self.config["targets"]}:
+        if msg.header.frame_id != "world" or msg.target_id not in {
+            t["id"] for t in self.config["targets"]
+        }:
             return
         if msg.target_id not in self.targets:
             self.event(f"{msg.observer} discovered {msg.target_id}")
@@ -161,7 +202,11 @@ class MissionDashboard(Node):
             return
         self.camera_at[name] = time.monotonic()
         try:
-            ok, image = cv2.imencode(".jpg", self.cv.imgmsg_to_cv2(msg, desired_encoding="bgr8"), [cv2.IMWRITE_JPEG_QUALITY, 70])
+            ok, image = cv2.imencode(
+                ".jpg",
+                self.cv.imgmsg_to_cv2(msg, desired_encoding="bgr8"),
+                [cv2.IMWRITE_JPEG_QUALITY, 70],
+            )
             if ok:
                 with self.lock:
                     self.images[name] = image.tobytes()
@@ -175,10 +220,18 @@ class MissionDashboard(Node):
             body = None
         if body:
             action = body["action"]
-            key = "pause" if action in ("pause", "resume") else ("recall" if action == "recall" else body.get("rover"))
-            client = self.clients.get(key)
+            key = (
+                "pause"
+                if action in ("pause", "resume")
+                else ("recall" if action == "recall" else body.get("rover"))
+            )
+            client = self.service_clients.get(key)
             if client and client.service_is_ready() and not self.finished:
-                request = Trigger.Request() if action == "recall" else SetBool.Request(data=action in ("pause", "enable"))
+                request = (
+                    Trigger.Request()
+                    if action == "recall"
+                    else SetBool.Request(data=action in ("pause", "enable"))
+                )
                 self.pending.append((action, client.call_async(request), time.monotonic()))
                 self.last_command = action + ": waiting for rover response"
             else:
@@ -198,14 +251,24 @@ class MissionDashboard(Node):
                 self.last_command = action + ": response timed out"
         self.pending = remaining
         payload = dict(
-            map_name=self.config.get("map_name", "Lunar survey"), bounds=self.config["map_bounds"],
-            hazards=self.config["hazards"], sectors=self.config.get("sectors", []),
+            map_name=self.config.get("map_name", "Lunar survey"),
+            bounds=self.config["map_bounds"],
+            hazards=self.config["hazards"],
+            sectors=self.config.get("sectors", []),
             bases=[dict(id=r["id"], position=r["spawn"][:2]) for r in self.config["rovers"]],
-            colours={t["id"]: t["colour"] for t in self.config["targets"]}, expected=len(self.config["targets"]),
+            colours={t["id"]: t["colour"] for t in self.config["targets"]},
+            expected=len(self.config["targets"]),
             time=round(self.get_clock().now().nanoseconds / 1e9, 1),
-            rovers=list(self.rovers.values()), targets=self.targets, owners=self.owners,
-            plans=self.plans, trails={k: list(v) for k, v in self.trails.items()}, navigation=self.navigation,
-            paused=self.paused, finished=self.finished, events=list(self.events), last_command=self.last_command,
+            rovers=list(self.rovers.values()),
+            targets=self.targets,
+            owners=self.owners,
+            plans=self.plans,
+            trails={k: list(v) for k, v in self.trails.items()},
+            navigation=self.navigation,
+            paused=self.paused,
+            finished=self.finished,
+            events=list(self.events),
+            last_command=self.last_command,
         )
         with self.lock:
             self.payload = json.dumps(payload).encode()

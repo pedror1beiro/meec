@@ -30,6 +30,12 @@ jobs:
           colcon build
           source install/setup.bash
           python3 -m unittest discover -s tests -v
+      - name: Check physical full-circle steering and translation
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          source install/setup.bash
+          python3 scripts/check_drive_ros.py
       - name: Verify actual cameras and mission messages
         shell: bash
         run: |

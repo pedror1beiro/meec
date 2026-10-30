@@ -24,7 +24,9 @@ def main():
     parser.add_argument("--model", choices=["lightweight", "viper"], default="lightweight")
     parser.add_argument("--simulation", type=Path)
     parser.add_argument("--config", type=Path)
-    parser.add_argument("--dashboard", action="store_true", help="Check console images and pause/resume services")
+    parser.add_argument(
+        "--dashboard", action="store_true", help="Check console images and pause/resume services"
+    )
     args = parser.parse_args()
     import rclpy
     from rclpy.node import Node
@@ -73,21 +75,31 @@ def main():
     subscriptions = []
     starts = {}
     last_commands = {}
+    camera_frames = {}
+    raw_motion = {}
     debug = {}
     debug_log = (output / "navigation.jsonl").open("w", encoding="utf-8")
     for spec in config["rovers"]:
         name = spec["id"]
         checks[name + "/motion"] = False
+
         def receive_debug(msg, name=name):
             record = json.loads(msg.data)
             debug[name] = record
             debug_log.write(json.dumps({"rover": name, **record}) + "\n")
             debug_log.flush()
-        subscriptions.append(node.create_subscription(String, f"/{name}/navigation_debug", receive_debug, 10))
-        subscriptions.append(node.create_subscription(
-            Twist, f"/{name}/cmd_vel",
-            lambda msg, n=name: last_commands.__setitem__(n, (msg.linear.x, msg.angular.z)), 10,
-        ))
+
+        subscriptions.append(
+            node.create_subscription(String, f"/{name}/navigation_debug", receive_debug, 10)
+        )
+        subscriptions.append(
+            node.create_subscription(
+                Twist,
+                f"/{name}/cmd_vel",
+                lambda msg, n=name: last_commands.__setitem__(n, (msg.linear.x, msg.angular.z)),
+                10,
+            )
+        )
         topics = [
             ("odom", Odometry),
             ("camera/image", Image),
@@ -103,6 +115,7 @@ def main():
             def receive(msg, key=key, topic=topic, rover=name):
                 if topic == "camera/image":
                     checks[key] = msg.width > 0 and msg.height > 0 and len(msg.data) > 0
+                    camera_frames[rover] = msg
                 elif topic == "camera/info":
                     checks[key] = bool(msg.k[0] > 0)
                 elif topic == "scan":
@@ -118,6 +131,15 @@ def main():
                     )
                 else:
                     checks[key] = msg.header.frame_id == "world"
+                    q = msg.pose.pose.orientation
+                    raw_motion[rover] = dict(
+                        quaternion=[q.x, q.y, q.z, q.w],
+                        velocity=[
+                            msg.twist.twist.linear.x,
+                            msg.twist.twist.linear.y,
+                            msg.twist.twist.angular.z,
+                        ],
+                    )
                     position = (msg.pose.pose.position.x, msg.pose.pose.position.y)
                     poses[rover] = position
                     if len(poses) == len(config["rovers"]):
@@ -174,20 +196,33 @@ def main():
             rclpy.spin_once(node, timeout_sec=0.2)
             if args.complete_mission:
                 for name, sample in debug.items():
-                    anchor, last_progress = progress.setdefault(name, (sample["pose"][:2], sample["time"]))
-                    if sample.get("mode") != "inspecting" or math.dist(anchor, sample["pose"][:2]) > 0.15:
+                    anchor, last_progress = progress.setdefault(
+                        name, (sample["pose"][:2], sample["time"])
+                    )
+                    if (
+                        sample.get("mode") != "inspecting"
+                        or math.dist(anchor, sample["pose"][:2]) > 0.15
+                    ):
                         progress[name] = sample["pose"][:2], sample["time"]
                     elif sample["time"] - last_progress > 45:
-                        stall = name + ": inspection made no positional progress for 45 simulation seconds"
+                        stall = (
+                            name
+                            + ": inspection made no positional progress for 45 simulation seconds"
+                        )
                 if stall:
                     break
             if args.dashboard and time.monotonic() >= next_http:
                 next_http = time.monotonic() + 0.5
                 try:
                     state = json.loads(http("/api/state"))
-                    checks["console_state"] = bool(state.get("bounds") and len(state.get("rovers", [])) == len(config["rovers"]))
+                    checks["console_state"] = bool(
+                        state.get("bounds")
+                        and len(state.get("rovers", [])) == len(config["rovers"])
+                    )
                     if checks["console_state"] and not checks["console_cameras"]:
-                        checks["console_cameras"] = all(len(http(f"/camera/{r['id']}.jpg")) > 500 for r in config["rovers"])
+                        checks["console_cameras"] = all(
+                            len(http(f"/camera/{r['id']}.jpg")) > 500 for r in config["rovers"]
+                        )
                     ready = all(v for k, v in checks.items() if k != "pause_resume")
                     if ready and not pause_sent:
                         http("/api/command", {"action": "pause"})
@@ -195,7 +230,9 @@ def main():
                     if pause_sent and state.get("paused"):
                         paused_time = state["time"] if paused_time is None else paused_time
                         if state["time"] - paused_time >= 0.5 and not resume_sent:
-                            pause_stopped = len(last_commands) == len(config["rovers"]) and all(abs(v) < 1e-6 and abs(w) < 1e-6 for v, w in last_commands.values())
+                            pause_stopped = len(last_commands) == len(config["rovers"]) and all(
+                                abs(v) < 1e-6 and abs(w) < 1e-6 for v, w in last_commands.values()
+                            )
                             http("/api/command", {"action": "resume"})
                             resume_sent = True
                     if resume_sent and not state.get("paused"):
@@ -224,6 +261,14 @@ def main():
         rclpy.shutdown()
         log.close()
         debug_log.close()
+    from cv_bridge import CvBridge
+    import cv2
+
+    for name, frame in camera_frames.items():
+        cv2.imwrite(
+            str(output / f"camera_{name}.jpg"),
+            CvBridge().imgmsg_to_cv2(frame, desired_encoding="bgr8"),
+        )
     report = {
         "passed": success,
         "model": args.model,
@@ -233,6 +278,7 @@ def main():
         "console_error": console_error,
         "last_navigation": debug,
         "stall": stall,
+        "last_raw_motion": raw_motion,
         "wall_seconds": round(time.monotonic() - started, 2),
     }
     if audit.violations:

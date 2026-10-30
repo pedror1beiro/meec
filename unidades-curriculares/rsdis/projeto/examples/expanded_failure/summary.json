@@ -1,0 +1,45 @@
+{
+  "mode": "offline_kinematic_oracle_detection",
+  "strategy": "energy",
+  "reason": "all_targets_confirmed_and_returned",
+  "elapsed_sim_seconds": 462.0,
+  "targets_expected": 5,
+  "targets_discovered": 5,
+  "targets_confirmed": 5,
+  "distance_m": 272.9383466449684,
+  "synthetic_energy_used": 1.7300500798697935,
+  "rovers": {
+    "rover1": {
+      "rover_id": "rover1",
+      "pose": [
+        -27.723830906556238,
+        -5.990798392800146,
+        -3.1082862273658876
+      ],
+      "battery": 0.8090523986877087,
+      "mode": "parked",
+      "seen_at": 462.0,
+      "travelled": 123.70626688539171,
+      "energy_used": 0.7884476013123408
+    },
+    "rover2": {
+      "rover_id": "rover2",
+      "pose": [
+        -27.745686564028894,
+        6.122720576223369,
+        -2.691999193515734
+      ],
+      "battery": 0.2633975214425568,
+      "mode": "parked",
+      "seen_at": 462.0,
+      "travelled": 149.23207975957672,
+      "energy_used": 0.9416024785574527
+    }
+  },
+  "clearance_audit": {
+    "minimum_obstacle_gap_m": 0.3003,
+    "minimum_peer_gap_m": 1.7728,
+    "footprint_overlap_samples": 0,
+    "method": "conservative planar geometry, not a physics contact measurement"
+  }
+}

@@ -303,8 +303,10 @@ class Rover:
                     self.finish(True, "camera_confirmed")
                 self.navigator.state = "confirming" if fresh else "acquiring_marker"
                 return self.navigator.guard(
-                    pose, (0.0, max(-0.55, min(0.55, 1.5 * error)) if abs(error) > 0.1 else 0.0),
-                    self.navigator.obstacles(self.known_targets.values(), peers, now), now,
+                    pose,
+                    (0.0, max(-0.55, min(0.55, 1.5 * error)) if abs(error) > 0.1 else 0.0),
+                    self.navigator.obstacles(self.known_targets.values(), peers, now),
+                    now,
                 )
             if self.mode == "exploring":
                 # A full camera sweep at route stops discovers sites in either direction.
@@ -315,14 +317,18 @@ class Rover:
                 if self.survey_angle < 2 * math.pi and now - self.survey_started < 25:
                     self.navigator.state = "surveying"
                     return self.navigator.guard(
-                        pose, (0.0, 0.5),
-                        self.navigator.obstacles(self.known_targets.values(), peers, now), now,
+                        pose,
+                        (0.0, 0.5),
+                        self.navigator.obstacles(self.known_targets.values(), peers, now),
+                        now,
                     )
                 self.waypoint_index += 1
                 self.survey_started = None
             return 0.0, 0.0
         navigation_goal = self.approach if self.mode == "inspecting" else destination
-        command = self.navigator.command(pose, navigation_goal, self.known_targets.values(), peers, now)
+        command = self.navigator.command(
+            pose, navigation_goal, self.known_targets.values(), peers, now
+        )
         if self.navigator.state in ("path_blocked", "obstacle_stop", "clearance_stop"):
             self.blocked_since = now if self.blocked_since is None else self.blocked_since
             if now - self.blocked_since > 12:
