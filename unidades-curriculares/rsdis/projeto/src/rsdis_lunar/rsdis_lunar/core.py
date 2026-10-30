@@ -217,6 +217,7 @@ class Rover:
                 for i in range(2)
             )
             self.navigator.path = []
+            self.navigator.pass_point = None
             self.survey_started = None
         self.lease_until = now + self.config["lease_seconds"]
 
@@ -322,7 +323,7 @@ class Rover:
             return 0.0, 0.0
         navigation_goal = self.approach if self.mode == "inspecting" else destination
         command = self.navigator.command(pose, navigation_goal, self.known_targets.values(), peers, now)
-        if self.navigator.state in ("path_blocked", "obstacle_stop"):
+        if self.navigator.state in ("path_blocked", "obstacle_stop", "clearance_stop"):
             self.blocked_since = now if self.blocked_since is None else self.blocked_since
             if now - self.blocked_since > 12:
                 if self.goal:

@@ -85,6 +85,9 @@ class Navigator:
         self.require_scan = False
         self.scan_at, self.scan_valid = -math.inf, False
         self.points, self.memory = [], {}
+        self.pass_point = None
+        self.requested = (0.0, 0.0)
+        self.blocker = None
 
     def update_scan(self, points, now, valid=True, peers=()):
         self.scan_at, self.scan_valid, self.points = now, valid, list(points)
@@ -106,6 +109,7 @@ class Navigator:
         return obstacles
 
     def guard(self, pose, command, obstacles, now):
+        self.requested = command
         if self.require_scan and (
             not self.scan_valid or not 0 <= now - self.scan_at < self.config.get("scan_timeout", 0.6)
         ):
@@ -116,13 +120,41 @@ class Navigator:
         )
         if command[0] and not checked[0]:
             self.state = "obstacle_stop"
+        elif command[1] and not checked[1]:
+            self.state = "clearance_stop"
+        candidates = [*obstacles, *self.points]
+        self.blocker = min(candidates, key=lambda o: math.dist(pose[:2], o[:2]) - o[2], default=None)
         return checked
 
     def command(self, pose, destination, markers, peers, now):
         obstacles = self.obstacles(markers, peers, now)
-        if self.require_scan and (not self.scan_valid or now - self.scan_at >= 0.6):
+        if self.require_scan and (not self.scan_valid or now - self.scan_at >= self.config.get("scan_timeout", 0.6)):
             self.state = "waiting_for_scan"
             return 0.0, 0.0
+        # Commit to passing on the right instead of letting symmetric A* searches
+        # repeatedly choose the same global side and turn towards one another.
+        if self.pass_point is not None and math.dist(pose[:2], self.pass_point) < 0.3:
+            self.pass_point = None
+        if self.pass_point is None:
+            heading = math.atan2(destination[1] - pose[1], destination[0] - pose[0])
+            for peer in peers:
+                bearing = wrap(math.atan2(peer.pose[1] - pose[1], peer.pose[0] - pose[0]) - heading)
+                opposing = abs(wrap(peer.pose[2] - heading)) > 2.2
+                occupied_goal = math.dist(destination, peer.pose[:2]) < 2 * self.radius + 0.5
+                if (abs(bearing) < 0.65 and (occupied_goal or (opposing and math.dist(pose[:2], peer.pose[:2]) < 7))
+                        and peer.mode not in ("parked", "unavailable", "depleted")):
+                    side = 2 * self.radius + self.config.get("safety_margin", 0.28) + 0.7
+                    for sign in (1, -1):
+                        candidate = (
+                            pose[0] + 1.2 * math.cos(heading) + sign * side * math.sin(heading),
+                            pose[1] + 1.2 * math.sin(heading) - sign * side * math.cos(heading),
+                        )
+                        if in_bounds(candidate, self.bounds, self.clearance) and segment_clear(candidate, candidate, obstacles, self.clearance):
+                            self.pass_point = candidate
+                            break
+                    break
+        if self.pass_point is not None:
+            destination = self.pass_point
         if self.path and math.dist(pose[:2], self.path[0]) < 0.2:
             self.path.pop(0)
         changed = self.destination is None or math.dist(destination, self.destination) > 0.15
@@ -149,4 +181,6 @@ class Navigator:
         if abs(error) >= 0.18:
             speed = 0.0
         self.state = "turning" if not speed else "driving"
+        if self.pass_point is not None:
+            self.state = "passing_rover"
         return self.guard(pose, (speed, turn), obstacles, now)

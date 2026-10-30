@@ -1,7 +1,43 @@
 # Validation record
 
-Checked on 29 October 2026 on the Windows authoring PC. This record separates
-what was executed locally from what still needs the target Linux environment.
+This record separates portable checks from actual ROS/Gazebo execution.
+
+## Navigation update, 30 October 2026
+
+- 52 portable tests with OpenCV and Xacro, including sensor-only pole avoidance,
+  scan loss/invalid data, swept-motion braking, bounded/radius-aware A*, opposing
+  rover passing, pause/recall, generated-world geometry and the existing mission,
+  perception, ownership, recovery and energy checks.
+- The 80 x 60 m nominal rehearsal confirms all five sites and returns both rovers
+  in 404.1 simulation seconds. Minimum conservative obstacle gap: 0.2917 m;
+  footprint overlap samples: zero.
+- Disabling rover1 at second 20 for 30 seconds completes the expanded mission in
+  462.0 simulation seconds. Minimum conservative obstacle gap: 0.3003 m;
+  footprint overlap samples: zero. The minimum peer footprint gap is 1.7728 m.
+- The larger VIPER footprint profile also completes the kinematic rehearsal in
+  402.2 simulation seconds, with zero overlaps and minimum obstacle gap 0.2810 m.
+  This does not test VIPER wheel physics.
+- The compact rehearsal completes in 104.2 simulation seconds.
+- Ruff and byte compilation pass. Both real upstream URDFs still expand with
+  29 links, 28 joints and 10 namespaced system plugins, plus the new range sensor.
+- The console layout and follow-rover selector were inspected in a browser using
+  explicitly labelled offline telemetry. Actual ROS service and image checks are
+  included in the Linux integration gate.
+- The updated IEEE draft remains two pages, with the team author block and no
+  en/em dashes. Both pages were rendered and checked.
+
+These rehearsal times and gaps use synthetic range endpoints, perfect target
+detections and planar kinematics. They are regression evidence, not experimental
+Gazebo comparisons. Existing examples from 29 October preserve the earlier map
+and controller; expanded-map examples are identified separately.
+
+The first Linux run of this update built both ROS packages and passed the actual
+camera, laser, odometry, detection and task-assignment gate. The complete compact
+mission and console controls remain under validation until their CI result is
+recorded here. Comparative experiments, detailed-rover physics and Docker remain
+pending.
+
+## Historical baseline, 29 October 2026
 
 ## Executed
 

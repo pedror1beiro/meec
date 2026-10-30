@@ -24,7 +24,8 @@ to each machine and should not be copied across operating systems.
 | --- | --- |
 | Package not found | Source `/opt/ros/jazzy/setup.bash`, then this workspace's `install/setup.bash` |
 | `gz sim` not found | Install `ros-jazzy-ros-gz`; use Gazebo Harmonic, not Gazebo Classic |
-| Rovers visible but no movement | Confirm `/clock`, `/roverN/odom`, agent logs and `/roverN/cmd_vel` |
+| Rovers visible but no movement | Confirm `/clock`, `/roverN/odom`, `/roverN/scan`, navigation state and `/roverN/cmd_vel`; a missing laser deliberately stops motion |
+| Console unavailable | Open `http://localhost:8765` on the simulation PC; check the dashboard node log and port; use `dashboard_port:=8766` if occupied |
 | Camera image exists but no detections | Check CameraInfo, marker visibility, BGR conversion, HSV masks and detector timestamps |
 | Headless rendering fails | Check EGL/OpenGL/GPU drivers; try the GUI run; read Gazebo's Ogre2 logs |
 | Very slow simulation | Use headless mode, verify hardware rendering and keep reduced-resolution cameras |
@@ -50,4 +51,4 @@ the uneven terrain and physical solar/battery plugins remain future steps.
 The built-in LaTeX preview compiler could not start in this Windows session, but
 the local MiKTeX installation compiled the draft successfully. The reviewed PDF
 is `output/pdf/rsdis_paper_draft.pdf`; the editable source is `report/main.tex`.
-Replace the authors and pending results before submission.
+Complete the pending results before submission; the team authors are already set.

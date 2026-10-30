@@ -28,9 +28,8 @@ and return to their bases. A nearest-rover policy and an energy-aware heuristic
 share the same battery feasibility constraints. The implementation includes
 typed ROS 2 interfaces, a generated Gazebo world, camera-based marker perception,
 mission telemetry, and a portable rehearsal of the coordination logic.
-Gazebo experiments have not yet been executed on the target Linux system.
-This document presents the design and evaluation protocol without claiming
-measured physical performance or an advantage over the baseline.
+Comparative Gazebo experiments remain pending. This document presents the design
+and protocol without claiming measured policy improvements.
 \end{abstract}
 \begin{IEEEkeywords}
 multi-robot systems, lunar exploration, task allocation, ROS 2, Gazebo, energy
@@ -76,7 +75,8 @@ Each rover has a custom agent and camera detector. A central coordinator receive
 shared detections and status, publishes leased inspection goals and records
 telemetry. The agent produces velocity commands, tracks its battery, confirms
 nearby targets from local camera observations and handles returning and charging.
-A monitoring node publishes RViz markers and paths.
+A monitoring node publishes RViz markers and paths. A local mission console
+shows camera feeds, routes and events, with pause, resume and return controls.
 
 Typed messages separate observations, resource state, ownership and completion.
 Sensor and command topics are namespaced; mission topics are shared. All mission
@@ -100,11 +100,15 @@ marker and receive recent local observations over a dwell period. A teammate's
 report alone cannot confirm a task.
 
 \subsection{Control}
-Agents follow sector waypoints until assigned an inspection. A heading controller
-generates forward and angular velocities. Planar A* detours avoid shared marker
-keep-out disks. A simple pairwise rule handles close rover encounters. These
-components target the supplied open field; general unknown-obstacle navigation
-and terrain traversability remain outside the current implementation.
+Agents follow sector waypoints and sweep their cameras at survey stops. The
+80 by 60 m scene includes mapped rocks, outpost structures and crater exclusions.
+Bounded planar A* inflates these hazards, shared marker estimates and peer poses
+by the rover footprint and a safety margin. A forward laser scan also detects
+unlabelled obstacles. A command gate checks curved motion and braking distance;
+missing range data stops motion. Opposing rovers commit to passing on the right.
+Inspections use fixed stand-off approaches and recent local camera observations.
+These safeguards target the supplied level scene; rough-terrain traversability
+and general dynamic-obstacle navigation still require further work.
 
 \section{Allocation and Energy}
 Each target has at most one owner, and each rover receives at most one inspection
@@ -173,18 +177,16 @@ Portable tests check ownership, feasibility, leases, recovery, detours and
 synthetic marker images. An offline rehearsal imports the same mission logic,
 but uses kinematic motion and oracle detections. It does not validate wheel
 contact, rendering, camera-based world positions or physical lunar operation.
-A Linux smoke test separately requires both rendered camera streams, odometry,
-a detection and an assignment.
+A Linux gate separately checks rendered cameras, laser scans, odometry,
+detections, assignments and conservative footprint separation during a compact
+mission. Geometric clearance is not a measurement of physical contact forces.
 
 \section{Results: Pending Gazebo Experiments}
-\textbf{This section is intentionally incomplete.} After the Linux gate passes,
-add hardware and package versions, paired-run counts, successful and failed
-outcomes, distributions or paired differences for Table~\ref{tab:metrics}, and
-a recovery timeline. Include a Gazebo screenshot and a cross-rover assignment
-trace.
-
-Do not present offline rehearsal values as main experimental results. Equal
-performance or a trade-off between energy and time is a valid finding.
+\textbf{The policy comparison remains pending.} Report hardware and software
+versions, paired-run counts, success rates, the metrics in Table~\ref{tab:metrics},
+and a recovery timeline from actual Gazebo runs. Offline rehearsal values are
+debugging evidence only. Equal performance or an energy/time trade-off is a
+valid finding.
 
 \section{Discussion and Limitations}
 Ground-truth localisation, known-size coloured markers, planar control and an
@@ -197,8 +199,7 @@ perception.
 \section{Conclusion}
 A prototype and comparison protocol have been prepared for cooperative lunar
 exploration. Conclusions about the allocation policies remain pending actual
-Gazebo experiments. Replace this paragraph with findings supported by the final
-measurements.
+Gazebo comparisons.
 
 \begin{thebibliography}{9}
 \bibitem{gerkey}

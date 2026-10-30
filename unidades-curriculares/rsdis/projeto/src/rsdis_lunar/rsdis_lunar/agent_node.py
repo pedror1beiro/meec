@@ -1,4 +1,5 @@
 import math
+import json
 
 import rclpy
 from rclpy.node import Node
@@ -35,6 +36,7 @@ class RoverAgent(Node):
         self.status_pub = self.create_publisher(RoverStatus, "/mission/status", 10)
         self.result_pub = self.create_publisher(TaskResult, "/mission/results", 10)
         self.nav_pub = self.create_publisher(String, prefix + "/navigation_state", 10)
+        self.debug_pub = self.create_publisher(String, prefix + "/navigation_debug", 10)
         self.plan_pub = self.create_publisher(Path, prefix + "/plan", 10)
         self.create_subscription(Odometry, prefix + "/odom", self.on_odom, qos_profile_sensor_data)
         self.create_subscription(LaserScan, prefix + "/scan", self.on_scan, qos_profile_sensor_data)
@@ -148,6 +150,16 @@ class RoverAgent(Node):
         status.energy_used = self.rover.energy_used
         self.status_pub.publish(status)
         self.nav_pub.publish(String(data=self.rover.navigator.state))
+        if int(now * 10) % 5 == 0:
+            nav = self.rover.navigator
+            self.debug_pub.publish(String(data=json.dumps(dict(
+                time=now, pose=self.pose, state=nav.state, mode=self.rover.mode,
+                task=self.rover.goal.task_id if self.rover.goal else None, requested=nav.requested,
+                command=[command.linear.x, command.angular.z], blocker=nav.blocker,
+                path=nav.path, markers=self.rover.known_targets,
+                scan_age=now - nav.scan_at if math.isfinite(nav.scan_at) else None,
+                scan_valid=nav.scan_valid, memory_size=len(nav.memory),
+            ))))
         path = Path()
         path.header = status.header
         for x, y in [self.pose[:2], *self.rover.navigator.path]:

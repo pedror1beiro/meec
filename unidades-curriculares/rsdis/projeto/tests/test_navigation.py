@@ -7,7 +7,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src/rsdis_lunar"))
 from rsdis_lunar.common import load_config
-from rsdis_lunar.core import Goal, Rover
+from rsdis_lunar.core import Goal, Rover, Snapshot
 from rsdis_lunar.navigation import Navigator, advance, safe_velocity, scan_points
 from rsdis_lunar.planning import in_bounds, plan_path, segment_clear
 from rsdis_lunar.safety_audit import simulated_scan
@@ -93,6 +93,26 @@ class NavigationTests(unittest.TestCase):
         rover.return_home()
         self.assertIsNone(rover.goal)
         self.assertTrue(rover.park)
+
+    def test_opposing_rovers_pass_and_can_exchange_start_positions(self):
+        config = copy.deepcopy(self.config)
+        config["hazards"] = []
+        for goals in ([(6, 0), (-6, 0)], [(4, 0), (-4, 0)]):
+            poses = [(-4, 0, 0), (4, 0, math.pi)]
+            nav = [Navigator(config), Navigator(config)]
+            minimum = math.inf
+            for i in range(1000):
+                commands = []
+                for j in range(2):
+                    peer = Snapshot("rover" + str(2 - j), poses[1 - j], 1, "exploring", i * .1)
+                    commands.append(nav[j].command(poses[j], goals[j], [], [peer], i * .1)
+                                    if math.dist(poses[j][:2], goals[j]) > .25 else (0, 0))
+                poses = [advance(p, *commands[j], .1) for j, p in enumerate(poses)]
+                minimum = min(minimum, math.dist(poses[0][:2], poses[1][:2]) - 1.44)
+                if all(math.dist(poses[j][:2], goals[j]) < .25 for j in range(2)):
+                    break
+            self.assertTrue(all(math.dist(poses[j][:2], goals[j]) < .25 for j in range(2)))
+            self.assertGreater(minimum, .2)
 
 
 if __name__ == '__main__':
