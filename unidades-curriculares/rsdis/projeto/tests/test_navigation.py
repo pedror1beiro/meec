@@ -96,6 +96,17 @@ class NavigationTests(unittest.TestCase):
         self.assertIsNone(rover.goal)
         self.assertTrue(rover.park)
 
+    def test_new_marker_estimate_corrects_the_fixed_inspection_approach(self):
+        spec = copy.deepcopy(self.config["rovers"][0])
+        spec["spawn"] = [0, 0, 0]
+        rover = Rover(spec, self.config)
+        rover.assign(Goal("red-1", "red", (2, 0), rover.id), 0)
+        rover.remember("red", (3, 0))
+        command = rover.step((0.5, 0, 0), 0.1, 0.1)
+        self.assertGreater(command[0], 0)
+        self.assertGreater(rover.approach[0], 1)
+        self.assertEqual(rover.dwell, 0)
+
     def test_opposing_rovers_pass_and_can_exchange_start_positions(self):
         config = copy.deepcopy(self.config)
         config["hazards"] = []

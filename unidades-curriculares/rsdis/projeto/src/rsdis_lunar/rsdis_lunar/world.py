@@ -140,12 +140,13 @@ def rover(world, spec, config):
             for axis, value in (("ixx", 0.012), ("iyy", 0.012), ("izz", 0.02)):
                 element(ii, axis, value)
             solid(wheel, "wheel", "0 0 0 0 0 0", "cylinder", (0.22, 0.12), "0.12 0.12 0.12 1")
-            # Low lateral friction supports skid steering in this integration model.
+            # Isotropic contact avoids a world-axis friction preference. The old
+            # anisotropic pair could lock skid steering at +/- 90 degrees.
             col = wheel.find("collision")
             friction = element(element(col, "surface"), "friction")
             ode = element(friction, "ode")
-            element(ode, "mu", 0.8)
-            element(ode, "mu2", 0.1)
+            element(ode, "mu", 0.6)
+            element(ode, "mu2", 0.6)
             joint = element(model, "joint", name=wheel_name + "_joint", type="revolute")
             element(joint, "parent", "base_link")
             element(joint, "child", wheel_name)

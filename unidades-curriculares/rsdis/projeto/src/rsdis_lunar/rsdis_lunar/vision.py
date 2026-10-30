@@ -49,8 +49,15 @@ def detect(bgr, camera_matrix, diameter=0.5):
                 or circularity < 0.8
             ):
                 continue
-            forward = fx * diameter / w
-            left = -(x + w / 2 - cx) * forward / fx
+            # A sphere near the edge of the image projects wider than fx*D/z.
+            # Use its two tangent ray angles; the apparent angular radius is
+            # asin(R / range). This avoids the old off-axis range underestimate.
+            low = math.atan((x - 0.5 - cx) / fx)
+            high = math.atan((x + w - 0.5 - cx) / fx)
+            bearing, half_angle = (low + high) / 2, (high - low) / 2
+            centre_range = (diameter / 2) / math.sin(half_angle)
+            forward = centre_range * math.cos(bearing)
+            left = -centre_range * math.sin(bearing)
             if forward < 15:
                 candidates.append((area, (target_id, forward, left, min(1.0, circularity))))
         if candidates:

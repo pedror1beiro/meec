@@ -33,7 +33,7 @@ class VisionTests(unittest.TestCase):
             cv2.circle(self.image, (100 + i * 100, 240), 20, colour, -1)
         result = {item[0]: item for item in detect(self.image, self.k)}
         self.assertEqual(set(result), set(colours))
-        self.assertAlmostEqual(result["red"][1], 400 * 0.5 / 41)
+        self.assertAlmostEqual(result["blue"][1], 400 * 0.5 / 41, delta=0.04)
         self.assertGreater(result["red"][2], 0)  # Left side of image is +left.
         self.assertLess(result["orange"][2], 0)
 
@@ -55,6 +55,26 @@ class VisionTests(unittest.TestCase):
     def test_square_panel_is_not_a_spherical_science_marker(self):
         cv2.rectangle(self.image, (250, 200), (310, 260), (255, 0, 0), -1)
         self.assertEqual(detect(self.image, self.k), [])
+
+    def test_sphere_range_is_correct_at_both_image_edges(self):
+        # Ray/sphere intersection independently rasterises the actual perspective
+        # silhouette. An off-axis sphere is not an image-space circle.
+        v, u = np.indices(self.image.shape[:2])
+        rx, ry = (u - self.k[2]) / self.k[0], (v - self.k[5]) / self.k[4]
+        a = rx * rx + ry * ry + 1
+        for lateral in (-3.0, -2.0, 0.0, 2.0, 3.0):
+            with self.subTest(lateral=lateral):
+                image = np.zeros_like(self.image)
+                dot = rx * lateral + 5.0
+                determinant = dot * dot - a * (lateral * lateral + 25.0 - 0.25**2)
+                image[determinant >= 0] = (0, 255, 0)
+                result = detect(image, self.k)
+                self.assertEqual(len(result), 1)
+                _, forward, left, _ = result[0]
+                # A single-pixel silhouette-width uncertainty is about 0.13 m
+                # at this range; the old off-axis bias was over half a metre.
+                self.assertAlmostEqual(forward, 5.0, delta=0.15)
+                self.assertAlmostEqual(left, -lateral, delta=0.1)
 
 
 if __name__ == "__main__":

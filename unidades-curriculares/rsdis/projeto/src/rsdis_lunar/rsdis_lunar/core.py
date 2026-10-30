@@ -196,6 +196,7 @@ class Rover:
         self.navigator = Navigator(config)
         self.paused = False
         self.approach = None
+        self.approach_centre = None
         self.blocked_since = None
         self.survey_started = None
         self.survey_yaw = None
@@ -216,6 +217,7 @@ class Rover:
                 goal.position[i] - (goal.position[i] - self.pose[i]) * stand / separation
                 for i in range(2)
             )
+            self.approach_centre = tuple(goal.position)
             self.navigator.path = []
             self.navigator.pass_point = None
             self.survey_started = None
@@ -234,7 +236,15 @@ class Rover:
 
     def remember(self, target_id, position):
         if all(math.isfinite(v) for v in position):
-            self.known_targets[target_id] = tuple(position)
+            old = self.known_targets.get(target_id)
+            # Do not let one partially occluded, biased contour drag a stable
+            # keep-out estimate towards the rover during an inspection.
+            if old is None:
+                self.known_targets[target_id] = tuple(position)
+            elif distance(old, position) < 2.0:
+                self.known_targets[target_id] = tuple(
+                    0.8 * a + 0.2 * b for a, b in zip(old, position)
+                )
 
     def return_home(self):
         self.returning = self.park = True
@@ -283,7 +293,13 @@ class Rover:
             self.mode, destination, tolerance = "returning", self.home, 0.25
         elif self.goal:
             self.mode = "inspecting"
-            destination, tolerance = self.goal.position, self.config["inspection_standoff"]
+            destination = self.known_targets.get(self.goal.target_id, self.goal.position)
+            tolerance = self.config["inspection_standoff"]
+            if distance(destination, self.approach_centre) > 0.12:
+                correction = tuple(a - b for a, b in zip(destination, self.approach_centre))
+                self.approach = tuple(a + b for a, b in zip(self.approach, correction))
+                self.approach_centre = tuple(destination)
+                self.navigator.path = []
         else:
             self.mode = "exploring"
             destination = self.waypoints[self.waypoint_index % len(self.waypoints)]
