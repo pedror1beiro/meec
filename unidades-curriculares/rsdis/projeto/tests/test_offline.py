@@ -16,6 +16,8 @@ class MissionRehearsalTests(unittest.TestCase):
             summary, path = rehearse(config, output=Path(temp) / "nominal")
             self.assertEqual(summary["reason"], "all_targets_confirmed_and_returned")
             self.assertEqual(summary["targets_confirmed"], 5)
+            self.assertEqual(summary["clearance_audit"]["footprint_overlap_samples"], 0)
+            self.assertGreater(summary["clearance_audit"]["minimum_obstacle_gap_m"], 0.2)
             self.assertTrue(all(r["mode"] == "parked" for r in summary["rovers"].values()))
             trace = json.loads((path / "trace.json").read_text())
             self.assertTrue(all(r["mode"] == "parked" for r in trace[-1]["rovers"]))

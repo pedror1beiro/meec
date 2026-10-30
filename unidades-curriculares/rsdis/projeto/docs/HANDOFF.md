@@ -10,7 +10,7 @@
 5. Verify both camera views, then run the smoke test after stopping the first launch.
 6. Execute one supervised experiment and inspect its logs and summary.
 7. Fetch the detailed upstream assets if the lightweight integration is stable.
-8. Use `model:=viper` for the experimental detailed-rover option and run its own
+8. Use `model:=viper` for the optional detailed-rover option and run its own
    smoke test before using that profile in experiments.
 9. Run the matched comparison and complete the paper/video from actual results.
 
@@ -24,7 +24,8 @@ to each machine and should not be copied across operating systems.
 | --- | --- |
 | Package not found | Source `/opt/ros/jazzy/setup.bash`, then this workspace's `install/setup.bash` |
 | `gz sim` not found | Install `ros-jazzy-ros-gz`; use Gazebo Harmonic, not Gazebo Classic |
-| Rovers visible but no movement | Confirm `/clock`, `/roverN/odom`, agent logs and `/roverN/cmd_vel` |
+| Rovers visible but no movement | Confirm `/clock`, `/roverN/odom`, `/roverN/scan`, navigation state and `/roverN/cmd_vel`; a missing laser deliberately stops motion |
+| Console unavailable | Open `http://localhost:8765` on the simulation PC; check the dashboard node log and port; use `dashboard_port:=8766` if occupied |
 | Camera image exists but no detections | Check CameraInfo, marker visibility, BGR conversion, HSV masks and detector timestamps |
 | Headless rendering fails | Check EGL/OpenGL/GPU drivers; try the GUI run; read Gazebo's Ogre2 logs |
 | Very slow simulation | Use headless mode, verify hardware rendering and keep reduced-resolution cameras |
@@ -40,14 +41,15 @@ known target coordinates to make the smoke test pass.
 
 ## Specific unverified boundaries
 
-The Linux build, Gazebo plugin loading, physical wheel behaviour, camera topic
-names, rendered marker visibility, RViz and Docker execution were not run on the
-Windows authoring machine. The Linux smoke test is the explicit gate for these
-interfaces. Upstream source pins and LFS assets have been downloaded on the
-authoring machine. The detailed rover adapter is prepared but physically untested;
-the uneven terrain and physical solar/battery plugins remain future steps.
+Linux CI validates the lightweight model on both maps, including failure recovery,
+and the detailed rover on the compact map. Both models pass physical full-circle
+turns, translation, real cameras/lidar and complete compact missions. The tests
+run headlessly with software rendering. RViz, Docker, hardware graphics behaviour,
+the detailed rover on the enlarged map, uneven terrain and physical solar/battery
+plugins remain separate checks. Read the exact run links and limits in
+`examples/gazebo_validation_20261030/README.md`.
 
 The built-in LaTeX preview compiler could not start in this Windows session, but
 the local MiKTeX installation compiled the draft successfully. The reviewed PDF
 is `output/pdf/rsdis_paper_draft.pdf`; the editable source is `report/main.tex`.
-Replace the authors and pending results before submission.
+Complete the pending results before submission; the team authors are already set.

@@ -6,7 +6,7 @@ Coordinates are metres in a shared world frame. This is not SLAM or Nav2.
 
 from dataclasses import dataclass
 import math
-from .planning import next_waypoint
+from .navigation import Navigator
 
 
 def distance(a, b):
@@ -193,8 +193,15 @@ class Rover:
         self.returning = False
         self.park = False
         self.known_targets = {}
-        self._path_key = None
-        self._path_point = None
+        self.navigator = Navigator(config)
+        self.paused = False
+        self.approach = None
+        self.approach_centre = None
+        self.inspection_arrived = False
+        self.blocked_since = None
+        self.survey_started = None
+        self.survey_yaw = None
+        self.survey_angle = 0.0
 
     def assign(self, goal, now):
         if goal.task_id in self.retired or goal.rover_id != self.id:
@@ -205,6 +212,17 @@ class Rover:
             if self.goal is not None:
                 self.finish(False, "superseded")
             self.goal, self.dwell = goal, 0.0
+            separation = max(0.01, distance(self.pose, goal.position))
+            stand = self.config["inspection_standoff"] - 0.12
+            self.approach = tuple(
+                goal.position[i] - (goal.position[i] - self.pose[i]) * stand / separation
+                for i in range(2)
+            )
+            self.approach_centre = tuple(goal.position)
+            self.inspection_arrived = False
+            self.navigator.path = []
+            self.navigator.pass_point = None
+            self.survey_started = None
         self.lease_until = now + self.config["lease_seconds"]
 
     def finish(self, success, detail):
@@ -220,11 +238,22 @@ class Rover:
 
     def remember(self, target_id, position):
         if all(math.isfinite(v) for v in position):
-            self.known_targets[target_id] = tuple(position)
+            old = self.known_targets.get(target_id)
+            # Do not let one partially occluded, biased contour drag a stable
+            # keep-out estimate towards the rover during an inspection.
+            if old is None:
+                self.known_targets[target_id] = tuple(position)
+            elif distance(old, position) < 2.0:
+                self.known_targets[target_id] = tuple(
+                    0.8 * a + 0.2 * b for a, b in zip(old, position)
+                )
 
     def return_home(self):
         self.returning = self.park = True
         self.finish(False, "mission_return")
+        self.navigator.path = []
+        self.navigator.pass_point = None
+        self.navigator.state = "returning"
 
     def snapshot(self, now):
         return Snapshot(
@@ -232,20 +261,29 @@ class Rover:
         )
 
     def step(self, pose, dt, now, peers=()):
+        peers = [p for p in peers if p.rover_id != self.id]
         travelled = distance(self.pose, pose)
         self.travelled += travelled
         self.pose = tuple(pose)
         # Distance comes from odometry, rather than requested velocity.
-        used = min(self.battery, self.energy.cost(travelled, dt))
+        used = min(self.battery, self.energy.cost(travelled, 0.0 if self.paused else dt))
         self.energy_used += used
         self.battery = max(0.0, self.battery - used)
         if not self.enabled:
             self.finish(False, "disabled")
             self.mode = "unavailable"
+            self.navigator.state = "disabled"
             return 0.0, 0.0
         if self.battery <= 0:
             self.finish(False, "depleted")
             self.mode = "depleted"
+            self.navigator.state = "depleted"
+            return 0.0, 0.0
+        if self.paused:
+            self.lease_until += dt
+            self.navigator.state = "paused"
+            if self.mode == "unavailable":
+                self.mode = "idle"
             return 0.0, 0.0
         if self.goal and now > self.lease_until:
             self.finish(False, "lease_expired")
@@ -257,6 +295,7 @@ class Rover:
         if self.returning:
             if home_distance < 0.3:
                 self.mode = "parked" if self.park else "charging"
+                self.navigator.state = self.mode
                 self.battery = min(1.0, self.battery + self.energy.charge_per_second * dt)
                 if self.battery >= self.energy.resume_level and not self.park:
                     self.returning = False
@@ -264,7 +303,13 @@ class Rover:
             self.mode, destination, tolerance = "returning", self.home, 0.25
         elif self.goal:
             self.mode = "inspecting"
-            destination, tolerance = self.goal.position, self.config["inspection_standoff"]
+            destination = self.known_targets.get(self.goal.target_id, self.goal.position)
+            tolerance = self.config["inspection_standoff"]
+            if distance(destination, self.approach_centre) > 0.12:
+                correction = tuple(a - b for a, b in zip(destination, self.approach_centre))
+                self.approach = tuple(a + b for a, b in zip(self.approach, correction))
+                self.approach_centre = tuple(destination)
+                self.navigator.path = []
         else:
             self.mode = "exploring"
             destination = self.waypoints[self.waypoint_index % len(self.waypoints)]
@@ -275,6 +320,13 @@ class Rover:
                 self.mode, destination, tolerance = "returning", self.home, 0.25
         error = wrap(math.atan2(destination[1] - pose[1], destination[0] - pose[0]) - pose[2])
         reached = distance(pose, destination) <= tolerance
+        if self.mode == "inspecting":
+            # Range quantisation must not alternate approach and camera aiming
+            # at the stand-off boundary. Once parked, retain the inspection zone
+            # until the estimate moves substantially farther away.
+            margin = 0.35 if self.inspection_arrived else 0.1
+            self.inspection_arrived = distance(pose, destination) <= tolerance + margin
+            reached = self.inspection_arrived
         if reached:
             if self.mode == "inspecting":
                 # Confirmation requires a recent detection by this rover, facing the marker.
@@ -282,41 +334,42 @@ class Rover:
                 self.dwell = self.dwell + dt if fresh and abs(error) < 0.2 else 0.0
                 if self.dwell >= self.config["inspection_seconds"]:
                     self.finish(True, "camera_confirmed")
-                return 0.0, max(-0.7, min(0.7, 1.5 * error)) if abs(error) > 0.1 else 0.0
+                self.navigator.state = "confirming" if fresh else "acquiring_marker"
+                return self.navigator.guard(
+                    pose,
+                    (0.0, max(-0.55, min(0.55, 1.5 * error)) if abs(error) > 0.1 else 0.0),
+                    self.navigator.obstacles(self.known_targets.values(), peers, now),
+                    now,
+                )
             if self.mode == "exploring":
+                # A full camera sweep at route stops discovers sites in either direction.
+                if self.survey_started is None:
+                    self.survey_started, self.survey_yaw, self.survey_angle = now, pose[2], 0.0
+                self.survey_angle += abs(wrap(pose[2] - self.survey_yaw))
+                self.survey_yaw = pose[2]
+                if self.survey_angle < 2 * math.pi and now - self.survey_started < 25:
+                    self.navigator.state = "surveying"
+                    return self.navigator.guard(
+                        pose,
+                        (0.0, 0.5),
+                        self.navigator.obstacles(self.known_targets.values(), peers, now),
+                        now,
+                    )
                 self.waypoint_index += 1
+                self.survey_started = None
             return 0.0, 0.0
-        # Plan to a stand-off point instead of the marker centre.
-        navigation_goal = destination
-        if self.mode == "inspecting":
-            separation = distance(pose, destination)
-            navigation_goal = (
-                destination[0] - (destination[0] - pose[0]) * tolerance / separation,
-                destination[1] - (destination[1] - pose[1]) * tolerance / separation,
-            )
-        # Replan at most once per second; share only marker locations, not world truth.
-        key = (int(now), tuple(round(v, 1) for v in navigation_goal), len(self.known_targets))
-        if key != self._path_key:
-            self._path_point = next_waypoint(
-                pose,
-                navigation_goal,
-                self.known_targets.values(),
-                clearance=self.config.get("planner_clearance", 0.95),
-            )
-            self._path_key = key
-        if self._path_point is None:
-            return 0.0, 0.0
-        error = wrap(
-            math.atan2(self._path_point[1] - pose[1], self._path_point[0] - pose[0]) - pose[2]
+        navigation_goal = self.approach if self.mode == "inspecting" else destination
+        command = self.navigator.command(
+            pose, navigation_goal, self.known_targets.values(), peers, now
         )
-        # Simple pairwise yielding, for the open test field only. Not obstacle planning.
-        for other in peers:
-            if other.rover_id == self.id or now - other.seen_at > 2.0:
-                continue
-            separation = distance(pose, other.pose)
-            bearing = wrap(math.atan2(other.pose[1] - pose[1], other.pose[0] - pose[0]) - pose[2])
-            if separation < self.config.get("peer_clearance", 1.2) and abs(bearing) < 0.8:
-                return 0.0, 0.6 if self.id < other.rover_id else -0.6
-        turn = max(-0.7, min(0.7, 1.5 * error))
-        speed = min(0.45, max(0.08, distance(pose, destination) - tolerance))
-        return (speed if abs(error) < 0.3 else 0.0), turn
+        if self.navigator.state in ("path_blocked", "obstacle_stop", "clearance_stop"):
+            self.blocked_since = now if self.blocked_since is None else self.blocked_since
+            if now - self.blocked_since > 12:
+                if self.goal:
+                    self.finish(False, "path_blocked")
+                elif self.mode == "exploring":
+                    self.waypoint_index += 1
+                self.blocked_since = None
+        else:
+            self.blocked_since = None
+        return command

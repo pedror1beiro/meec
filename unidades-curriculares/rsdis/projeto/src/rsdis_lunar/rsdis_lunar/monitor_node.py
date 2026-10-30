@@ -3,8 +3,9 @@ from copy import deepcopy
 
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import Point, PoseStamped
 from nav_msgs.msg import Path
+from std_msgs.msg import String
 from visualization_msgs.msg import Marker, MarkerArray
 from rsdis_interfaces.msg import Detection, RoverStatus, TaskGoal, TaskResult
 
@@ -19,6 +20,8 @@ class MissionMonitor(Node):
         self.marker_height = config.get("marker_height", 0.88)
         self.detailed = config.get("model_profile") == "space_ros_viper"
         self.ids = [r["id"] for r in config["rovers"]]
+        self.config = config
+        self.navigation = {}
         self.colours = {t["id"]: t["colour"] for t in config["targets"]}
         self.statuses = {}
         self.detections = {}
@@ -33,6 +36,13 @@ class MissionMonitor(Node):
         self.create_subscription(Detection, "/mission/detections", self.on_detection, 10)
         self.create_subscription(TaskGoal, "/mission/goals", self.on_goal, 10)
         self.create_subscription(TaskResult, "/mission/results", self.on_result, 10)
+        for name in self.ids:
+            self.create_subscription(
+                String,
+                f"/{name}/navigation_state",
+                lambda msg, n=name: self.navigation.__setitem__(n, msg.data),
+                10,
+            )
         self.create_timer(0.5, self.tick)
 
     def on_status(self, msg):
@@ -92,7 +102,9 @@ class MissionMonitor(Node):
             label.pose.position.z = self.marker_height + 0.52
             label.scale.z = 0.28
             label.color.r = label.color.g = label.color.b = 1.0
-            label.text = f"{name}: {status.mode} | {status.battery:.0%}"
+            label.text = (
+                f"{name}: {status.mode} | {self.navigation.get(name, '')} | {status.battery:.0%}"
+            )
             markers.extend((body, label))
             path = Path()
             path.header = label.header
@@ -115,6 +127,23 @@ class MissionMonitor(Node):
             label.color.r = label.color.g = label.color.b = 1.0
             label.text = name + (" [confirmed]" if name in self.confirmed else " [detected]")
             markers.extend((marker, label))
+        for i, hazard in enumerate(self.config.get("hazards", [])):
+            area = self.marker("mapped_hazards", i, Marker.CYLINDER)
+            area.pose.position.x, area.pose.position.y = map(float, hazard["position"])
+            area.pose.position.z = 0.03
+            area.scale.x = area.scale.y = 2 * hazard["radius"]
+            area.scale.z = 0.06
+            area.color.r, area.color.g, area.color.b, area.color.a = 0.6, 0.56, 0.48, 0.45
+            markers.append(area)
+        xmin, xmax, ymin, ymax = self.config["map_bounds"]
+        boundary = self.marker("map_bounds", 0, Marker.LINE_STRIP)
+        boundary.scale.x = 0.08
+        boundary.color.r = boundary.color.g = boundary.color.b = 0.6
+        boundary.points = [
+            Point(x=float(x), y=float(y), z=0.05)
+            for x, y in [(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax), (xmin, ymin)]
+        ]
+        markers.append(boundary)
         self.pub.publish(MarkerArray(markers=markers))
 
 

@@ -1,7 +1,75 @@
 # Validation record
 
-Checked on 29 October 2026 on the Windows authoring PC. This record separates
-what was executed locally from what still needs the target Linux environment.
+This record separates portable checks from actual ROS/Gazebo execution.
+
+## Navigation update, 30 October 2026
+
+- 56 portable tests with OpenCV and Xacro, including sensor-only pole avoidance,
+  scan loss/invalid data, swept-motion braking, bounded/radius-aware A*, opposing
+  rover passing, pause/recall, generated-world geometry and the existing mission,
+  perception, ownership, recovery and energy checks. Added independent
+  perspective sphere silhouettes at both image edges, corrected inspection
+  approaches, noisy stand-off arrival and disable/enable while paused.
+- The 80 x 60 m nominal rehearsal confirms all five sites and returns both rovers
+  in 398.6 simulation seconds. Minimum conservative obstacle gap: 0.2943 m;
+  footprint overlap samples: zero.
+- Disabling rover1 at second 20 for 30 seconds completes the expanded mission in
+  452.9 simulation seconds. Minimum conservative obstacle gap: 0.3003 m;
+  footprint overlap samples: zero. The minimum peer footprint gap is 1.8539 m.
+- The larger VIPER footprint profile also completes the kinematic rehearsal in
+  396.6 simulation seconds, with zero overlaps and minimum obstacle gap 0.2810 m.
+  This does not test VIPER wheel physics.
+- The compact rehearsal completes in 104.2 simulation seconds.
+- Ruff and byte compilation pass. Both real upstream URDFs still expand with
+  29 links, 28 joints and 10 namespaced system plugins, plus the new range sensor.
+- The console layout and follow-rover selector were inspected in a browser using
+  both explicitly labelled offline telemetry and a saved actual Gazebo checkpoint.
+  Recorded mission controls are disabled and both rendered camera images load.
+  Actual ROS service and image checks pass in the Linux integration gate.
+- The updated IEEE draft remains two pages, with the team author block and no
+  en/em dashes. Both pages were rendered and checked.
+
+These rehearsal times and gaps use synthetic range endpoints, perfect target
+detections and planar kinematics. They are regression evidence, not experimental
+Gazebo comparisons. Existing examples from 29 October preserve the earlier map
+and controller; expanded-map examples are identified separately.
+
+Linux CI at commit `1317fb3` built both ROS packages and passed actual camera,
+laser, odometry, detection and task-assignment gates. Full turns in both
+directions, translation and level attitude passed. The compact mission confirmed
+five targets and returned both rovers in 116.0 simulation seconds, with minimum
+conservative obstacle gap 0.5421 m and zero overlaps. Actual console telemetry,
+camera previews and pause/resume passed.
+
+The expanded map with a temporary rover failure completed in 656.5 simulation
+seconds. Its minimum conservative obstacle gap was 0.2827 m, with zero overlaps.
+rover1 was disabled at world time 20 s and restored at 50 s. Its red-marker task
+was released, assigned to rover2 and confirmed by rover2. Both intervention
+service calls succeeded. Metadata records OpenCV 4.6.0, rclpy 7.1.12, ros_gz
+1.0.24 and xacro 2.1.1 on an x86_64 Linux runner using software rendering.
+
+The retained evidence is in `examples/gazebo_validation_20261030/`, with the
+workflow link, configurations, events, telemetry, summaries and camera images.
+The optional VIPER gate at commit `8bcfb9a` also passed in
+[Linux CI](https://github.com/pedror1beiro/meec/actions/runs/41070906055). Both
+rover models rotate more than a full turn in opposite directions, translate and
+remain level. The detailed rover's compact mission confirms all five targets and
+returns both rovers in 171.5 simulation seconds, with minimum conservative
+obstacle gap 0.5218 m, peer gap 0.4489 m and zero overlaps. Real joint feedback,
+cameras, lidar, console controls and checkpoint export all passed.
+
+The final lightweight repeat at the same `8bcfb9a` runtime revision passes the
+entire [Linux gate](https://github.com/pedror1beiro/meec/actions/runs/41070832128).
+The compact mission again takes 116.0 simulation seconds, with minimum obstacle
+gap 0.5453 m. The expanded failure mission takes 631.5 seconds, with obstacle gap
+0.2804 m, peer gap 5.0920 m and zero overlaps. Both failure service calls succeed;
+the red inspection is released by rover1 and completed by rover2. These repeats
+demonstrate functional consistency, not a statistical policy comparison.
+
+This is functional validation. Comparative experiments, VIPER's expanded mission,
+Docker, the final paper results and the demonstration video remain pending.
+
+## Historical baseline, 29 October 2026
 
 ## Executed
 

@@ -11,7 +11,7 @@ Visualization Manager:
       Name: Grid
       Enabled: true
       Cell Size: 1
-      Plane Cell Count: 40
+      Plane Cell Count: 80
     - Class: rviz_default_plugins/MarkerArray
       Name: Mission markers
       Enabled: true
@@ -33,10 +33,22 @@ Visualization Manager:
       Color: 255; 190; 110
       Topic:
         Value: /rover2/path
+    - Class: rviz_default_plugins/Path
+      Name: Rover 1 plan
+      Enabled: true
+      Color: 120; 170; 230
+      Topic:
+        Value: /rover1/plan
+    - Class: rviz_default_plugins/Path
+      Name: Rover 2 plan
+      Enabled: true
+      Color: 230; 170; 90
+      Topic:
+        Value: /rover2/plan
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 30
+      Distance: 80
       Pitch: 1.2
       Yaw: 0.2
       Focal Point:

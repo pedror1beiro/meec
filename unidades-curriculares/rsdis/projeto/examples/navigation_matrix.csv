@@ -1,0 +1,13 @@
+scenario,strategy,seed,mode,reason,elapsed_sim_seconds,targets_confirmed,distance_m,synthetic_energy_used
+nominal,nearest,0,offline_kinematic_oracle_detection,all_targets_confirmed_and_returned,398.6,5,256.72387879128155,1.6200832727476882
+nominal,energy,0,offline_kinematic_oracle_detection,all_targets_confirmed_and_returned,398.6,5,256.72387879128155,1.6200832727476882
+rover1_failure,nearest,0,offline_kinematic_oracle_detection,all_targets_confirmed_and_returned,452.9,5,272.37659711266065,1.724859582675948
+rover1_failure,energy,0,offline_kinematic_oracle_detection,all_targets_confirmed_and_returned,452.9,5,272.37659711266065,1.724859582675948
+nominal,nearest,1,offline_kinematic_oracle_detection,all_targets_confirmed_and_returned,382.6,5,257.5363126493967,1.6217578758963869
+nominal,energy,1,offline_kinematic_oracle_detection,all_targets_confirmed_and_returned,382.6,5,257.5363126493967,1.6217578758963869
+rover1_failure,nearest,1,offline_kinematic_oracle_detection,all_targets_confirmed_and_returned,423.4,5,266.9039706357215,1.6861238238143184
+rover1_failure,energy,1,offline_kinematic_oracle_detection,all_targets_confirmed_and_returned,423.4,5,266.9039706357215,1.6861238238143184
+nominal,nearest,2,offline_kinematic_oracle_detection,all_targets_confirmed_and_returned,298.9,5,207.31623647515258,1.303697418850915
+nominal,energy,2,offline_kinematic_oracle_detection,all_targets_confirmed_and_returned,298.9,5,207.31623647515258,1.303697418850915
+rover1_failure,nearest,2,offline_kinematic_oracle_detection,all_targets_confirmed_and_returned,511.9,5,308.47235305448294,1.953234118326845
+rover1_failure,energy,2,offline_kinematic_oracle_detection,all_targets_confirmed_and_returned,511.9,5,308.47235305448294,1.953234118326845

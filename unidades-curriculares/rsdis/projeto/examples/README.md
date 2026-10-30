@@ -5,6 +5,15 @@ Gazebo runs. Open each `playback.html` in a browser; no server is required.
 
 - `offline_nominal`: discover five markers, inspect them, and return both rovers.
 - `offline_failure`: disable rover1 for 30 simulated seconds; rover2 takes over.
+- `expanded_nominal` and `expanded_failure`: the 30 October 80 x 60 m map, laser
+  rehearsal and updated controller, with a conservative clearance audit in each
+  summary. These replace the compact examples for checking the latest map.
+- `navigation_matrix.csv`: twelve portable rehearsals with three route orders,
+  nominal/failure conditions and both allocation policies.
+- `gazebo_validation_20261030`: actual Linux ROS/Gazebo functional validation,
+  including complete compact and expanded missions, real camera images, a
+  failure reassignment and clearance audits. Its README identifies the source
+  commit and workflow. These files are distinct from the portable rehearsals.
 - `choice_nearest` and `choice_energy`: the same diagnostic layout under both
   policies. Both rovers can inspect the central blue marker, but different
   initial batteries lead to different ownership under the two ranking rules.

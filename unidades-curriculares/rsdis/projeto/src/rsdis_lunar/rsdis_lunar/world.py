@@ -1,5 +1,6 @@
-"""Generate a small, self-contained SDF integration field (no network assets)."""
+"""Generate an asset-free lunar outpost with the same hazards used by planning."""
 
+import math
 from xml.etree import ElementTree as ET
 
 
@@ -28,6 +29,8 @@ def geometry(parent, shape, size):
     elif shape == "cylinder":
         element(obj, "radius", size[0])
         element(obj, "length", size[1])
+    elif shape == "ellipsoid":
+        element(obj, "radii", size)
     return obj
 
 
@@ -49,6 +52,36 @@ def plugin(parent, file, name):
     )
 
 
+def lidar(link, name, config):
+    sensor = element(link, "sensor", name="safety_lidar", type="gpu_lidar")
+    element(
+        sensor,
+        "pose",
+        f"{config.get('lidar_offset', 0.62)} 0 {config.get('lidar_height', 0.65)} 0 0 0",
+    )
+    element(sensor, "topic", f"/{name}/scan")
+    element(sensor, "gz_frame_id", f"{name}/safety_lidar")
+    element(sensor, "update_rate", 10)
+    element(sensor, "always_on", "true")
+    element(sensor, "visualize", "false")
+    rays = element(sensor, "lidar")
+    horizontal = element(element(rays, "scan"), "horizontal")
+    for key, value in {
+        "samples": 721,
+        "resolution": 1,
+        "min_angle": -math.pi / 2,
+        "max_angle": math.pi / 2,
+    }.items():
+        element(horizontal, key, value)
+    distance = element(rays, "range")
+    for key, value in {
+        "min": 0.06,
+        "max": config.get("lidar_range", 12.0),
+        "resolution": 0.01,
+    }.items():
+        element(distance, key, value)
+
+
 def rover(world, spec, config):
     name = spec["id"]
     x, y, yaw = spec["spawn"]
@@ -60,7 +93,8 @@ def rover(world, spec, config):
     inertia = element(inertial, "inertia")
     for axis, value in (("ixx", 0.7), ("iyy", 1.0), ("izz", 1.4)):
         element(inertia, axis, value)
-    solid(base, "body", "0 0 0.22 0 0 0", "box", "0.9 0.58 0.3", "0.6 0.6 0.57 1")
+    colour = "0.52 0.62 0.72 1" if config["rovers"][0]["id"] == name else "0.70 0.63 0.52 1"
+    solid(base, "body", "0 0 0.22 0 0 0", "box", "0.9 0.58 0.3", colour)
     solid(
         base,
         "solar_panel",
@@ -96,6 +130,7 @@ def rover(world, spec, config):
     clip = element(camera_spec, "clip")
     element(clip, "near", 0.05)
     element(clip, "far", 30)
+    lidar(base, name, config)
     drive = plugin(model, "diff-drive", "DiffDrive")
     for side, sign in (("left", 1), ("right", -1)):
         for end, wx in (("front", 0.3), ("rear", -0.3)):
@@ -108,12 +143,13 @@ def rover(world, spec, config):
             for axis, value in (("ixx", 0.012), ("iyy", 0.012), ("izz", 0.02)):
                 element(ii, axis, value)
             solid(wheel, "wheel", "0 0 0 0 0 0", "cylinder", (0.22, 0.12), "0.12 0.12 0.12 1")
-            # Low lateral friction supports skid steering in this integration model.
+            # Isotropic contact avoids a world-axis friction preference. The old
+            # anisotropic pair could lock skid steering at +/- 90 degrees.
             col = wheel.find("collision")
             friction = element(element(col, "surface"), "friction")
             ode = element(friction, "ode")
-            element(ode, "mu", 0.8)
-            element(ode, "mu2", 0.1)
+            element(ode, "mu", 0.6)
+            element(ode, "mu2", 0.6)
             joint = element(model, "joint", name=wheel_name + "_joint", type="revolute")
             element(joint, "parent", "base_link")
             element(joint, "child", wheel_name)
@@ -168,15 +204,115 @@ def build_world(config, include_rovers=True):
     ground = element(world, "model", name="regolith")
     element(ground, "static", "true")
     ground_link = element(ground, "link", name="ground")
-    solid(ground_link, "ground", "0 0 -0.1 0 0 0", "box", "40 30 0.2", "0.35 0.34 0.32 1")
-    # Decoration stays outside the open test routes; obstacle avoidance is future work.
-    for index, (x, y, radius) in enumerate(
-        [(-5, -8, 0.8), (2, 8, 0.7), (10, 5, 1.0), (10, -6, 0.6), (-12, 2, 0.9)]
-    ):
-        rock = element(world, "model", name=f"rock_{index}")
-        element(rock, "static", "true")
-        link = element(rock, "link", name="rock")
-        solid(link, "rock", f"{x} {y} 0 0 0 0", "sphere", radius, "0.22 0.21 0.2 1")
+    width, height = config.get("ground_size", [40, 30])
+    solid(
+        ground_link, "ground", "0 0 -0.1 0 0 0", "box", f"{width} {height} 0.2", "0.35 0.34 0.32 1"
+    )
+    for index, hazard in enumerate(config.get("hazards", [])):
+        obj = element(world, "model", name=hazard["id"])
+        element(obj, "static", "true")
+        link = element(obj, "link", name="obstacle")
+        x, y = hazard["position"]
+        radius, kind = hazard["radius"], hazard["kind"]
+        if kind == "crater":
+            # A shallow visual depression and rim, with a circular planning exclusion.
+            # No fictitious drivable heightmap or invisible collision wall is used.
+            solid(
+                link,
+                "basin",
+                f"{x} {y} 0.006 0 0 0",
+                "cylinder",
+                (radius, 0.012),
+                "0.18 0.18 0.18 1",
+                False,
+            )
+            for i in range(24):
+                angle = 2 * math.pi * i / 24
+                px, py = x + radius * math.cos(angle), y + radius * math.sin(angle)
+                solid(
+                    link,
+                    f"rim_{i}",
+                    f"{px} {py} -0.12 0 0 0",
+                    "sphere",
+                    0.23,
+                    "0.42 0.41 0.39 1",
+                    False,
+                )
+        elif kind == "habitat":
+            solid(
+                link,
+                "module",
+                f"{x} {y} 1.0 0 0 0",
+                "cylinder",
+                (radius * 0.8, 2.0),
+                "0.72 0.73 0.72 1",
+            )
+            solid(
+                link,
+                "roof",
+                f"{x} {y} 2.05 0 0 0",
+                "cylinder",
+                (radius * 0.85, 0.1),
+                "0.45 0.46 0.47 1",
+            )
+            solid(
+                link,
+                "window_band",
+                f"{x} {y} 1.3 0 0 0",
+                "cylinder",
+                (radius * 0.805, 0.22),
+                "0.08 0.10 0.13 1",
+                False,
+            )
+            solid(
+                link,
+                "antenna",
+                f"{x} {y} 2.7 0 0 0",
+                "cylinder",
+                (0.035, 1.3),
+                "0.65 0.66 0.66 1",
+                False,
+            )
+        elif kind == "solar":
+            solid(
+                link,
+                "panel",
+                f"{x} {y} 0.6 0 0 0",
+                "box",
+                f"{radius * 1.5} {radius} 0.15",
+                "0.07 0.09 0.16 1",
+            )
+        else:
+            # Low irregular rocks, enclosed by the configured circular radius.
+            solid(
+                link,
+                "boulder",
+                f"{x} {y} {radius * 0.25} 0 0 {index * 0.43}",
+                "ellipsoid",
+                f"{radius * 0.86} {radius} {radius * 0.6}",
+                "0.24 0.235 0.22 1",
+            )
+            solid(
+                link,
+                "cap",
+                f"{x + radius * 0.2} {y} {radius * 0.43} 0 0 {index * 0.43}",
+                "ellipsoid",
+                f"{radius * 0.52} {radius * 0.6} {radius * 0.5}",
+                "0.28 0.27 0.25 1",
+            )
+    # Surface patches give scale without introducing unmodelled collision objects.
+    for i in range(65):
+        x = -width / 2 + 2 + ((i * 17) % int(width - 4))
+        y = -height / 2 + 2 + ((i * 13) % int(height - 4))
+        solid(
+            ground_link,
+            f"regolith_patch_{i}",
+            f"{x} {y} 0.002 0 0 0",
+            "cylinder",
+            (0.15 + (i % 4) * 0.12, 0.003),
+            "0.30 0.295 0.28 1",
+            False,
+        )
     for spec in config["rovers"]:
         if include_rovers:
             rover(world, spec, config)
@@ -184,7 +320,25 @@ def build_world(config, include_rovers=True):
         element(home, "static", "true")
         link = element(home, "link", name="pad")
         x, y = spec["spawn"][:2]
-        solid(link, "pad", f"{x} {y} 0.005 0 0 0", "box", "1.6 1.6 0.01", "0.15 0.15 0.17 1", False)
+        pad_size = max(2.4, 2 * config.get("rover_radius", 0.72) + 0.6)
+        solid(
+            link,
+            "pad",
+            f"{x} {y} 0.005 0 0 0",
+            "box",
+            f"{pad_size} {pad_size} 0.01",
+            "0.13 0.15 0.18 1",
+            False,
+        )
+        solid(
+            link,
+            "pad_centre",
+            f"{x} {y} 0.012 0 0 0",
+            "box",
+            f"{pad_size * 0.7} 0.08 0.01",
+            "0.65 0.68 0.7 1",
+            False,
+        )
     for target in config["targets"]:
         model = element(world, "model", name="target_" + target["id"])
         element(model, "static", "true")

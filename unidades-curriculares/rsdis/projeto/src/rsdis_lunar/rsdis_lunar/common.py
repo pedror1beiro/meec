@@ -5,6 +5,23 @@ from pathlib import Path
 
 def load_config(path):
     config = json.loads(Path(path).read_text(encoding="utf-8"))
+    defaults = dict(
+        map_bounds=[-18, 18, -13, 13],
+        ground_size=[40, 30],
+        rover_radius=0.72,
+        safety_margin=0.28,
+        marker_uncertainty=0.25,
+        lidar_offset=0.62,
+        lidar_height=0.65,
+        lidar_range=12.0,
+        scan_timeout=0.6,
+        planner_resolution=0.5,
+        max_speed=0.45,
+        hazards=[],
+        sectors=[],
+    )
+    for key, value in defaults.items():
+        config.setdefault(key, value)
 
     def numeric(value, label):
         if (
@@ -29,6 +46,56 @@ def load_config(path):
         config[key] = numeric(config[key], key)
     for key, value in config["energy"].items():
         config["energy"][key] = numeric(value, "energy." + key)
+    for key in (
+        "rover_radius",
+        "safety_margin",
+        "marker_uncertainty",
+        "lidar_offset",
+        "lidar_height",
+        "lidar_range",
+        "scan_timeout",
+        "planner_resolution",
+        "max_speed",
+    ):
+        config[key] = numeric(config[key], key)
+        if config[key] <= 0:
+            raise ValueError(f"{key} must be positive")
+    if config["max_speed"] > 0.45:
+        raise ValueError("max_speed must not exceed the model limit of 0.45 m/s")
+    if len(config["map_bounds"]) != 4 or len(config["ground_size"]) != 2:
+        raise ValueError("Use map_bounds=[xmin,xmax,ymin,ymax] and ground_size=[width,height]")
+    bounds = config["map_bounds"] = [numeric(v, "map_bounds") for v in config["map_bounds"]]
+    ground = config["ground_size"] = [numeric(v, "ground_size") for v in config["ground_size"]]
+    if not (
+        -ground[0] / 2 <= bounds[0] < bounds[1] <= ground[0] / 2
+        and -ground[1] / 2 <= bounds[2] < bounds[3] <= ground[1] / 2
+    ):
+        raise ValueError("Map bounds must fit inside the ground surface")
+    hazard_ids = set()
+    for hazard in config["hazards"]:
+        if hazard["id"] in hazard_ids or hazard["kind"] not in (
+            "rock",
+            "crater",
+            "habitat",
+            "solar",
+        ):
+            raise ValueError("Hazards need unique IDs and kind=rock/crater/habitat/solar")
+        hazard_ids.add(hazard["id"])
+        if not hazard["id"].isidentifier() or len(hazard["position"]) != 2:
+            raise ValueError("Hazards need identifier IDs and position=[x,y]")
+        hazard["position"] = [numeric(v, "hazard position") for v in hazard["position"]]
+        hazard["radius"] = numeric(hazard["radius"], "hazard radius")
+        if hazard["radius"] <= 0:
+            raise ValueError("Hazard radii must be positive")
+    minimum_standoff = (
+        config["rover_radius"]
+        + config["safety_margin"]
+        + config["marker_diameter"] / 2
+        + config["marker_uncertainty"]
+    )
+    if config["inspection_standoff"] < minimum_standoff + 0.2:
+        # Older saved experiment files used 1.25 m. Keep them runnable safely.
+        config["inspection_standoff"] = minimum_standoff + 0.35
     ids = [r["id"] for r in config["rovers"]]
     if len(ids) != len(set(ids)) or len(ids) < 2:
         raise ValueError("Provide at least two rovers with unique IDs")
@@ -79,6 +146,16 @@ def load_config(path):
             raise ValueError("Failure requires a known rover, at>=0 and duration>0")
         failure["at"] = numeric(failure["at"], "failure time")
         failure["duration"] = numeric(failure["duration"], "failure duration")
+    from .planning import in_bounds, segment_clear
+
+    obstacles = [(*h["position"], h["radius"]) for h in config["hazards"]]
+    clearance = config["rover_radius"] + config["safety_margin"]
+    for spec in config["rovers"]:
+        for position in [spec["spawn"][:2], *spec["waypoints"]]:
+            if not in_bounds(position, bounds, clearance) or not segment_clear(
+                position, position, obstacles, clearance
+            ):
+                raise ValueError(f"{spec['id']} spawn/waypoint intersects a hazard or map boundary")
     return config
 
 
