@@ -11,7 +11,7 @@ from rsdis_lunar.core import Coordinator, Goal, Rover, Snapshot, wrap
 
 
 def configuration():
-    return load_config(ROOT / "src/rsdis_lunar/config/mission.json")
+    return load_config(ROOT / "src/rsdis_lunar/config/mission_small.json")
 
 
 class CoordinationTests(unittest.TestCase):

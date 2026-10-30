@@ -12,6 +12,8 @@ sys.path.insert(0, str(ROOT / "src" / "rsdis_lunar"))
 from rsdis_lunar.common import load_config
 from rsdis_lunar.core import Coordinator, Rover, distance, wrap
 from rsdis_lunar.metrics import Metrics
+from rsdis_lunar.navigation import advance
+from rsdis_lunar.safety_audit import ClearanceAudit, simulated_scan
 
 
 def rehearse(
@@ -37,6 +39,8 @@ def rehearse(
         spec["waypoints"] = spec["waypoints"][shift:] + spec["waypoints"][:shift]
     coordinator = Coordinator(config, strategy)
     rovers = {r["id"]: Rover(r, config) for r in config["rovers"]}
+    for rover in rovers.values():
+        rover.navigator.require_scan = True
     poses = {r["id"]: tuple(r["spawn"]) for r in config["rovers"]}
     dt, now = 0.1, 0.0
     if output is None:
@@ -47,6 +51,7 @@ def rehearse(
     failure_started = failure_ended = False
     return_requested = False
     reason = "time_limit"
+    audit = ClearanceAudit(config)
     while now <= config["mission_seconds"]:
         if failure_at is not None:
             failed_id = failure_rover or config["rovers"][0]["id"]
@@ -75,17 +80,15 @@ def rehearse(
                     for teammate in rovers.values():
                         teammate.remember(target["id"], target["position"])
         for rover in rovers.values():
+            points = simulated_scan(poses[rover.id], config, poses, rover.id)
+            rover.navigator.update_scan(points, now, peers=list(coordinator.rovers.values()))
             v, w = rover.step(poses[rover.id], dt, now, list(coordinator.rovers.values()))
-            x, y, yaw = poses[rover.id]
-            poses[rover.id] = (
-                x + v * math.cos(yaw) * dt,
-                y + v * math.sin(yaw) * dt,
-                wrap(yaw + w * dt),
-            )
+            poses[rover.id] = advance(poses[rover.id], v, w, dt)
             coordinator.update(rover.snapshot(now))
             while rover.results:
                 rover_id, task_id, success, detail = rover.results.pop(0)
                 coordinator.result(rover_id, task_id, success, now, detail)
+        audit.sample(poses)
         if round(now / dt) % 5 == 0:
             for goal in [] if return_requested else coordinator.tick(now):
                 rovers[goal.rover_id].assign(goal, now)
@@ -94,7 +97,8 @@ def rehearse(
                 {
                     "time": round(now, 2),
                     "rovers": [
-                        {"id": r.id, "pose": list(r.pose), "battery": r.battery, "mode": r.mode}
+                        {"id": r.id, "pose": list(r.pose), "battery": r.battery, "mode": r.mode,
+                         "navigation": r.navigator.state, "plan": r.navigator.path}
                         for r in rovers.values()
                     ],
                     "targets": {
@@ -132,6 +136,8 @@ def rehearse(
     summary = metrics.finish(coordinator, now, reason)
     import json
 
+    summary["clearance_audit"] = audit.report()
+    (Path(output) / "summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     (Path(output) / "trace.json").write_text(json.dumps(trace), encoding="utf-8")
     from playback import write_playback
 

@@ -28,6 +28,9 @@ class WorldTests(unittest.TestCase):
             self.assertEqual(camera.findtext("topic"), f"/{name}/camera/image")
             self.assertEqual(camera.findtext("camera/camera_info_topic"), f"/{name}/camera/info")
             self.assertEqual(len(model.findall("joint")), 4)
+            lidar = model.find("link/sensor[@type='gpu_lidar']")
+            self.assertEqual(lidar.findtext("topic"), f"/{name}/scan")
+            self.assertEqual(lidar.findtext("lidar/scan/horizontal/samples"), "721")
 
     def test_no_downloads_required_and_lunar_gravity(self):
         self.assertFalse(self.world.findall(".//uri"))
@@ -44,6 +47,11 @@ class WorldTests(unittest.TestCase):
             path.write_text(json.dumps(self.config), encoding="utf-8")
             with self.assertRaises(ValueError):
                 load_config(path)
+
+    def test_large_world_and_hazards_match_the_config(self):
+        self.assertEqual(self.world.findtext("model[@name='regolith']/link/collision/geometry/box/size"), "80.0 60.0 0.2")
+        for hazard in self.config["hazards"]:
+            self.assertIsNotNone(self.world.find(f"model[@name='{hazard['id']}']"))
 
     def test_non_finite_coordinates_are_rejected(self):
         self.config["rovers"][0]["spawn"][0] = float("nan")

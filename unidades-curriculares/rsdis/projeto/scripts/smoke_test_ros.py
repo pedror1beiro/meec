@@ -21,17 +21,25 @@ def main():
     parser.add_argument("--complete-mission", action="store_true")
     parser.add_argument("--model", choices=["lightweight", "viper"], default="lightweight")
     parser.add_argument("--simulation", type=Path)
+    parser.add_argument("--config", type=Path)
     args = parser.parse_args()
     import rclpy
     from rclpy.node import Node
     from rclpy.qos import qos_profile_sensor_data
     from nav_msgs.msg import Odometry
-    from sensor_msgs.msg import CameraInfo, Image, JointState
+    from sensor_msgs.msg import CameraInfo, Image, JointState, LaserScan
     from rsdis_interfaces.msg import Detection, TaskGoal
     from rsdis_lunar.common import load_config
+    from rsdis_lunar.safety_audit import ClearanceAudit
+    from rsdis_lunar.viper import profile
 
     root = Path(__file__).resolve().parents[1]
-    config = load_config(root / "src/rsdis_lunar/config/mission.json")
+    config_path = (args.config or root / "src/rsdis_lunar/config/mission.json").resolve()
+    config = load_config(config_path)
+    if args.model == "viper":
+        config = profile(config)
+    audit = ClearanceAudit(config)
+    poses = {}
     run_id = str(time.time_ns())
     output = root / "results" / ("smoke_" + run_id)
     output.mkdir(parents=True)
@@ -43,8 +51,9 @@ def main():
         "prototype.launch.py",
         "headless:=true",
         "output:=" + str(output),
-        "config:=" + str(root / "src/rsdis_lunar/config/mission.json"),
+        "config:=" + str(config_path),
         "model:=" + args.model,
+        "dashboard:=false",
         "upstream_simulation:="
         + str((args.simulation or root / "third_party/simulation").resolve()),
     ]
@@ -64,6 +73,7 @@ def main():
             ("odom", Odometry),
             ("camera/image", Image),
             ("camera/info", CameraInfo),
+            ("scan", LaserScan),
         ]
         if args.model == "viper":
             topics.append(("joint_states", JointState))
@@ -75,7 +85,9 @@ def main():
                 if topic == "camera/image":
                     checks[key] = msg.width > 0 and msg.height > 0 and len(msg.data) > 0
                 elif topic == "camera/info":
-                    checks[key] = msg.k[0] > 0
+                    checks[key] = bool(msg.k[0] > 0)
+                elif topic == "scan":
+                    checks[key] = bool(len(msg.ranges) >= 180 and msg.angle_increment > 0)
                 elif topic == "joint_states":
                     names = {n.split("::")[-1] for n in msg.name}
                     checks[key] = (
@@ -88,6 +100,9 @@ def main():
                 else:
                     checks[key] = msg.header.frame_id == "world"
                     position = (msg.pose.pose.position.x, msg.pose.pose.position.y)
+                    poses[rover] = position
+                    if len(poses) == len(config["rovers"]):
+                        audit.sample(poses)
                     starts.setdefault(rover, position)
                     if math.dist(starts[rover], position) > 0.15:
                         checks[rover + "/motion"] = True
@@ -143,10 +158,13 @@ def main():
     report = {
         "passed": success,
         "model": args.model,
-        "checks": checks,
+        "checks": {key: bool(value) for key, value in checks.items()},
+        "clearance_audit": audit.report(),
         "complete_mission_requested": args.complete_mission,
         "wall_seconds": round(time.monotonic() - started, 2),
     }
+    if audit.violations:
+        report["passed"] = success = False
     (output / "smoke_report.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(report, indent=2))
     print(f"Logs: {output}")

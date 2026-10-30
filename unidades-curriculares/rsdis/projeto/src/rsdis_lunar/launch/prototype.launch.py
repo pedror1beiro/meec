@@ -92,6 +92,7 @@ def configure(context):
             prefix + "/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry",
             prefix + "/camera/image@sensor_msgs/msg/Image[gz.msgs.Image",
             prefix + "/camera/info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo",
+            prefix + "/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan",
         ]
         bridges += (
             [prefix + "/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist"]
@@ -160,6 +161,14 @@ def configure(context):
                 )
             )
     actions = [gazebo, *nodes, *spawn_nodes]
+    actions.append(
+        Node(
+            package="rsdis_lunar", executable="mission_dashboard",
+            parameters=[{"use_sim_time": True, "config": config_path,
+                         "port": int(LaunchConfiguration("dashboard_port").perform(context))}],
+            condition=IfCondition(LaunchConfiguration("dashboard")), output="screen",
+        )
+    )
 
     def spawn_finished(event, context):
         if event.returncode != 0:
@@ -213,6 +222,8 @@ def generate_launch_description():
             ),
             DeclareLaunchArgument("headless", default_value="false", choices=["true", "false"]),
             DeclareLaunchArgument("rviz", default_value="false", choices=["true", "false"]),
+            DeclareLaunchArgument("dashboard", default_value="true", choices=["true", "false"]),
+            DeclareLaunchArgument("dashboard_port", default_value="8765"),
             DeclareLaunchArgument(
                 "model", default_value="lightweight", choices=["lightweight", "viper"]
             ),

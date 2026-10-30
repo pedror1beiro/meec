@@ -11,6 +11,7 @@ setup(
         ("share/rsdis_lunar/launch", glob("launch/*.launch.py")),
         ("share/rsdis_lunar/config", glob("config/*.json")),
         ("share/rsdis_lunar/rviz", glob("rviz/*.rviz")),
+        ("share/rsdis_lunar/web", glob("web/*.html")),
     ],
     install_requires=["setuptools"],
     zip_safe=True,
@@ -25,6 +26,7 @@ setup(
             "target_detector = rsdis_lunar.detector_node:main",
             "mission_monitor = rsdis_lunar.monitor_node:main",
             "viper_driver = rsdis_lunar.viper_driver_node:main",
+            "mission_dashboard = rsdis_lunar.dashboard_node:main",
         ]
     },
 )

@@ -52,7 +52,13 @@ jobs:
         run: |
           source /opt/ros/jazzy/setup.bash
           source install/setup.bash
-          python3 scripts/smoke_test_ros.py --timeout 180
+          python3 scripts/smoke_test_ros.py --timeout 240
+      - name: Complete the compact mission without footprint overlaps
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          source install/setup.bash
+          python3 scripts/smoke_test_ros.py --config src/rsdis_lunar/config/mission_small.json --complete-mission --timeout 600
       - name: Check the detailed rover on request
         if: github.event_name == 'workflow_dispatch' && inputs.viper
         shell: bash

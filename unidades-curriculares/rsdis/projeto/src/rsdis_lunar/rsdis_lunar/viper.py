@@ -11,7 +11,7 @@ from pathlib import Path
 import tempfile
 from xml.etree import ElementTree as ET
 
-from .world import element, plugin
+from .world import element, lidar, plugin
 
 WHEELS = ("front_left", "rear_left", "front_right", "rear_right")
 HALF_LENGTH, HALF_TRACK, WHEEL_RADIUS = 0.435, 0.525, 0.225
@@ -24,9 +24,10 @@ def profile(config):
         model_profile="space_ros_viper",
         camera_offset=0.85,
         marker_height=1.7305,
-        inspection_standoff=2.1,
-        planner_clearance=1.5,
-        peer_clearance=2.4,
+        inspection_standoff=2.7,
+        rover_radius=1.35,
+        lidar_offset=1.0,
+        lidar_height=1.4605,
     )
     return result
 
@@ -162,6 +163,7 @@ def adapt_urdf(expanded, simulation_path, rover_id, config, require_assets=True)
     }.items():
         element(odom, name, value)
     sensing = element(robot, "gazebo", reference="chassis")
+    lidar(sensing, rover_id, config)
     camera = element(sensing, "sensor", name="mission_camera", type="camera")
     element(camera, "pose", f"{config['camera_offset']} 0 1.4605 0 0 0")
     element(camera, "topic", f"/{rover_id}/camera/image")
