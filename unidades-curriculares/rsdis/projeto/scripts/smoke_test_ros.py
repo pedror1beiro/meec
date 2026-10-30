@@ -251,7 +251,7 @@ def main():
                     break
     finally:
         if process.poll() is None:
-            os.killpg(process.pid, signal.SIGINT)
+            process.send_signal(signal.SIGINT)
             try:
                 process.wait(timeout=15)
             except subprocess.TimeoutExpired:

@@ -77,9 +77,9 @@ def main():
             elapsed = now - sim_start
             for i, name in enumerate(names):
                 command = Twist()
-                if 1 < elapsed < 26:
+                if 1 < elapsed < 36:
                     command.angular.z = 0.35 if i == 0 else -0.35
-                elif 28 < elapsed < 33:
+                elif 38 < elapsed < 43:
                     drive_starts.setdefault(name, poses[name][:2])
                     command.linear.x = 0.25
                 publishers[name].publish(command)
@@ -93,13 +93,13 @@ def main():
                         attitude=dict(attitude),
                     )
                 )
-            if elapsed >= 34:
+            if elapsed >= 44:
                 break
     finally:
         for pub in publishers.values():
             pub.publish(Twist())
         if process.poll() is None:
-            os.killpg(process.pid, signal.SIGINT)
+            process.send_signal(signal.SIGINT)
             try:
                 process.wait(timeout=15)
             except subprocess.TimeoutExpired:
@@ -110,8 +110,8 @@ def main():
         log.close()
     distance = {name: math.dist(start, poses[name][:2]) for name, start in drive_starts.items()}
     checks = dict(
-        positive_turn=rotation.get("rover1", 0) > 6,
-        negative_turn=rotation.get("rover2", 0) < -6,
+        positive_turn=rotation.get("rover1", 0) > 2 * math.pi,
+        negative_turn=rotation.get("rover2", 0) < -2 * math.pi,
         translation=len(distance) == 2 and all(d > 0.6 for d in distance.values()),
         level=bool(attitude)
         and all(abs(a["roll"]) < 0.15 and abs(a["pitch"]) < 0.15 for a in attitude.values()),

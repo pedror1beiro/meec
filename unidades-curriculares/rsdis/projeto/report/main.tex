@@ -84,12 +84,12 @@ coordinates use the world frame.
 
 \subsection{Visual Perception}
 HSV masks and contour filters detect five marker colours. Small, clipped or
-strongly non-circular blobs are rejected. For marker diameter $D$, focal length
-$f_x$, observed width $w$, horizontal centre $u$, and principal point $c_x$,
-the planar estimate is
+strongly non-circular blobs are rejected. Pinhole intrinsics map the two
+horizontal silhouette edges to tangent rays. For marker diameter $D$, their
+half angular separation $\alpha$ and mean bearing $\beta$, the estimate is
 \begin{equation}
-z_c \approx \frac{f_xD}{w}, \qquad
-y_c \approx -\frac{(u-c_x)z_c}{f_x}.
+z_c \approx \frac{D\cos\beta}{2\sin\alpha}, \qquad
+y_c \approx -\frac{D\sin\beta}{2\sin\alpha}.
 \end{equation}
 The camera offset and closest timestamped rover pose transform the estimate
 into world coordinates. This approximation assumes a mostly level field.

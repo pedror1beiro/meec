@@ -53,9 +53,11 @@ this is ground-truth localisation, not wheel-odometry SLAM.
 
 Five distinct colour IDs identify five spherical markers. HSV segmentation and
 contour shape reject small, clipped or strongly non-circular blobs. Approximate
-forward range is `fx * marker_diameter / bounding_box_width`. Horizontal pixel
-offset gives lateral position. The camera offset and closest timestamped world
-pose transform this into a shared world coordinate.
+range uses the two horizontal silhouette tangent angles: `range = radius /
+sin(half_angular_width)`. Their mean bearing resolves forward and lateral
+position. This corrects the width-only formula's off-axis underestimate. The
+camera offset and closest timestamped world pose transform the estimate into a
+shared world coordinate. Pixel quantisation and occlusion still cause error.
 
 This is a known-size marker method, not recognition of real lunar minerals.
 It assumes a mostly level rover and limited roll/pitch, and uses an approximation
