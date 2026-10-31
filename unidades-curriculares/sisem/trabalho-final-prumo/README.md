@@ -1,4 +1,4 @@
-# PRUMO — nível digital para SISEM
+# PRUMO — nível digital para SISEM.
 
 Projeto com STM32F103RBT6 numa NUCLEO-F103RB, acelerómetro MMA8452Q por I²C e interface no TFT da placa de expansão 3S0 Board 1.2.
 
