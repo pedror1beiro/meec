@@ -1,0 +1,2 @@
+PASS: signed samples, tilt, calibration, HOLD, validity, filtering, tolerance, debounce and tick wrap
+PASS: 128x160 renderer, bounded stripes, changing views and error/HOLD states

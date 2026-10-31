@@ -1,0 +1,11 @@
+arm-none-eabi-gcc.exe (Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)) 13.2.1 20231009
+Copyright (C) 2023 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+Memory region         Used Size  Region Size  %age Used
+             RAM:        5248 B        20 KB     25.63%
+           FLASH:       19820 B       128 KB     15.12%
+   text	   data	    bss	    dec	    hex	filename
+  19728	     92	   5156	  24976	   6190	C:\SISEM\tmp\transfer-check\SISEM\firmware\PRUMO\Debug\PRUMO.elf
+Build complete: C:\SISEM\tmp\transfer-check\SISEM\firmware\PRUMO\Debug\PRUMO.elf

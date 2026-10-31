@@ -1,0 +1,12 @@
+{
+  "compiler": "arm-none-eabi-gcc.exe (Arm GNU Toolchain 13.2.rel1 (Build arm-13.7)) 13.2.1 20231009",
+  "mode": "Debug",
+  "mcu": "STM32F103RBT6",
+  "size_output": "   text\t   data\t    bss\t    dec\t    hex\tfilename\n  19728\t     92\t   5156\t  24976\t   6190\tC:\\SISEM\\firmware\\PRUMO\\Debug\\PRUMO.elf\n",
+  "hardware_tested": false,
+  "note": "Compile/link check only. Physical TFT/sensor/debug still require board validation.",
+  "elf_sha256": "746820c9fc9f0ae6b8a16caa1bda8821e50ed0c3f9530ca69e3fbda5f9e5ee0f",
+  "flash_bytes": 19820,
+  "ram_reserved_bytes": 5248,
+  "stack_reserve_bytes": 2048
+}

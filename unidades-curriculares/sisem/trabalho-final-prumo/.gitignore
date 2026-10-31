@@ -1,0 +1,17 @@
+tmp/
+**/Debug/
+**/Release/
+**/.metadata/
+**/.settings/language.settings.xml
+**/*.o
+**/*.d
+**/*.su
+**/*.cyclo
+**/*.list
+**/*.map
+**/*.elf
+**/*.hex
+**/*.bin
+__pycache__/
+.venv/
+entrega/

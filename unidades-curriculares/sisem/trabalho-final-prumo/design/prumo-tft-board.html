@@ -1,0 +1,194 @@
+<div id="prumo-tft-sim">
+  <style>
+    #prumo-tft-sim { color-scheme:light dark; --l-paper:light-dark(#f3f5ef,#19201c); --l-ink:light-dark(#24372c,#e1e9df); --l-muted:light-dark(#5b6c60,#abbbae); --l-edge:light-dark(#cdd8cd,#435548); --l-accent:light-dark(#34684b,#afcf9d); --l-panel:light-dark(#ffffff,#25332b); --l-on:light-dark(#ffffff,#17231a); --lcd-scale:2; color:var(--l-ink); font:14px/1.45 system-ui,sans-serif; }
+    #prumo-tft-sim * { box-sizing:border-box; }
+    #prumo-tft-sim .lt-title { margin:0 100px 8px 0; font-size:20px; font-weight:500; letter-spacing:-.4px; }
+    #prumo-tft-sim .lt-meta { margin-bottom:20px; color:var(--l-muted); font-size:12px; }
+    #prumo-tft-sim .lt-layout { display:grid; grid-template-columns:minmax(0,370px) minmax(220px,1fr); gap:28px; align-items:start; }
+    #prumo-tft-sim .lt-device-stage { display:flex; flex-direction:column; align-items:center; min-width:0; }
+    #prumo-tft-sim .lt-board { width:100%; background:var(--l-paper); border:1px solid var(--l-edge); border-radius:17px; padding:20px 10px 17px; display:flex; flex-direction:column; align-items:center; }
+    #prumo-tft-sim .lt-dimension { font-size:11px; color:var(--l-muted); margin-bottom:8px; font-variant-numeric:tabular-nums; }
+    #prumo-tft-sim .lt-module { position:relative; width:calc(155.262px * var(--lcd-scale)); height:calc(209.269px * var(--lcd-scale)); flex:none; background:linear-gradient(110deg,#b9bfbc,#e5e9e5 30%,#9fa9a2 54%,#dbe0da); border:1px solid #7c8880; box-shadow:0 4px 10px color-mix(in srgb,var(--l-ink) 15%,transparent); }
+    #prumo-tft-sim .lt-module::after { content:''; position:absolute; width:40%; height:12%; left:30%; bottom:0; background:repeating-linear-gradient(90deg,#ae7b27 0 3px,#8d5e1f 3px 4px); border-top:3px solid #393b30; }
+    #prumo-tft-sim .lt-screen { position:absolute; left:calc(13.631px * var(--lcd-scale)); top:calc(12.329px * var(--lcd-scale)); width:calc(128px * var(--lcd-scale)); height:calc(160px * var(--lcd-scale)); image-rendering:pixelated; background:#08141a; outline:calc(2px * var(--lcd-scale)) solid #343e39; z-index:1; }
+    #prumo-tft-sim .lt-zoom { margin-top:12px; font-size:11px; color:var(--l-muted); text-align:center; }
+    #prumo-tft-sim .lt-keypad { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px 13px; margin-top:16px; width:100%; max-width:290px; }
+    #prumo-tft-sim .lt-key { display:flex; flex-direction:column; align-items:center; justify-content:center; border:1px solid var(--l-edge); border-radius:9px; padding:6px 3px; background:var(--l-panel); color:var(--l-ink); min-height:54px; font:12px/1.3 system-ui,sans-serif; gap:4px; }
+    #prumo-tft-sim .lt-key::before { content:''; display:block; height:15px; width:15px; border-radius:50%; background:#167ac1; box-shadow:inset 0 2px 2px #79c5f5,0 1px 0 #16496d; }
+    #prumo-tft-sim .lt-key:active { background:var(--l-paper); }
+    #prumo-tft-sim .lt-key[data-action=zero] { border-color:var(--l-accent); }
+    #prumo-tft-sim .lt-key[data-action=hold][aria-pressed=true] { background:var(--l-accent); color:var(--l-on); }
+    #prumo-tft-sim .lt-key[data-action=reset]::before { background:#ba3f39; box-shadow:inset 0 2px 2px #e8867b,0 1px 0 #73302b; }
+    #prumo-tft-sim .lt-key[data-action=plus] { grid-column:2; grid-row:1; }
+    #prumo-tft-sim .lt-key[data-action=view] { grid-column:1; grid-row:2; }
+    #prumo-tft-sim .lt-key[data-action=zero] { grid-column:2; grid-row:2; }
+    #prumo-tft-sim .lt-key[data-action=hold] { grid-column:3; grid-row:2; }
+    #prumo-tft-sim .lt-key[data-action=minus] { grid-column:2; grid-row:3; }
+    #prumo-tft-sim .lt-key[data-action=reset] { grid-column:1; grid-row:3; }
+    #prumo-tft-sim .lt-controls { padding-top:3px; }
+    #prumo-tft-sim .lt-controls h3 { font-size:15px; font-weight:500; margin:0 0 20px; }
+    #prumo-tft-sim .lt-field { display:block; margin-bottom:23px; }
+    #prumo-tft-sim .lt-field-title { display:flex; justify-content:space-between; gap:12px; font-size:12px; margin-bottom:10px; }
+    #prumo-tft-sim output { font-variant-numeric:tabular-nums; color:var(--l-muted); }
+    #prumo-tft-sim input[type=range] { display:block; width:100%; accent-color:var(--l-accent); min-height:24px; margin:0; }
+    #prumo-tft-sim .lt-readout { margin-top:25px; border-top:1px solid var(--l-edge); padding-top:18px; }
+    #prumo-tft-sim .lt-row { display:flex; justify-content:space-between; gap:10px; margin-bottom:11px; font-size:12px; }
+    #prumo-tft-sim .lt-row span:first-child { color:var(--l-muted); }
+    #prumo-tft-sim .lt-row strong { font-weight:500; text-align:right; }
+    #prumo-tft-sim .lt-reference { color:var(--l-muted); font-size:12px; margin-top:18px; }
+    #prumo-tft-sim .lt-reference button { border:1px solid var(--l-edge); border-radius:8px; padding:10px 12px; margin-top:12px; background:var(--l-panel); color:var(--l-ink); font:inherit; min-height:44px; }
+    #prumo-tft-sim .lt-accessible { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+    @media(max-width:620px) { #prumo-tft-sim .lt-layout { grid-template-columns:1fr; gap:24px; } #prumo-tft-sim .lt-controls { padding:0 8px; } #prumo-tft-sim .lt-title { margin-right:90px; } }
+  </style>
+  <h2 class="lt-title">PRUMO · na board</h2>
+  <div class="lt-meta">TFT 1,8″ · 128 × 160 píxeis · simulação</div>
+  <div class="lt-layout">
+    <div class="lt-device-stage">
+      <div class="lt-board" aria-label="Representação esquemática do painel e botões físicos">
+        <div class="lt-dimension">Área ativa: 28,03 × 35,04 mm</div>
+        <div class="lt-module" aria-label="Módulo LCD, contorno de 34 por 45,83 milímetros">
+          <canvas class="lt-screen" width="128" height="160" role="img" aria-label="Ecrã do nível digital, 128 por 160 píxeis">Nível digital com bolha, inclinação X e Y e tolerância.</canvas>
+        </div>
+        <div class="lt-zoom" data-zoom>Ampliação: 2× os píxeis · vista esquemática</div>
+        <div class="lt-keypad" aria-label="Botões da board — funções propostas">
+          <button type="button" class="lt-key cursor-interaction" data-action="plus" aria-label="SW2, aumentar tolerância">SW2 · TOL +</button>
+          <button type="button" class="lt-key cursor-interaction" data-action="view" aria-label="SW1, alternar vista">SW1 · VISTA</button>
+          <button type="button" class="lt-key cursor-interaction" data-action="zero" aria-label="SW5, definir zero">SW5 · ZERO</button>
+          <button type="button" class="lt-key cursor-interaction" data-action="hold" aria-label="SW3, congelar leitura" aria-pressed="false">SW3 · HOLD</button>
+          <button type="button" class="lt-key cursor-interaction" data-action="minus" aria-label="SW4, reduzir tolerância">SW4 · TOL −</button>
+          <button type="button" class="lt-key cursor-interaction" data-action="reset" aria-label="SW6, reiniciar simulação">SW6 · RESET</button>
+        </div>
+      </div>
+    </div>
+    <div class="lt-controls">
+      <h3>Inclinação da board</h3>
+      <label class="lt-field"><span class="lt-field-title"><span>Eixo X</span><output data-input-value="x">+3,2°</output></span><input type="range" data-axis="x" min="-15" max="15" value="3.2" step="0.1" aria-label="Simular inclinação X"></label>
+      <label class="lt-field"><span class="lt-field-title"><span>Eixo Y</span><output data-input-value="y">−1,4°</output></span><input type="range" data-axis="y" min="-15" max="15" value="-1.4" step="0.1" aria-label="Simular inclinação Y"></label>
+      <div class="lt-readout">
+        <div class="lt-row"><span>Estado</span><strong data-state>INCLINADO</strong></div>
+        <div class="lt-row"><span>Leitura X</span><strong data-reading="x">+3,2°</strong></div>
+        <div class="lt-row"><span>Leitura Y</span><strong data-reading="y">−1,4°</strong></div>
+        <div class="lt-row"><span>Tolerância por eixo</span><strong data-tol>±1,0°</strong></div>
+        <div class="lt-row"><span>Modo</span><strong data-mode>Bolha · em direto</strong></div>
+      </div>
+      <div class="lt-reference"><div data-reference>Referência inicial simulada</div><button type="button" class="cursor-interaction" data-flat>Simular posição de referência</button></div>
+      <div class="lt-accessible" role="status" aria-live="polite" data-live></div>
+    </div>
+  </div>
+  <script>
+    (()=>{
+      const root=document.getElementById('prumo-tft-sim');
+      const canvas=root.querySelector('canvas'),ctx=canvas.getContext('2d');
+      const state={x:3.2,y:-1.4,zx:0,zy:0,tol:1,hold:false,heldX:0,heldY:0,view:'bubble',calibrated:false};
+      const design={theme:'Noite'};
+      const tolerances=[.2,.5,1,2,5];
+      const font={
+        'A':['01110','10001','10001','11111','10001','10001','10001'],
+        'B':['11110','10001','10001','11110','10001','10001','11110'],
+        'C':['01111','10000','10000','10000','10000','10000','01111'],
+        'D':['11110','10001','10001','10001','10001','10001','11110'],
+        'E':['11111','10000','10000','11110','10000','10000','11111'],
+        'F':['11111','10000','10000','11110','10000','10000','10000'],
+        'G':['01111','10000','10000','10111','10001','10001','01111'],
+        'H':['10001','10001','10001','11111','10001','10001','10001'],
+        'I':['11111','00100','00100','00100','00100','00100','11111'],
+        'J':['00111','00010','00010','00010','10010','10010','01100'],
+        'K':['10001','10010','10100','11000','10100','10010','10001'],
+        'L':['10000','10000','10000','10000','10000','10000','11111'],
+        'M':['10001','11011','10101','10101','10001','10001','10001'],
+        'N':['10001','11001','10101','10011','10001','10001','10001'],
+        'O':['01110','10001','10001','10001','10001','10001','01110'],
+        'P':['11110','10001','10001','11110','10000','10000','10000'],
+        'Q':['01110','10001','10001','10001','10101','10010','01101'],
+        'R':['11110','10001','10001','11110','10100','10010','10001'],
+        'S':['01111','10000','10000','01110','00001','00001','11110'],
+        'T':['11111','00100','00100','00100','00100','00100','00100'],
+        'U':['10001','10001','10001','10001','10001','10001','01110'],
+        'V':['10001','10001','10001','10001','10001','01010','00100'],
+        'W':['10001','10001','10001','10101','10101','10101','01010'],
+        'X':['10001','10001','01010','00100','01010','10001','10001'],
+        'Y':['10001','10001','01010','00100','00100','00100','00100'],
+        'Z':['11111','00001','00010','00100','01000','10000','11111'],
+        '0':['01110','10001','10011','10101','11001','10001','01110'],
+        '1':['00100','01100','00100','00100','00100','00100','01110'],
+        '2':['01110','10001','00001','00010','00100','01000','11111'],
+        '3':['11110','00001','00001','01110','00001','00001','11110'],
+        '4':['00010','00110','01010','10010','11111','00010','00010'],
+        '5':['11111','10000','10000','11110','00001','00001','11110'],
+        '6':['01110','10000','10000','11110','10001','10001','01110'],
+        '7':['11111','00001','00010','00100','01000','01000','01000'],
+        '8':['01110','10001','10001','01110','10001','10001','01110'],
+        '9':['01110','10001','10001','01111','00001','00001','01110'],
+        '+':['00000','00100','00100','11111','00100','00100','00000'],
+        '-':['00000','00000','00000','11111','00000','00000','00000'],
+        '.':['00000','00000','00000','00000','00000','00110','00110'],
+        ':':['00000','00110','00110','00000','00110','00110','00000'],
+        '/':['00001','00010','00010','00100','01000','01000','10000'],
+        '°':['01100','10010','10010','01100','00000','00000','00000'],
+        ' ':['00000','00000','00000','00000','00000','00000','00000']
+      };
+      const rgb565=hex=>{const n=parseInt(hex.slice(1),16),r=(n>>16)&255,g=(n>>8)&255,b=n&255;return `rgb(${Math.round(Math.round(r*31/255)*255/31)},${Math.round(Math.round(g*63/255)*255/63)},${Math.round(Math.round(b*31/255)*255/31)})`;};
+      const palettes={Noite:{bg:'#08141a',header:'#172c33',ink:'#eff5e8',muted:'#8eaaa3',grid:'#34524d',accent:'#b2e876',warn:'#f4bf65'},Dia:{bg:'#eef2dc',header:'#d7e0c2',ink:'#183529',muted:'#49654e',grid:'#a6b98f',accent:'#28683f',warn:'#92501b'}};
+      let palette={};
+      const f=(v,pad=false)=>(v<-.05?'-':'+')+(pad?Math.abs(v).toFixed(1).padStart(4,'0'):Math.abs(v).toFixed(1));
+      const human=v=>f(v).replace('-', '−').replace('.',',')+'°';
+      const rect=(x,y,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h));};
+      function text(s,x,y,color,size=1){[...s].forEach((ch,i)=>{const glyph=font[ch]||font[' '];glyph.forEach((row,gy)=>[...row].forEach((bit,gx)=>{if(bit==='1')rect(x+(i*6+gx)*size,y+gy*size,size,size,color);}));});}
+      function center(s,y,color,size=1){text(s,Math.floor((128-(s.length*6-1)*size)/2),y,color,size);}
+      function circle(cx,cy,r,c,fill=false){for(let y=-r;y<=r;y++)for(let x=-r;x<=r;x++){const d=x*x+y*y;if(fill?d<=r*r:d<=r*r&&d>=(r-1)*(r-1))rect(cx+x,cy+y,1,1,c);}}
+      function values(){return state.hold?{x:state.heldX,y:state.heldY}:{x:state.x-state.zx,y:state.y-state.zy};}
+      function draw(){
+        palette=Object.fromEntries(Object.entries(palettes[design.theme]).map(([k,v])=>[k,rgb565(v)]));
+        const {x,y}=values(),ok=Math.abs(x)<=state.tol&&Math.abs(y)<=state.tol,accent=ok?palette.accent:palette.warn;
+        ctx.imageSmoothingEnabled=false;rect(0,0,128,160,palette.bg);rect(0,0,128,15,palette.header);
+        text('PRUMO',5,4,palette.ink);text(state.hold?'HOLD':'LIVE',100,4,state.hold?palette.warn:palette.accent);
+        center(ok?'NIVELADO':'INCLINADO',20,accent);
+        if(state.view==='bubble'){
+          circle(64,66,34,palette.grid);circle(64,66,17,palette.grid);
+          rect(29,66,71,1,palette.grid);rect(64,31,1,71,palette.grid);
+          const limit=Math.min(29,Math.max(2,Math.round(state.tol*2.8)));
+          rect(64-limit,66-limit,limit*2+1,limit*2+1,palette.header);
+          rect(64-limit,66-limit,limit*2+1,1,palette.accent);rect(64-limit,66+limit,limit*2+1,1,palette.accent);
+          rect(64-limit,66-limit,1,limit*2+1,palette.accent);rect(64+limit,66-limit,1,limit*2+1,palette.accent);
+          let dx=-x*2.8,dy=-y*2.8;const len=Math.hypot(dx,dy);if(len>29){dx=dx/len*29;dy=dy/len*29;}
+          const bx=64+Math.round(dx),by=66+Math.round(dy);circle(bx,by,5,accent,true);rect(bx,by-2,1,5,palette.bg);rect(bx-2,by,5,1,palette.bg);
+          text('+Y',58,29,palette.muted);text('+X',12,63,palette.muted);
+        }else{
+          text('EIXO X',6,35,palette.muted);rect(8,51,112,12,palette.header);rect(64,49,1,16,palette.grid);rect(62+Math.max(-52,Math.min(52,x*5.2)),52,5,10,accent);
+          text('EIXO Y',6,72,palette.muted);rect(8,88,112,12,palette.header);rect(64,86,1,16,palette.grid);rect(62+Math.max(-52,Math.min(52,y*5.2)),89,5,10,accent);
+        }
+        text('X',6,111,palette.muted);text(f(x,true)+'°',29,106,palette.ink,2);
+        text('Y',6,132,palette.muted);text(f(y,true)+'°',29,127,palette.ink,2);
+        rect(0,147,128,13,palette.header);text('TOL '+state.tol.toFixed(1)+'°',5,150,palette.muted);text(state.calibrated?'REL':'ABS',105,150,palette.muted);
+        canvas.setAttribute('aria-label',`Ecrã 128 por 160: ${ok?'nivelado':'inclinado'}, X ${human(x)}, Y ${human(y)}, tolerância ${state.tol} graus por eixo. ${state.hold?'Leitura congelada.':'Em direto.'}`);
+        root.querySelector('[data-state]').textContent=ok?'NIVELADO':'INCLINADO';
+        root.querySelector('[data-reading=x]').textContent=human(x);root.querySelector('[data-reading=y]').textContent=human(y);
+        root.querySelector('[data-tol]').textContent='±'+state.tol.toFixed(1).replace('.',',')+'°';
+        root.querySelector('[data-mode]').textContent=(state.view==='bubble'?'Bolha':'Eixos')+' · '+(state.hold?'congelado':'em direto');
+        root.querySelector('[data-action=hold]').setAttribute('aria-pressed',String(state.hold));
+        root.querySelectorAll('[data-axis]').forEach(el=>{el.value=state[el.dataset.axis];});
+        root.querySelectorAll('[data-input-value]').forEach(el=>el.textContent=human(state[el.dataset.inputValue]));
+        root.querySelector('[data-reference]').textContent=state.calibrated?'Zero relativo: X '+human(state.zx)+' · Y '+human(state.zy):'Referência inicial simulada';
+      }
+      function save(){try{window.openai?.setWidgetState?.({modelContent:{prumoTft:{...state}},privateContent:{theme:design.theme}})?.catch(()=>{});}catch{}}
+      function announce(){root.querySelector('[data-live]').textContent=canvas.getAttribute('aria-label');}
+      function restore(saved){const s=saved?.modelContent?.prumoTft;if(s){for(const k of ['x','y','zx','zy','heldX','heldY'])if(Number.isFinite(s[k]))state[k]=Math.max(-30,Math.min(30,s[k]));state.x=Math.max(-15,Math.min(15,state.x));state.y=Math.max(-15,Math.min(15,state.y));if(tolerances.includes(s.tol))state.tol=s.tol;state.hold=!!s.hold;state.calibrated=!!s.calibrated;state.view=s.view==='axes'?'axes':'bubble';}if(palettes[saved?.privateContent?.theme])design.theme=saved.privateContent.theme;}
+      root.querySelectorAll('[data-axis]').forEach(el=>{el.addEventListener('input',()=>{state[el.dataset.axis]=Number(el.value);draw();});el.addEventListener('change',()=>{announce();save();});});
+      root.querySelectorAll('[data-action]').forEach(el=>el.addEventListener('click',()=>{
+        const a=el.dataset.action;
+        if(a==='zero'){state.zx=state.x;state.zy=state.y;state.calibrated=true;state.hold=false;}
+        if(a==='hold'){if(!state.hold){const v=values();state.heldX=v.x;state.heldY=v.y;}state.hold=!state.hold;}
+        if(a==='view')state.view=state.view==='bubble'?'axes':'bubble';
+        if(a==='plus')state.tol=tolerances[Math.min(tolerances.length-1,tolerances.indexOf(state.tol)+1)];
+        if(a==='minus')state.tol=tolerances[Math.max(0,tolerances.indexOf(state.tol)-1)];
+        if(a==='reset'){Object.assign(state,{zx:0,zy:0,tol:1,hold:false,heldX:0,heldY:0,view:'bubble',calibrated:false});}
+        draw();announce();save();
+      }));
+      root.querySelector('[data-flat]').addEventListener('click',()=>{state.x=state.zx;state.y=state.zy;draw();announce();save();});
+      restore(window.openai?.widgetState);draw();
+      const resize=new ResizeObserver(()=>{const width=root.querySelector('.lt-board').clientWidth;const scale=width>=330?2:1;root.style.setProperty('--lcd-scale',scale);root.querySelector('[data-zoom]').textContent=`Ampliação: ${scale}× os píxeis · vista esquemática`;});resize.observe(root.querySelector('.lt-board'));
+      window.addEventListener('openai:set_globals',e=>{if(e.detail?.globals?.widgetState){restore(e.detail.globals.widgetState);draw();}});
+      if(globalThis.Tweak){const tweak=new Tweak({container:root,onChange:draw});tweak.addSelect(design,'theme',{label:'Paleta do TFT',options:['Noite','Dia']});}
+    })();
+  </script>
+</div>

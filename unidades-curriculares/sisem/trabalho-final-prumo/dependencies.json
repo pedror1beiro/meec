@@ -1,0 +1,57 @@
+{
+  "project": "PRUMO",
+  "recorded_on": "2026-10-31",
+  "mcu": "STM32F103RBT6",
+  "board": "NUCLEO-F103RB + 3S0 Board 1.2",
+  "framework": "STM32 HAL",
+  "framework_confirmed_by_user": true,
+  "toolchain_target": "STM32CubeIDE / Arm GNU / Cortex-M3 soft-float",
+  "tool_installation_located": true,
+  "build_verified": true,
+  "hardware_verified": false,
+  "firmware_packages": [
+    {
+      "name": "STM32CubeF1",
+      "source": "https://github.com/STMicroelectronics/STM32CubeF1",
+      "reference_tag": "v1.8.7",
+      "reference_commit": "d12e75247d5bcedc734f829b394517ab4c2726e3",
+      "status": "minimal_subset_vendored_compile_verified",
+      "notes": "HAL/CMSIS from pinned CubeF1 snapshot are included. See vendor-manifest.json."
+    }
+  ],
+  "standard_libraries": [
+    "libc",
+    "libm"
+  ],
+  "display_reference_sources_not_vendored": [
+    {
+      "source": "https://github.com/STMicroelectronics/stm32-st7735",
+      "tag": "v2.0.4",
+      "commit": "354b04160fdbda6e4320dcfe20ad329df83bed97"
+    },
+    {
+      "source": "https://github.com/afiskon/stm32-st7735",
+      "commit": "b9408107226246a8494e6a729dfaeebfa0a75a5d",
+      "license": "MIT",
+      "requires_porting": true
+    }
+  ],
+  "cubeide_gui_validated": false,
+  "compiler_verified": "Arm GNU Toolchain 13.2.Rel1 / GCC 13.2.1",
+  "debug_flash_bytes": 19820,
+  "release_flash_bytes": 17668,
+  "ram_reserved_bytes": 5248,
+  "minimum_stack_reserve_bytes": 2048,
+  "hal_commit": "fee494a92b5ad331f92ad21f76c66a5cb83773ee",
+  "cmsis_device_commit": "c8e9a4a4f16b6d2cb2a2083cbe5161025280fb22",
+  "configuration": "HAL in C; no CubeMX-generated IOC",
+  "implemented_local_modules": [
+    "mma8452q",
+    "st7735_board_driver",
+    "bitmap_font",
+    "level_processing",
+    "buttons",
+    "telemetry",
+    "level_ui"
+  ]
+}

@@ -1,0 +1,5 @@
+# Preserve upstream bytes so vendor-manifest.json remains reproducible on Linux.
+firmware/PRUMO/Drivers/** -text -whitespace linguist-vendored
+firmware/PRUMO/Core/Src/system_stm32f1xx.c -text -whitespace linguist-vendored
+firmware/PRUMO/Core/Startup/startup_stm32f103xb.s -text -whitespace linguist-vendored
+firmware/PRUMO/Licenses/** -text -whitespace linguist-vendored
