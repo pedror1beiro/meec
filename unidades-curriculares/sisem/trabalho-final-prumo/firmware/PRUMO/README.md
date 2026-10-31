@@ -1,6 +1,6 @@
 # PRUMO — STM32F103RB / HAL
 
-Importar esta pasta pelo STM32CubeIDE: **File > Import > Existing Projects into Workspace**. Selecionar o projeto PRUMO e fazer build Debug.
+Importar esta pasta pelo STM32CubeIDE: **File > Import > Import STM32 Project > STM32CubeMX/STM32CubeIDE Project** nas versões recentes; em versões antigas, **Existing Projects into Workspace**. Selecionar o projeto PRUMO e fazer build Debug.
 
 Instruções completas: [Linux, compilação e debug](../../docs/08-linux-cubeide.md).
 

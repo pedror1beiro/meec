@@ -13,13 +13,21 @@ O projeto tem configuração HAL escrita em C. **Não é necessário criar ou ge
 
 1. Descomprimir a entrega numa pasta normal, por exemplo `~/SISEM`.
 2. Abrir o STM32CubeIDE, escolhendo um workspace à parte.
-3. Selecionar **File > Import > General > Existing Projects into Workspace**.
+3. Nas versões recentes, selecionar **File > Import > Import STM32 Project > STM32CubeMX/STM32CubeIDE Project**. Se esse assistente não existir na versão utilizada, usar **General > Existing Projects into Workspace**.
 4. Em **Select root directory**, escolher `SISEM/firmware/PRUMO`.
 5. Selecionar o projeto **PRUMO** e concluir. O projeto já tem todos os paths relativos.
 6. Selecionar a configuração **Debug** e fazer **Project > Clean** e **Build Project**.
 7. O executável será `Debug/PRUMO.elf`. Verificar que a consola usa `-mcpu=cortex-m3`, `-mthumb`, ABI `soft`, `STM32F103xB` e `USE_HAL_DRIVER`.
 
 A importação gráfica e o debug dependem da versão do CubeIDE instalada e ainda não foram ensaiados nesta máquina. Os metadados XML foram verificados; o build independente foi usado para verificar compilação e ligação reais do código para Cortex-M3. Se houver problema de migração de metadados, usar a alternativa de compilação abaixo para produzir o ELF e selecionar esse ELF na configuração de debug do IDE.
+
+### Configuração Debug indisponível ou aviso de encoding
+
+Foi corrigida a falta do marcador `<?fileVersion 4.0.0?>` na segunda linha do `.cproject`. Este marcador é exigido pelo leitor CDT, apesar de não ser necessário para o XML ser sintaticamente válido. A versão inicial sem ele podia impedir o carregamento de Debug/Release. Os testes de metadados verificam agora este requisito.
+
+O aviso `has no explicit encoding set` é independente: a preferência UTF-8 está agora guardada em `.settings/org.eclipse.core.resources.prefs`.
+
+Se tiver sido importada a versão antiga, fechar o CubeIDE, executar `git pull` na raiz do repositório e voltar a abrir o projeto atualizado. Se as configurações continuarem em cache ou o projeto tiver sido copiado para o workspace, usar um workspace novo e importar a pasta `firmware/PRUMO` diretamente do clone atualizado. Não é preciso apagar os ficheiros do projeto.
 
 ## 2. Debug com ST-LINK
 

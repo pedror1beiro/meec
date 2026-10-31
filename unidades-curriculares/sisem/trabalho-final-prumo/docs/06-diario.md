@@ -48,6 +48,15 @@ M0–M7: pendentes. Não houve build, programação, sessão de debug ou mediç�
 - **Ainda pendentes:** importar/compilar no CubeIDE/Linux do utilizador, debug ST-LINK físico, comunicação elétrica, offsets/cores/inicialização do painel e medições experimentais.
 - M0: compilação cruzada concluída; importação gráfica/debug no alvo pendentes. M1–M7 físicos pendentes.
 
+## 2026-10-31 — correção da leitura do projeto pelo CubeIDE
+
+- Sintoma reportado: Build/Run/Debug sem efeito e configuração ativa indisponível, com um aviso de encoding.
+- Identificado um erro nos metadados gerados: faltava `<?fileVersion 4.0.0?>` no `.cproject`. O leitor de configurações do Eclipse CDT exige uma processing instruction como primeiro nó DOM e rejeita o documento sem ela.
+- Restaurado o marcador e adicionada a preferência explícita de encoding UTF-8. O aviso de encoding é independente do erro de leitura das configurações.
+- Acrescentados testes de regressão que validam o primeiro nó DOM, as configurações Debug/Release, o builder e a preferência UTF-8. Um simples teste de sintaxe XML não detetava o problema anterior.
+- A correção dos metadados não altera o código do firmware. A confirmação na instalação CubeIDE/Linux do utilizador continua pendente.
+- Referência do leitor CDT: https://github.com/eclipse-cdt/cdt/blob/main/core/org.eclipse.cdt.core/model/org/eclipse/cdt/internal/core/settings/model/CProjectDescriptionStorageManager.java
+
 ## Modelo para novas entradas
 
 ```text

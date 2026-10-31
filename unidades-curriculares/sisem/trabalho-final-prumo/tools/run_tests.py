@@ -3,6 +3,7 @@
 import os
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -47,3 +48,5 @@ for name, (sources, includes) in tests.items():
         check=True,
     )
     subprocess.run([str(exe)], cwd=ROOT, check=True)
+
+subprocess.run([sys.executable, str(ROOT / "tests/test_project_metadata.py")], check=True)
