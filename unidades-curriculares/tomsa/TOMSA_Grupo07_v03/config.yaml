@@ -3,15 +3,19 @@
 data:
   mode: zip  # zip (dados originais) | demo (dados sintéticos)
   zip_path: data/TL2026.zip
+  extra_zip_paths:
+    - data/robot8_s1.zip
   files:
     robot1: robot1_s1.csv
     robot4: robot4_s1.csv
     robot7: robot7_s1.csv
+    robot8: robot8_s1.csv
 
 robots:
   robot1: {label: 'Robô 1', color: '#db5661'}
   robot4: {label: 'Robô 4', color: '#1f97a8'}
   robot7: {label: 'Robô 7', color: '#c99b36'}
+  robot8: {label: 'Robô 8', color: '#7455b8'}
 
 reference:
   # Origem indicada no README, transcrita na primeira entrega

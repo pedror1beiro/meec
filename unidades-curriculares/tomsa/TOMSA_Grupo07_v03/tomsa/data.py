@@ -1,5 +1,6 @@
 """Leitura de dados ROS-like a partir do ZIP ou geração de missão demo."""
 from __future__ import annotations
+from contextlib import ExitStack
 from dataclasses import dataclass
 from pathlib import Path
 from zipfile import ZipFile
@@ -128,19 +129,33 @@ def _to_trace(key, df, cfg):
 
 
 def _load_zip(cfg, config_dir):
-    src = Path(cfg['data']['zip_path'])
-    if not src.is_absolute():
-        src = config_dir / src
-    if not src.is_file():
-        raise FileNotFoundError(f'ZIP não encontrado: {src}. Colocar o ficheiro e mudar data.mode para zip.')
+    extra_paths = cfg['data'].get('extra_zip_paths', [])
+    if not isinstance(extra_paths, list):
+        raise ValueError('data.extra_zip_paths deve ser uma lista de caminhos ZIP.')
+    sources = []
+    for location in [cfg['data']['zip_path'], *extra_paths]:
+        if not isinstance(location, str) or not location.strip():
+            raise ValueError('Os caminhos ZIP devem ser strings não vazias.')
+        src = Path(location)
+        if not src.is_absolute():
+            src = config_dir / src
+        src = src.resolve()
+        if not src.is_file():
+            raise FileNotFoundError(f'ZIP não encontrado: {src}. Verificar os caminhos na configuração.')
+        if src not in sources:
+            sources.append(src)
     result = {}
-    with ZipFile(src) as z:
+    with ExitStack() as stack:
+        archives = [stack.enter_context(ZipFile(src)) for src in sources]
         for key, filename in cfg['data']['files'].items():
-            # ZIP pode conter um diretório raiz; encontrar pelo nome sem ambiguidade.
-            matches = [entry for entry in z.namelist() if Path(entry).name == filename]
+            # Os CSV podem estar em ZIPs diferentes e dentro de pastas raiz.
+            # O nome tem de ser único no conjunto dos arquivos configurados.
+            matches = [(z, entry) for z in archives for entry in z.namelist()
+                       if not entry.endswith('/') and Path(entry).name == filename]
             if len(matches) != 1:
-                raise ValueError(f'{filename}: esperava um único CSV no ZIP; encontrados {len(matches)}.')
-            with z.open(matches[0]) as file:
+                raise ValueError(f'{filename}: esperava um único CSV nos ZIPs configurados; encontrados {len(matches)}.')
+            archive, entry = matches[0]
+            with archive.open(entry) as file:
                 result[key] = pd.read_csv(file)
     return result
 
@@ -158,7 +173,7 @@ def _demo_frames(cfg):
     demo = {}
     for k, key in enumerate(cfg['data']['files']):
         # Desenhar trajetos suaves em componentes norte/este (m).
-        phase = 2 * np.pi * k / 3
+        phase = 2 * np.pi * k / len(cfg['data']['files'])
         north_m = 35 * np.cos(t_s / 35 + phase) + 0.22 * t_s + 7 * k
         east_m = 42 * np.sin(t_s / 35 + phase) + 12 * k
         # Aproximação local usada só para CRIAR a missão sintética.
@@ -196,12 +211,12 @@ def load_mission(cfg, config_dir='.'):
         source = 'DEMONSTRAÇÃO — dados sintéticos, não são os logs reais'
     elif mode == 'zip':
         frames = _load_zip(cfg, Path(config_dir))
-        source = 'DADOS REAIS — ZIP fornecido para a UC'
+        source = 'DADOS REAIS — logs fornecidos para a UC'
     else:
         raise ValueError("data.mode deve ser 'demo' ou 'zip'.")
     traces = {key: _to_trace(key, frame, cfg) for key, frame in frames.items()}
     start = max(int(trace.times_ns[0]) for trace in traces.values())
     end = min(int(trace.times_ns[-1]) for trace in traces.values())
     if end <= start:
-        raise ValueError('Não existe intervalo temporal comum aos três robôs.')
+        raise ValueError('Não existe intervalo temporal comum aos robôs configurados.')
     return Mission(traces, start, end, source)

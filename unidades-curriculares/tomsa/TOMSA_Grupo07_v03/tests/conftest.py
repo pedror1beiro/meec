@@ -9,8 +9,8 @@ ROOT = Path(__file__).resolve().parents[1]
 def real_mission_and_config():
     cfg = load_config(ROOT / 'config.yaml')
     cfg['data']['mode'] = 'zip'
-    path = Path(cfg['data']['zip_path'])
-    if not (path if path.is_absolute() else ROOT / path).is_file():
+    paths = [Path(p) for p in [cfg['data']['zip_path'], *cfg['data'].get('extra_zip_paths', [])]]
+    if any(not (path if path.is_absolute() else ROOT / path).is_file() for path in paths):
         pytest.skip('ZIP restrito ausente; testes de dados reais são opcionais.')
     return load_mission(cfg, ROOT), cfg
 

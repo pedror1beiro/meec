@@ -2,11 +2,11 @@
 
 ## Ideia principal (30 segundos)
 
-Desenvolvemos uma aplicação em Python/Dash que lê os registos de três robôs e permite acompanhar as suas trajetórias num mapa, numa vista NED global e numa vista relativa ao robô escolhido. Convertemos latitude/longitude/altitude para um referencial comum, alinhamos os registos por tempo e mostramos rapidez e a sua derivada. Um painel interativo permite inspecionar a transformação rígida e verificar os seus invariantes nas próprias amostras da missão. As hipóteses físicas permanecem identificadas.
+Desenvolvemos uma aplicação em Python/Dash que lê os registos dos robôs definidos no YAML e permite acompanhar as suas trajetórias num mapa, numa vista NED global e numa vista relativa ao robô escolhido. Convertemos latitude/longitude/altitude para um referencial comum, alinhamos os registos por tempo e mostramos rapidez e a sua derivada. Um painel interativo permite inspecionar a transformação rígida e verificar os seus invariantes nas próprias amostras da missão. As hipóteses físicas permanecem identificadas.
 
 ## Demonstração recomendada (5–7 minutos)
 
-1. Mostrar o `config.yaml` e explicar os três CSV; os dados originais não são alterados.
+1. Mostrar o `config.yaml` e explicar os CSV configurados; os dados originais não são alterados.
 2. Mapa: latitude/longitude originais, rasto recente e seleção do robô. Alternar percurso completo/60 s. Mostrar 3D e explicar que as ondas, ícones e pulso são ilustrativos. O círculo horizontal é aproximado; o filtro local usa distância NED 3D.
 3. Replay: Play/Pause, timestamp e amostra mais próxima com tolerância ±0,3 s. A câmara do mapa não salta ao mudar o instante.
 4. Vistas global/local: Norte, Este, Baixo em metros, na mesma origem. Selecionar robô 1 e explicar a hipótese de orientação; selecionar robô 7 para mostrar NED transladado.
@@ -34,6 +34,8 @@ Desenvolvemos uma aplicação em Python/Dash que lê os registos de três robôs
 
 **Porquê YAML?** Configuração desacoplada do código.
 
+**Como adicionamos um novo log/robô?** Colocamos o ZIP em `data/` e acrescentamos no `config.yaml` o caminho do ZIP em `data.extra_zip_paths`, o identificador e nome do CSV em `data.files`, e a etiqueta/cor em `robots`. Se o ZIP já estiver configurado, basta registar o novo CSV e o robô. Reiniciamos com `python app.py`; as vistas e os cálculos percorrem os robôs configurados, sem alterar o código Python. O log deve respeitar o formato esperado e partilhar um intervalo temporal com os restantes. A presença do ficheiro na pasta, por si só, não o adiciona à missão.
+
 **Porquê NED?** Um referencial cartesiano comum em metros, adequado para comparar posições relativas.
 
 **As orientações estão comprovadas?** Não. `world_ned` é usado como hipótese explicitamente assinalada, e o robô 7 fica em NED transladado. Precisamos de confirmação do professor sobre a convenção dos quaterniões.
@@ -42,7 +44,7 @@ Desenvolvemos uma aplicação em Python/Dash que lê os registos de três robôs
 
 **O triângulo parece diferente nas duas vistas?** As distâncias são espaciais, em 3D. A projeção das câmaras pode mudar a aparência. As duas cenas usam a mesma escala métrica nos três eixos, e a tabela permite comparar numericamente.
 
-**Os três pontos correspondem ao mesmo instante exato?** São as amostras mais próximas do instante do replay, dentro da tolerância. A tabela mostra o desvio de cada timestamp; não se inventam pontos por interpolação.
+**As posições correspondem ao mesmo instante exato?** São as amostras mais próximas do instante do replay, dentro da tolerância. A tabela mostra o desvio de cada timestamp; não se inventam pontos por interpolação.
 
 **O círculo e o rasto acrescentam dados medidos?** O rasto liga amostras originais e omite lacunas grandes. O círculo é uma ajuda cartográfica horizontal aproximada; o brilho, os ícones e as ondas são apresentação. Nenhum desses efeitos altera os logs, a matemática ou as exportações.
 

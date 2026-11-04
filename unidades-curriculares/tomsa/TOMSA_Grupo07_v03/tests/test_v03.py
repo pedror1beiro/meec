@@ -80,7 +80,7 @@ def test_export_local_origin_is_zero_and_frame_is_explicit(real_mission):
     frame = cfg['orientation']['assumed_body_to_ned_frame_id']
     for origin in mission.traces:
         rows = local_snapshot_rows(mission, t, origin, 0.3, frame)
-        assert len(rows) == 3
+        assert len(rows) == len(mission.traces)
         center = next(row for row in rows if row['robot'] == origin)
         assert center['reference_robot'] == origin
         np.testing.assert_allclose([center[f'local_{axis}_m'] for axis in 'xyz'],
@@ -114,7 +114,7 @@ def test_local_csv_round_trip(real_mission, tmp_path):
     path = tmp_path / 'tomsa_snapshot_local.csv'
     pd.DataFrame(rows).to_csv(path, index=False)
     df = pd.read_csv(path)
-    assert len(df) == 3
+    assert len(df) == len(mission.traces)
     assert set(df['coordinate_frame']) == {'ned_translated'}
     assert set(df['reference_robot']) == {'robot7'}
 

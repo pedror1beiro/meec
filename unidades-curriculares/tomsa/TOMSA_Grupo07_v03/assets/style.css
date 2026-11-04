@@ -134,7 +134,7 @@ body {
 .math-checks { display: flex; flex-wrap: wrap; gap: 8px 22px; font: 12px/1.5 ui-monospace, Consolas, monospace; }
 .math-check-result { font-size: 13px; font-weight: 700; }
 .maplibregl-ctrl-attrib { font-size: 11px; color: #17263c; }
-.kinematics-readouts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 16px 0; }
+.kinematics-readouts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 16px 0; }
 .kinematics-readout { display: flex; flex-direction: column; gap: 5px; padding: 12px 16px;
   border: 1px solid var(--line); border-radius: 9px; font-size: 12px; font-variant-numeric: tabular-nums; }
 .speed-value { color: var(--ink); font-size: 22px; font-weight: 700; }

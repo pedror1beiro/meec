@@ -42,11 +42,11 @@ def test_frame_callback_syncs_map_cursor_and_missing_samples(dashboard):
             output = dashboard.render_frame(10, key, 450, dimension)
             assert len(output) == 10
             assert output[5]['selected'] == key
-            assert len(output[5]['robots']) == 3
+            assert len(output[5]['robots']) == len(dashboard.MISSION.traces)
             assert isinstance(output[6], Patch) and isinstance(output[7], Patch)
             operations = output[6].to_plotly_json()['operations']
             assert all(op['params']['value'] == 5. for op in operations)
-            assert len(output[8]) == 3
+            assert len(output[8]) == len(dashboard.MISSION.traces)
     state = dashboard.mission_state(dashboard.MISSION, dashboard.MISSION.start_ns - 10**10, .3)
     assert all(s is None for s in state.values())
 
@@ -63,7 +63,7 @@ def test_dash_frame_callback_http_serialization(dashboard):
         'state': [], 'changedPropIds': ['time-slider.value']})
     assert response.status_code == 200, response.data
     data = response.get_json()['response']
-    assert len(data['map-frame']['data']['robots']) == 3
+    assert len(data['map-frame']['data']['robots']) == len(dashboard.MISSION.traces)
     assert data['speed-view']['figure']['__dash_patch_update']
     assert data['math-content']['children']
 

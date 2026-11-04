@@ -2,11 +2,11 @@
 
 **Multi-Robot Trajectory Replay and Coordinate Frame Visualizer** — ISEP, Mestrado em Sistemas Autónomos.
 
-Dashboard Python/Dash para os robôs 1, 4 e 7: mapa geográfico MapLibre/OpenStreetMap com camada OpenSeaMap, vistas NED 2D/3D e local, replay sincronizado, rapidez, análise de aceleração, orientação, configuração YAML e exportações CSV.
+Dashboard Python/Dash para os robôs configurados (atualmente: 1, 4, 7 e 8): mapa geográfico MapLibre/OpenStreetMap com camada OpenSeaMap, vistas NED 2D/3D e local, replay sincronizado, rapidez, análise de aceleração, orientação, configuração YAML e exportações CSV.
 
 ## Executar
 
-No Windows, dentro desta pasta (o nome `TOMSA_Grupo07_v03` mantém-se para preservar os caminhos existentes):
+No Windows, dentro da pasta da aplicação:
 
 ```cmd
 python -m venv .venv
@@ -27,9 +27,20 @@ São mantidas as dependências Python existentes; a atualização parcial dos gr
 
 ## Dados restritos — não publicar
 
-Obter `TL2026.zip` nos materiais oficiais da UC e colocá-lo **localmente** em `data/TL2026.zip`. O ZIP contém os três CSV e `TOMSA2026_TL_readme.pdf`, que documenta a estrutura. O uso dos dados é restrito à UC TOMSA.
+A configuração predefinida usa `data/TL2026.zip` e `data/robot8_s1.zip`, já disponíveis nesta cópia local. O primeiro ZIP contém os três CSV originais e `TOMSA2026_TL_readme.pdf`, que documenta a estrutura; o segundo contém o CSV do robô 8. Numa nova cópia do repositório, obter os ZIPs nos materiais oficiais da UC e colocá-los nesses caminhos. O uso dos dados é restrito à UC TOMSA.
 
 O ZIP, CSV, pasta `data/`, exportações e pré-visualizações geográficas derivadas não devem entrar no repositório público. Os testes novos usam dados sintéticos; testes dos dados reais são opcionais quando o ZIP está ausente. Não guardar capturas/HTML do mapa real em pastas versionadas.
+
+## Adicionar um novo log/robô
+
+1. Colocar o ZIP em `data/`, por exemplo `data/robot9_s1.zip`. Não é necessário extrair o CSV.
+2. No único `config.yaml`, acrescentar as entradas às secções existentes, mantendo os robôs atuais:
+   - Em `data.extra_zip_paths`, acrescentar `data/robot9_s1.zip` à lista. Se o CSV já estiver num ZIP configurado, este passo não é necessário.
+   - Em `data.files`, acrescentar `robot9: robot9_s1.csv`.
+   - Em `robots`, acrescentar `robot9: {label: 'Robô 9', color: '#3b82f6'}`.
+3. Reiniciar com `python app.py`. A lista de robôs, as vistas e os cálculos usam as entradas do YAML, sem alterar o código Python.
+
+O novo log deve respeitar o formato esperado dos CSV, e os robôs devem ter um intervalo temporal comum com relógios comparáveis. O leitor valida as colunas obrigatórias e os timestamps e rejeita nomes de CSV ausentes ou repetidos nos ZIPs configurados. As convenções de orientação e velocidade continuam sujeitas às confirmações descritas abaixo. A adição é feita por configuração; colocar um ficheiro na pasta, por si só, não o regista na missão.
 
 ## Utilização
 
@@ -52,11 +63,11 @@ O efeito é recortado por polígonos `water` com `class: ocean` do esquema [Open
 
 O README original define `pose.pose.position.x/y` como latitude/longitude em graus e `.z` como altitude em metros. Usamos geodésicas → ECEF WGS84 → NED comum, com a origem do YAML. O datum vertical da altitude (descrita como acima do nível do mar) não está confirmado como elipsoidal; a conversão ECEF mantém a hipótese de alturas comparáveis da versão anterior. Isto limita a interpretação vertical.
 
-O replay usa `header.stamp.secs/nsecs`, preservando nanossegundos inteiros, e escolhe a amostra mais próxima dentro de ±0,3 s, sem interpolação. O intervalo comum dos três robôs define o slider. Pressupõe-se que os relógios são comparáveis. Os registos são ordenados; timestamps duplicados são rejeitados, assim como quaterniões de norma zero. Campos opcionais de velocidade inválidos não eliminam poses válidas.
+O replay usa `header.stamp.secs/nsecs`, preservando nanossegundos inteiros, e escolhe a amostra mais próxima dentro de ±0,3 s, sem interpolação. O intervalo comum de todos os robôs configurados define o slider. Pressupõe-se que os relógios são comparáveis. Os registos são ordenados; timestamps duplicados são rejeitados, assim como quaterniões de norma zero. Campos opcionais de velocidade inválidos não eliminam poses válidas.
 
 ### Velocidade
 
-Os CSV têm `twist.twist.linear.{x,y,z}` e `twist.twist.angular.{x,y,z}`. O README descreve as unidades como **normalmente m/s e rad/s**, sem garantir a base das componentes. `header.frame_id` é `world_ned` nos robôs 1/4 e `WGS84` no robô 7; todos têm `child_frame_id: body`. A mensagem [ROS Odometry](https://github.com/ros/common_msgs/blob/noetic-devel/nav_msgs/msg/Odometry.msg) especifica twist em `child_frame_id`, mas o formato ROS-like destes logs não comprova que o produtor seguiu essa convenção.
+Os CSV têm `twist.twist.linear.{x,y,z}` e `twist.twist.angular.{x,y,z}`. O README descreve as unidades como **normalmente m/s e rad/s**, sem garantir a base das componentes. `header.frame_id` é `world_ned` nos robôs 1/4/8 e `WGS84` no robô 7; todos têm `child_frame_id: body`. A mensagem [ROS Odometry](https://github.com/ros/common_msgs/blob/noetic-devel/nav_msgs/msg/Odometry.msg) especifica twist em `child_frame_id`, mas o formato ROS-like destes logs não comprova que o produtor seguiu essa convenção.
 
 Por isso, a interpretação SI usual é declarada na interface e `kinematics.confirmed_velocity_frame` começa em `unknown`. A rapidez é `s = ‖v‖ = sqrt(vx² + vy² + vz²)`, invariante sob rotações de bases cartesianas ortonormais com as mesmas unidades. Não se tratam componentes de velocidade como graus/s nem se derivam latitude/longitude para inventar velocidades. As componentes angulares são carregadas, mas não são usadas para inferir uma convenção desconhecida.
 

@@ -23,7 +23,7 @@ def test_nearest_timestamp_and_gap():
 
 def test_real_mission_row_counts_and_time_overlap(mission):
     assert {k: len(t.times_ns) for k, t in mission.traces.items()} == {
-        'robot1': 9537, 'robot4': 5615, 'robot7': 15000}
+        'robot1': 9537, 'robot4': 5615, 'robot7': 15000, 'robot8': 5615}
     assert abs(mission.duration_s - 2396.191938162) < 1e-7
 
 
@@ -47,5 +47,5 @@ def test_unknown_orientation_falls_back_to_translated_ned(mission):
 def test_aer_independent_of_unknown_orientation(mission):
     state = mission_state(mission, mission.start_ns + 40_000_000_000, .3)
     rows = relative_aer(state, 'robot7')
-    assert len(rows) == 2
+    assert len(rows) == len(mission.traces) - 1
     assert all(x['range_m'] > 0 and np.isfinite(x['azimuth_deg']) for x in rows)

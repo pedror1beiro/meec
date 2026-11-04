@@ -240,7 +240,7 @@ app.layout = html.Div([
     ], className='card export-card'),
 
     html.P(
-        'Nota técnica: as posições são latitude/longitude/altitude nos três logs, '
+        'Nota técnica: as posições são interpretadas como latitude/longitude/altitude nos logs, '
         'segundo o README. O nome world_ned, por si só, não confirma corpo→NED; '
         'setas provisórias estão identificadas. WGS84 não determina eixos de orientação. No mapa, setas só '
         'com corpo→NED confirmado. O datum vertical da altitude carece de confirmação.',

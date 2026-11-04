@@ -89,4 +89,4 @@ def test_real_data_checks_preserve_the_original_orientation_limits(real_mission_
         result = frame_diagnostics(state, center, cfg['orientation']['assumed_body_to_ned_frame_id'])
         assert result['checks_pass']
         assert result['frame'] == ('ned_translated' if center == 'robot7' else 'robot_body_assumed')
-        assert len(result['pairs']) == 3
+        assert len(result['pairs']) == len(mission.traces) * (len(mission.traces) - 1) // 2
