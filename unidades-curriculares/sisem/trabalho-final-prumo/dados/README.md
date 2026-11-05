@@ -1,5 +1,5 @@
 # Dados experimentais
 
-Guardar aqui os registos reais da USART. Ainda não foram recolhidas amostras físicas.
+Não foi disponibilizado um ficheiro de aquisição real para esta entrega. O gráfico da apresentação usa dados sintéticos identificados como simulação.
 
-Para cada sessão, registar data, firmware/commit, frequência de amostragem, escala, filtro, referência angular, número de amostras e condições do ensaio. Não substituir os dados originais por dados filtrados; guardar transformações num ficheiro separado ou script reproduzível.
+Guardar aqui os CSV originais produzidos pelo logger da USART. Para cada ensaio, registar data, versão do firmware, duração, número de amostras, escala, filtro, referência angular e condições da montagem. Guardar transformações e gráficos separadamente, preservando os dados originais.

@@ -17,4 +17,4 @@ Principais ficheiros:
 - `UI/ui.c`: desenho do ecrã em blocos de 8 linhas, buffer estático de 2 KiB.
 - `vendor-manifest.json`: origens e hashes das dependências ST/Arm incluídas.
 
-O firmware foi preparado para a 3S0 Board 1.2 do esquema fornecido. O build e os testes em PC são distintos da validação física, que precisa de ser feita na board. Os offsets, RGB/BGR e a inicialização do TFT podem exigir ajuste no primeiro ensaio.
+O firmware foi preparado para a 3S0 Board 1.2 do esquema fornecido. O grupo relata execução, apresentação no TFT e controlos funcionais na placa. Os testes no PC e os relatórios de compilação verificam outros aspetos; não foram disponibilizadas medições quantitativas. A revisão final não repetiu os ensaios físicos. O perfil do TFT e os sinais dos eixos devem acompanhar a montagem usada.
