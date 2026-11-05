@@ -1,93 +1,72 @@
-# Compilação, debug e validação
+# Configuração, processamento e validação
 
-Este documento começou como roteiro. Atualização: existe agora código completo em `firmware/PRUMO`, com build independente Debug/Release verificado. As etapas no hardware continuam pendentes. Para o projeto entregue, seguir [instruções Linux/CubeIDE](08-linux-cubeide.md); as tabelas seguintes documentam o planeamento inicial.
+## Configuração entregue
 
-## Configuração inicial a gerar no CubeMX
-
-| Item | Configuração proposta |
+| Item | Valor no código |
 |---|---|
-| MCU | STM32F103RBT6; verificar Flash de 128 KiB e RAM de 20 KiB |
-| Projeto | C / HAL / STM32CubeIDE; nome PRUMO |
-| SYS Debug | Serial Wire, mantendo SWD e libertando PB4 de JTAG |
-| Clock | Começar com HSI interno para bring-up; definir PLL/HSE depois de verificar a placa |
-| I2C2 | PB10/PB11, 100 kHz, endereçamento de 7 bits |
-| SPI1 | Master, SCK PA5, MOSI PA7, NSS por software; escrita apenas |
-| SPI inicial | CPOL baixo / primeira transição, MSB primeiro, 8 bits; frequência conservadora ≤1 MHz até validar o TFT |
-| TFT GPIO | PA4 CS alto em repouso, PA8 D/C, PB4 RESET alto após inicialização, PA0 backlight |
-| Sensor SA0 | PB12 alto, endereço 0x1D |
-| Botões | PC13/PC10/PC11/PC12/PA1, entrada pull-up |
-| USART2 | PA2 TX / PA3 RX, 115200 baud, 8N1; confirmar VCP |
-| Temporização | Tick de 1 ms; aquisição alvo 50 Hz, UI inicial 10 Hz |
+| Alvo | STM32F103RBT6, Cortex-M3, soft-float, 128 KiB de Flash / 20 KiB de SRAM |
+| Clock | HSI/2 × PLL16: 64 MHz nominais; APB1 a 32 MHz |
+| I²C2 | PB10/PB11, 100 kHz, endereço de 7 bits 0x1D, SA0/PB12 alto |
+| Sensor | MMA8452Q, ±2 g, 12 bits, 1024 contagens/g, ODR nominal de 50 Hz |
+| SPI1 | PA5/PA7, modo 0, MSB primeiro, 8 bits, 4 MHz nominais |
+| USART2 | PA2/TX e PA3/RX, 115200 baud, 8N1, transmissão por interrupção |
+| Temporização | Consulta alvo de 20 ms; pedido de UI de 100 ms; debounce de 25 ms |
+| Filtro | Média exponencial por componente, α = 0,18 |
+| Validade | Norma da aceleração de entrada entre 0,75 g e 1,25 g |
+| Dados antigos | Limite configurado de 200 ms, verificado pelo ciclo cooperativo |
+| Recuperação | Nova tentativa do sensor após cerca de 1 s; TFT após cerca de 3 s |
 
-A frequência SPI tem de respeitar o datasheet do controlador e o clock APB2 real. A resolução/offsets e a ordem de cor do TFT devem ser verificadas com padrões antes da UI final.
+São valores configurados. A taxa efetiva de leituras válidas, a atualização visual e a latência precisam de medição. As transações bloqueantes e a reinicialização do TFT podem atrasar o ciclo principal.
 
-## Estrutura futura do firmware
+## Processamento
+
+Os seis bytes do sensor são convertidos em três amostras assinadas de 12 bits. O código reconstrói `n = (MSB << 4) | (LSB >> 4)` e subtrai 4096 quando o bit de sinal está ativo. Em ±2 g, divide por 1024 para obter g.
+
+Cada componente é filtrada por `a_f = a_f + α × (a − a_f)`. A primeira amostra inicializa o filtro. Diminuir α aumenta a suavização e o atraso de resposta.
+
+As componentes filtradas originam duas inclinações em graus:
 
 ```text
-firmware/PRUMO/
-  PRUMO.ioc                  # a gerar com CubeMX
-  Core/Inc/                  # arranque e interfaces gerados
-  Core/Src/
-  Drivers/                   # HAL/CMSIS do pacote escolhido
-  App/                       # aquisição, processamento, botões e scheduler
-  Board/                     # adaptação GPIO/I2C/SPI/USART desta board
-  Components/                # MMA8452Q, TFT e fonte bitmap
-  UI/                        # desenho e estado do nível
+X = atan2(ax, sqrt(ay² + az²)) × 180/π
+Y = atan2(ay, sqrt(ax² + az²)) × 180/π
 ```
 
-Manter o código de aplicação em ficheiros próprios e usar as secções `USER CODE` onde for necessário chamar a aplicação a partir de ficheiros gerados. Não editar startup/linker por tentativa: selecionar primeiro o alvo correto e verificar o projeto mínimo.
+A estimativa usa a gravidade perto do repouso. Não fornece orientação completa em 3D nem yaw. O teste da norma rejeita algumas condições inadequadas, mas não garante ausência de aceleração dinâmica.
 
-## Sequência de marcos
+ZERO guarda os ângulos atuais e a apresentação subtrai essa referência. HOLD mantém os valores apresentados sem parar a aquisição ou o CSV. Uma falha ou leitura inválida sobrepõe o aviso aos valores da UI. A tolerância define um critério de nivelamento e não a exatidão do sensor.
 
-| Marco | Resultado a demonstrar | Evidência a guardar |
+## Estado dos ensaios
+
+| Verificação | Resultado disponível | Alcance da evidência |
 |---|---|---|
-| M0 — ferramentas | Versões, projeto mínimo compila e entra em debug | Versões, `.ioc`, build log, captura do debugger |
-| M1 — GPIO/tempo | LED ou contador confirma execução e tick | Captura do contador e configuração |
-| M2 — USART | Mensagem e contador chegam ao PC sem erros | Log série, COM e baud |
-| M3 — I²C | ACK no endereço e `WHO_AM_I = 0x2A` | Captura de variáveis e, se disponível, traço I²C |
-| M4 — aceleração | Dados assinados coerentes com as orientações e gravidade | CSV das posições ±X/±Y/±Z |
-| M5 — TFT | Cores e cantos corretos, texto legível e orientação certa | Fotografia real, offsets, ordem RGB/BGR |
-| M6 — UI | Bolha, valores, ZERO, HOLD e tolerância funcionam | Vídeo/capturas e lista dos ensaios |
-| M7 — resultados | Repetibilidade, erro e resposta documentados | CSV, gráficos, condições e tabela de erros |
+| Compilação Cortex-M3 Debug/Release | Relatórios anteriores em `evidencias/` | Construção e ligação do executável, sem provar execução física. |
+| Lógica, formatação, botões e desenho no PC | Testes existentes passaram na revisão final | Entradas simuladas e saída TFT substituída por memória. |
+| Metadados CubeIDE | Dois testes passaram na revisão final | Estrutura de Debug/Release, builder e UTF-8; não substitui abrir o IDE. |
+| Execução na placa | Relatada pelo grupo no slide 8 | Teste funcional; condições detalhadas não disponibilizadas. |
+| Informação no TFT | Relatada pelo grupo no slide 8 | Apresentação funcional; a imagem do slide 6 continua a ser uma simulação. |
+| Botões e modos | Relatados pelo grupo no slide 8 | Resposta funcional; não há registo individual de cada pressão. |
+| Registo série real e análise angular | Não disponibilizados | Sem valores medidos de erro, repetibilidade ou resposta. |
 
-Não marcar um marco como concluído só porque uma simulação ou a compilação passou. Distinguir compilação, execução e validação física.
+Fonte dos ensaios físicos: [apresentação do grupo](Nivel_Digital_SISEM.pptx), incluindo notas. A revisão final não repetiu os testes na placa. Os relatórios antigos mantêm a sua data e o seu âmbito; não foram reclassificados como ensaios físicos.
 
-## Build e debug
+## Compilar e executar os testes
 
-1. Registar versões de IDE, CubeMX, CubeF1 e compilador.
-2. Gerar para STM32CubeIDE e importar/abrir segundo a versão instalada.
-3. Fazer build Debug, com símbolos e otimização adequada à depuração (por exemplo, `-Og`).
-4. Confirmar o tamanho de Flash/RAM no build e inspecionar o `.map`; não alocar framebuffer completo.
-5. Ligar por ST-LINK, interface SWD. Confirmar MCU detetado.
-6. Colocar breakpoint no arranque da aplicação; observar tick e contador de amostras.
-7. Registar as primeiras variáveis de estado/erro do I²C e a identificação do sensor.
-8. Remover breakpoints durante medições de latência ou temporização: parar o CPU perturba a aquisição e a comunicação.
+Seguir as [instruções Linux/CubeIDE](08-linux-cubeide.md). Para o alvo, usar o toolchain Arm GNU com newlib ou o compilador do CubeIDE. Para os testes no PC, executar `python3 tools/run_tests.py` com GCC nativo e Python 3.12 ou posterior.
 
-Variáveis úteis propostas para observar: `sample_count`, `i2c_error_count`, `last_i2c_status`, `who_am_i`, `raw_xyz`, `accel_g`, `tilt_deg`, `zero_reference`, `ui_hold`, `tolerance_deg` e `render_time_ms`. Os nomes finais acompanharão o código.
+O projeto tem configuração HAL em C, sem `.ioc` gerado/validado. As variáveis de diagnóstico são `prumo_debug`, `prumo_level` e `fatal_code`. A compilação independente anterior registou 19 820 bytes de Flash em Debug, 17 668 em Release e 5248 bytes de RAM reservada, incluindo 2048 bytes de reserva mínima de stack. O mapa não mede o pico real da stack.
 
-## Processamento e limites
-
-- Ler dados assinados de 12 bits, converter para g e aplicar filtro passa-baixo simples.
-- Calcular inclinações pela projeção da gravidade, com `atan2f`/`sqrtf`, definindo explicitamente a convenção dos eixos antes das fórmulas finais.
-- Acelerações de movimento contaminam a estimativa de inclinação; avaliar perto de repouso. Monitorizar também a norma da aceleração.
-- ZERO deve guardar uma referência angular da posição atual; não deve remover indiscriminadamente a gravidade dos três eixos antes de estimar a orientação.
-- O ajuste do filtro será escolhido por medições de ruído e resposta, não apenas por aparência.
-- HOLD congela a UI; a telemetria deve continuar com indicação de HOLD. Falhas do sensor devem sobrepor-se a esse estado no aviso de erro.
-
-## Registo proposto
-
-Formato CSV preliminar, independente da UI:
+## Telemetria e resultados
 
 ```text
-t_ms,seq,ax_g,ay_g,az_g,tilt_x_deg,tilt_y_deg,zero_x_deg,zero_y_deg,tolerance_deg,hold,sensor_ok
+t_ms,sample_ms,seq,ax_mg,ay_mg,az_mg,x_cdeg,y_cdeg,zero_x_cdeg,zero_y_cdeg,tol_cdeg,hold,sensor_ok,tilt_valid,i2c_errors,missed_polls,uart_dropped
 ```
 
-Formato por fechar na implementação. Preferir unidades explícitas e um cabeçalho estável. Para não aumentar desnecessariamente Flash com `printf` de floats, pode transmitir-se com inteiros escalados e formatação própria. Não fabricar ficheiros de medições enquanto não houver aquisição real.
+Dividir `mg` por 1000 para obter g e `cdeg` por 100 para obter graus. As acelerações são as amostras originais convertidas. Os ângulos vêm das componentes filtradas, antes do ZERO; o relativo resulta de `x_cdeg − zero_x_cdeg`, e de modo equivalente para Y.
 
-## Ensaios para a apresentação
+`sample_ms` é o tick associado à última leitura bem-sucedida, e não um timestamp de data-ready do sensor. `t_ms` é o tick usado ao preparar o registo. Verificar `seq`, `sensor_ok` e `tilt_valid`, pois também existem registos de erro sem nova amostra. `missed_polls` conta períodos do agendamento ultrapassados; `uart_dropped` conta tentativas de transmissão descartadas ou falhadas.
 
-- Estabilidade: registar vários segundos com a board imóvel; indicar duração, frequência e número real de amostras.
-- Repetibilidade: recolocar várias vezes na mesma superfície e comparar média/dispersão.
-- Referência: usar suporte/transferidor de precisão conhecida; indicar a incerteza e evitar tratá-lo como perfeito.
-- Resposta: mudar entre duas inclinações e medir o atraso/estabilização, antes e depois do filtro.
-- Interface: testar pressões únicas, debounce, HOLD, ZERO, limites das tolerâncias e recuperação de erros.
+## Próxima caracterização experimental
+
+Guardar um CSV real e registar firmware, montagem, duração, número de amostras e referência usada. Comparar vários ângulos conhecidos, repetir posições e calcular erro e dispersão. Para estudar a resposta, aplicar uma mudança de inclinação e medir o tempo de estabilização. Fotografias do ecrã e registos de USART devem acompanhar os ensaios que documentam.
+
+O gráfico do slide 9 é sintético e serve apenas para explicar a suavização. Não permite atribuir ao protótipo uma precisão ou um tempo de resposta medidos.

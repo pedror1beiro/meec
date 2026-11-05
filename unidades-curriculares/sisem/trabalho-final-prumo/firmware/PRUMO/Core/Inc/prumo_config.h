@@ -5,6 +5,7 @@
 #define PRUMO_UI_MS 100U
 #define PRUMO_DEBOUNCE_MS 25U
 #define PRUMO_STALE_MS 200U
+/* Alpha menor suaviza mais e aumenta o atraso; aplicado as componentes em g. */
 #define PRUMO_FILTER_ALPHA 0.18f
 #define PRUMO_MMA_ADDR7 0x1DU
 #define PRUMO_TFT_X_OFFSET 0U

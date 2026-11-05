@@ -18,6 +18,7 @@ void Level_Update(LevelState *s, float ax, float ay, float az, float alpha) {
         s->valid = false;
         return;
     }
+    /* Inicializacao direta evita um transitorio artificial a partir de zero. */
     if (!s->seeded) {
         s->ax = ax;
         s->ay = ay;
@@ -31,8 +32,10 @@ void Level_Update(LevelState *s, float ax, float ay, float az, float alpha) {
     /* Two inclination angles relative to horizontal; no heading/yaw claim. */
     s->angle_x = atan2f(s->ax, sqrtf(s->ay * s->ay + s->az * s->az)) * 57.295779513f;
     s->angle_y = atan2f(s->ay, sqrtf(s->ax * s->ax + s->az * s->az)) * 57.295779513f;
+    /* Heuristica de repouso: alguns movimentos continuam a passar neste intervalo. */
     s->valid = s->norm_g >= 0.75f && s->norm_g <= 1.25f;
 }
+/* Referencia angular local em RAM; nao calibra ganho ou alinhamento do sensor. */
 void Level_Zero(LevelState *s) {
     if (!s->valid) return;
     s->zero_x = s->angle_x;

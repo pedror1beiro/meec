@@ -8,6 +8,8 @@
 #include "prumo_config.h"
 #include "st7735.h"
 #include "ui.h"
+
+/* Ciclo cooperativo: I2C/SPI bloqueantes com timeout; USART por interrupcao. */
 volatile PrumoDebug prumo_debug;
 LevelState prumo_level;
 static ButtonsState buttons;
@@ -25,6 +27,7 @@ static void telemetry(uint32_t now) {
     Csv_Unsigned(&b, now);
     Csv_Unsigned(&b, prumo_debug.sample_ms);
     Csv_Unsigned(&b, prumo_debug.sample_count);
+    /* XYZ em mg; angulos filtrados em centesimos de grau, antes do ZERO. */
     Csv_Signed(&b, scaled(prumo_debug.raw_x / 1024.0f, 1000));
     Csv_Signed(&b, scaled(prumo_debug.raw_y / 1024.0f, 1000));
     Csv_Signed(&b, scaled(prumo_debug.raw_z / 1024.0f, 1000));
@@ -86,6 +89,7 @@ void App_Task(void) {
         probe(true);
         now = HAL_GetTick();
     }
+    /* Mantem a fase de consulta e conta atrasos sem repetir leituras antigas. */
     if ((uint32_t)(now - last_poll) >= PRUMO_SAMPLE_MS) {
         uint32_t periods = (uint32_t)(now - last_poll) / PRUMO_SAMPLE_MS;
         prumo_debug.missed_polls += periods - 1;

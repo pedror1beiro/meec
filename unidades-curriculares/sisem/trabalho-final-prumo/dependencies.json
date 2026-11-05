@@ -53,5 +53,16 @@
     "buttons",
     "telemetry",
     "level_ui"
-  ]
+  ],
+  "functional_validation": {
+    "reported_by": "grupo",
+    "source": "docs/Nivel_Digital_SISEM.pptx, slides 8 e 10",
+    "scope": [
+      "execucao_na_placa",
+      "apresentacao_no_TFT",
+      "botoes_e_modos"
+    ],
+    "repeated_in_final_review": false,
+    "quantitative_data_provided": false
+  }
 }

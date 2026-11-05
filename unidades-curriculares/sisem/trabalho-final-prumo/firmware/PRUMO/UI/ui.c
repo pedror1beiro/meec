@@ -41,6 +41,7 @@ static const Glyph font[] = {
 #define GREEN 0xB72EU
 #define AMBER 0xF5ECU
 #define RED 0xF2C8U
+/* Vinte faixas por imagem; 2 KiB de RAM em vez de um framebuffer de 40 KiB. */
 static uint8_t tile[128 * 8 * 2];
 static unsigned tile_y;
 static UiFrame pending, active;
@@ -172,6 +173,7 @@ void UI_Request(const UiFrame *frame) {
 bool UI_Task(void) {
     if (!busy) {
         if (!dirty) return true;
+        /* Todas as faixas deste frame usam o mesmo estado logico. */
         active = pending;
         dirty = false;
         busy = true;

@@ -1,57 +1,40 @@
 # Requisitos e decisões
 
-Data inicial: 2026-10-31. Contexto: SISEM 2026/27, trabalho ADC/SPI/I²C.
+## Enquadramento
 
-## Requisitos do enunciado
+O [enunciado de SISEM 2026/27](referencias/FichaDeTrabalhoFinal.pdf), páginas 1–2, pede o estudo de um periférico do STM32, leitura de um dos sensores indicados, envio dos dados ao computador por USART, tratamento dos resultados e documentação em formato de apresentação.
 
-Fonte: [enunciado original](referencias/FichaDeTrabalhoFinal.pdf), páginas 1–2.
+Foi escolhido o MMA8452Q e o periférico I²C. A aplicação é um nível digital: a orientação da gravidade permite estimar a inclinação quando a placa está aproximadamente imóvel. O TFT por SPI e os botões acrescentam uma interface local.
 
-- Estudar um periférico do STM32 e ler um dos sensores propostos.
-- O sensor escolhido é o MMA8452Q, ligado por I²C.
-- Enviar os dados do microcontrolador para o computador por ligação série assíncrona através da USART.
-- Tratar os resultados; o enunciado dá como exemplo uma demonstração e um gráfico.
-- Documentar estudo do sensor, estudo do periférico/biblioteca, implementação, validação e resultados.
-- Entregar documentação em formato de apresentação, que funciona como relatório.
-
-Não foi fornecida uma grelha de avaliação. Não há evidência de que jogos, originalidade ou a estética tenham um peso específico. A opção por validação quantitativa é uma decisão nossa para demonstrar o trabalho técnico.
-
-## Decisões confirmadas com o utilizador
+## Decisões de implementação
 
 | Decisão | Justificação |
 |---|---|
-| Nível digital PRUMO | Aplicação prática e fácil de validar com inclinações conhecidas. |
-| Interface local no TFT | Aproveitar o ecrã da placa de expansão. |
-| NUCLEO-F103RB / STM32F103RBT6 | Hardware indicado e confirmado pelo utilizador. |
-| HAL / STM32CubeMX | Preferência confirmada pelo utilizador em 2026-10-31. |
-| Compilação e debug no STM32CubeIDE | Objetivo explícito do utilizador. |
-| Documentação contínua | Guardar decisões, fontes e evidências para a apresentação. |
+| NUCLEO-F103RB / STM32F103RBT6 | Plataforma usada com a placa de expansão 3S0 Board 1.2. |
+| HAL e CMSIS de STM32CubeF1 v1.8.7 | Acesso aos periféricos com dependências incluídas e identificadas. |
+| Configuração HAL escrita em C | Projeto existente importável no CubeIDE, sem `.ioc` gerado/validado. |
+| HSI/2 e PLL ×16, 64 MHz nominais | Evitar dependência de cristal ou MCO externo na configuração entregue. |
+| Consulta do sensor a cada 20 ms | Alvo de aquisição compatível com a ODR configurada de 50 Hz. |
+| Pedido de UI a cada 100 ms | Separar a aquisição do ritmo de apresentação. |
+| Desenho em faixas de oito linhas | Buffer de 2 KiB, compatível com os 20 KiB de SRAM. |
+| USART2 a 115200 baud, 8N1 | Transmissão dos valores e estados para o computador. |
 
-Foram encontrados exemplos locais em `C:\meec\unidades-curriculares\sisem` que usam registos e Standard Peripheral Library. São apenas contexto; a indicação posterior do utilizador para HAL prevalece. Não misturar os dois conjuntos de bibliotecas no projeto.
+O código usa HAL. Os exemplos de fichas que usam SPL são material separado e não fazem parte deste firmware.
 
-## Funcionalidades propostas para a primeira versão
+## Funcionalidades implementadas
 
-- Mostrar bolha e inclinações em dois eixos no TFT de 128 × 160 píxeis.
-- Definir zero relativo por botão.
-- Congelar a apresentação da leitura por HOLD; continuar a aquisição e a telemetria.
-- Ajustar tolerância por eixo: 0,2°, 0,5°, 1°, 2° ou 5°.
-- Alternar entre bolha e indicadores por eixo.
-- Transmitir amostras e estados por USART2 para registo no computador.
+- Bolha e inclinações X/Y no TFT de 128 × 160 píxeis.
+- ZERO guarda os ângulos atuais como referência relativa e cancela HOLD.
+- HOLD mantém os valores apresentados, enquanto a aquisição e a telemetria continuam.
+- Tolerância por eixo: 0,2°, 0,5°, 1°, 2° ou 5°; valor inicial de 1°.
+- Vista alternativa com indicadores por eixo.
+- CSV com acelerações, ângulos, referência e indicadores de validade/erro.
+- Aviso de falha do sensor ou leitura inválida e tentativa limitada de recuperação do I²C.
 
-Tolerância é um critério escolhido pelo utilizador, não uma garantia de precisão do sensor. Mostrar uma casa decimal também não demonstra precisão de 0,1°.
+O estado nivelado exige que os módulos dos dois ângulos apresentados sejam inferiores ou iguais à tolerância. ZERO e tolerância ficam em RAM e perdem-se com o reset. A tolerância é um critério de aceitação e não uma garantia de exatidão.
 
-## Critérios de funcionamento a validar
+## Validação e limites
 
-- Nivelado: `abs(angulo_x) <= tolerancia` e `abs(angulo_y) <= tolerancia`.
-- ZERO guarda a referência atual; não altera a sensibilidade física do sensor.
-- HOLD congela a UI, mantendo visível essa condição.
-- Perda de comunicação produz um estado de erro identificável; nunca apresentar uma leitura antiga como uma leitura atual válida.
-- Os sinais e a correspondência entre ângulos, eixos físicos e movimento da bolha devem ser verificados na board.
+O grupo relata testes funcionais de execução, apresentação e controlos na placa, registados na [apresentação](Nivel_Digital_SISEM.pptx). Os testes no PC verificam lógica e desenho; os relatórios de compilação verificam construção do executável.
 
-## Questões técnicas ainda abertas
-
-- Caminhos e versões de CubeIDE, CubeMX, compilador e pacote CubeF1 efetivamente instalados.
-- Revisão da NUCLEO e origem real do clock: HSI, cristal HSE ou MCO do ST-LINK.
-- Ligação física de USART2 ao VCP do ST-LINK, incluindo pontes da revisão da NUCLEO.
-- Sequência de inicialização, offsets, ordem RGB/BGR e orientação exatos do TFT.
-- Aprovação pelo docente das bibliotecas, se houver uma exigência adicional não presente no enunciado.
-- Formato final de entrega: seguir o enunciado (apresentação); paper pode ser material complementar se fizer sentido.
+Não foram disponibilizados registos numéricos reais, uma referência angular ou medições de tempos. Esses resultados não devem ser inferidos das simulações. O teste de norma do vetor de aceleração deteta apenas algumas condições inadequadas e não garante ausência de movimento.

@@ -57,6 +57,14 @@ M0–M7: pendentes. Não houve build, programação, sessão de debug ou mediç�
 - A correção dos metadados não altera o código do firmware. A confirmação na instalação CubeIDE/Linux do utilizador continua pendente.
 - Referência do leitor CDT: https://github.com/eclipse-cdt/cdt/blob/main/core/org.eclipse.cdt.core/model/org/eclipse/cdt/internal/core/settings/model/CProjectDescriptionStorageManager.java
 
+## 2026-11-04 — revisão para entrega
+
+- Consolidada a documentação para descrever a implementação existente: HAL em C, 64 MHz, SPI de 4 MHz, CSV de 17 campos e desenho completo por faixas.
+- A apresentação do grupo relata execução na placa, TFT e controlos funcionais. Este relato atualiza o estado documental de 31 de outubro; a revisão não repetiu os ensaios físicos e não recebeu dados numéricos de aquisição.
+- Acrescentados comentários pontuais e nomes para os registos do MMA8452Q, preservando os valores de configuração e o comportamento do firmware.
+- Apresentação incluída na entrega, com dois slides técnicos de apoio. As simulações continuam identificadas.
+- Os resultados da validação final ficam em `evidencias/revisao-final-2026-11-04.txt`. Os registos anteriores de compilação mantêm a sua data e âmbito.
+
 ## Modelo para novas entradas
 
 ```text

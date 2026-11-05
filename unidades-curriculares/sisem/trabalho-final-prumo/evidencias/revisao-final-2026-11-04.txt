@@ -1,0 +1,34 @@
+Revisao final para entrega
+Data da verificacao: 2026-11-04, UTC
+Base: meec / 03ee2cf52865b0c7a9bcadf730909c8e64972b9e
+Branch de preparacao: codex/sisem-preparar-entrega
+
+Testes executados no Ubuntu, GCC 13.3.0:
+PASS: signed samples, tilt, calibration, HOLD, validity, filtering,
+      tolerance, debounce and tick wrap
+PASS: 128x160 renderer, bounded stripes, changing views and error/HOLD states
+PASS: 2 testes de metadados do projeto (Debug/Release, builder e UTF-8)
+PASS: o driver MMA8452Q antes/depois da atribuicao de nomes aos registos
+      produziu assembly identico com GCC host, -O2 -Wall -Wextra -Werror
+
+Verificacoes da entrega:
+PASS: ligacoes relativas dos documentos e sintaxe dos ficheiros Python
+PASS: 111 ficheiros de fornecedor com SHA-256 igual ao manifesto
+PASS: 6 referencias originais com SHA-256 igual ao manifesto
+PASS: app.c, level.c, ui.c e prumo_config.h mantem o mesmo codigo,
+      ignorando comentarios e espacos
+PASS: PowerPoint com 12 slides, tabela e grafico editaveis,
+      validacao estrutural e inspecao visual de todos os slides
+PASS: as 2 series simuladas, com 201 pontos cada, mantem os valores originais
+PASS: slides 1-7 e 10 com imagens renderizadas identicas as da apresentacao original
+PASS: PowerPoint original do Ambiente de Trabalho preservado
+
+Alcance:
+- Os testes acima verificam o codigo no PC e a integridade dos materiais.
+- A compilacao ARM nao foi repetida nesta revisao por ausencia do toolchain.
+  Os relatorios Debug/Release anteriores foram preservados com o seu ambito.
+- Os testes fisicos nao foram repetidos nesta revisao. A execucao na placa,
+  TFT e botoes/modos sao resultados funcionais relatados pelo grupo.
+- Nao foram fornecidos CSV real, referencia angular ou tempos medidos.
+- A apresentacao foi importada, renderizada e verificada; nao foi aberta
+  na aplicacao Microsoft PowerPoint durante esta revisao.

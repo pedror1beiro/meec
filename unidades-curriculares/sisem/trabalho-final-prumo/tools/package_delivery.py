@@ -7,7 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "entrega"
 OUT.mkdir(exist_ok=True)
-archive = OUT / "PRUMO-linux.zip"
+archive = OUT / "Nivel_Digital_SISEM-entrega.zip"
 skip = {"tmp", "entrega", ".git", "__pycache__", ".venv", ".metadata"}
 build_files = {"PRUMO.elf", "PRUMO.hex", "PRUMO.bin", "PRUMO.map", "build-report.json"}
 with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as z:
@@ -26,6 +26,9 @@ with zipfile.ZipFile(archive) as z:
     assert z.testzip() is None
     assert "SISEM/firmware/PRUMO/.project" in z.namelist()
     assert "SISEM/firmware/PRUMO/.cproject" in z.namelist()
+    assert "SISEM/docs/Nivel_Digital_SISEM.pptx" in z.namelist()
 digest = hashlib.sha256(archive.read_bytes()).hexdigest()
-(OUT / "PRUMO-linux.sha256").write_text(digest + "  PRUMO-linux.zip\n", encoding="ascii")
+(OUT / "Nivel_Digital_SISEM-entrega.sha256").write_text(
+    digest + "  " + archive.name + "\n", encoding="ascii"
+)
 print(archive, archive.stat().st_size, "bytes", digest)

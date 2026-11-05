@@ -1,6 +1,6 @@
 # Fontes e proveniência
 
-Consultadas em 2026-10-31. As cópias locais dos PDFs e da fotografia estão em `referencias/`; o manifesto JSON regista origem, tamanho e SHA-256. Não foram alterados os originais fornecidos pelo utilizador.
+Fontes técnicas consultadas em 2026-10-31; documentação consolidada em 2026-11-04. As cópias locais dos PDFs e da fotografia estão em `referencias/`; o manifesto JSON regista origem, tamanho e SHA-256. Não foram alterados os originais fornecidos pelo utilizador.
 
 ## Documentos do utilizador
 
@@ -18,7 +18,7 @@ Consultadas em 2026-10-31. As cópias locais dos PDFs e da fotografia estão em 
 - [Joy-IT RB-TFT1.8](https://www.joy-it.net/en/products/RB-TFT1.8): referência complementar ao mesmo painel; não confundir as dimensões da placa Joy-IT com as do LCD da nossa board.
 - [NXP AN3461](https://www.nxp.com/docs/en/application-note/AN3461.pdf): inclinação pela gravidade e limitações sob movimento.
 - [STM32CubeF1 oficial](https://github.com/STMicroelectronics/STM32CubeF1): HAL, CMSIS, exemplos e dependências de submódulos.
-- [STM32CubeF1 v1.8.7](https://github.com/STMicroelectronics/STM32CubeF1/tree/v1.8.7): referência de versão do pacote, ainda não integrada.
+- [STM32CubeF1 v1.8.7](https://github.com/STMicroelectronics/STM32CubeF1/tree/v1.8.7): versão do subconjunto HAL/CMSIS integrado, com hashes em `firmware/PRUMO/vendor-manifest.json`.
 - [Estrutura de um pacote Cube](https://wiki.st.com/stm32mcu/wiki/Getting_started_with_STM32Cube_MCU_Package).
 - [RM0008 — manual de referência STM32F1](https://www.st.com/resource/en/reference_manual/cd00171190-stm32f101-103-105-107-stm32f100-series-armbased-32bit-mcus-stmicroelectronics.pdf): consultar os capítulos GPIO/AFIO, RCC, SPI, I²C, USART e debug ao implementar os periféricos.
 - [UM1724 — Nucleo-64 MB1136](https://www.st.com.cn/resource/en/user_manual/um1724-stm32-nucleo64-boards-mb1136-stmicroelectronics.pdf): referência para clocks, ST-LINK e pontes de USART2/VCP; conferir a revisão física.
@@ -31,8 +31,8 @@ Consultadas em 2026-10-31. As cópias locais dos PDFs e da fotografia estão em 
 
 ## Exemplos locais consultados, sem alteração
 
-- `C:\meec\unidades-curriculares\sisem\ficha-1\main.c`
-- `C:\meec\unidades-curriculares\sisem\ficha-2\main.c`
-- `C:\meec\unidades-curriculares\sisem\mainf3.c`
+- [Ficha 1](https://github.com/pedror1beiro/meec/blob/03ee2cf52865b0c7a9bcadf730909c8e64972b9e/unidades-curriculares/sisem/ficha-1/main.c)
+- [Ficha 2](https://github.com/pedror1beiro/meec/blob/03ee2cf52865b0c7a9bcadf730909c8e64972b9e/unidades-curriculares/sisem/ficha-2/main.c)
+- [Exemplo de interrupções](https://github.com/pedror1beiro/meec/blob/03ee2cf52865b0c7a9bcadf730909c8e64972b9e/unidades-curriculares/sisem/mainf3.c)
 
-Apresentam acessos a registos e funções SPL. Serviram para identificar uma possível diferença em relação à base HAL confirmada posteriormente pelo utilizador. Não constituem instrução para mudar de biblioteca nem são prova de que um clock externo de 12 MHz exista na NUCLEO utilizada.
+Apresentam acessos a registos e funções SPL. Serviram para identificar uma possível diferença em relação à base HAL escolhida para o trabalho final. Não constituem instrução para mudar de biblioteca nem são prova de que um clock externo de 12 MHz exista na NUCLEO utilizada.

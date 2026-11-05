@@ -19,7 +19,7 @@ O projeto tem configuração HAL escrita em C. **Não é necessário criar ou ge
 6. Selecionar a configuração **Debug** e fazer **Project > Clean** e **Build Project**.
 7. O executável será `Debug/PRUMO.elf`. Verificar que a consola usa `-mcpu=cortex-m3`, `-mthumb`, ABI `soft`, `STM32F103xB` e `USE_HAL_DRIVER`.
 
-A importação gráfica e o debug dependem da versão do CubeIDE instalada e ainda não foram ensaiados nesta máquina. Os metadados XML foram verificados; o build independente foi usado para verificar compilação e ligação reais do código para Cortex-M3. Se houver problema de migração de metadados, usar a alternativa de compilação abaixo para produzir o ELF e selecionar esse ELF na configuração de debug do IDE.
+O grupo relata execução do programa na placa. Não foram disponibilizados os detalhes da versão do CubeIDE e da sessão de debug; a revisão final não repetiu essa sessão. Os metadados XML foram verificados; o build independente foi usado para verificar compilação e ligação reais do código para Cortex-M3. Se houver problema de migração de metadados, usar a alternativa de compilação abaixo para produzir o ELF e selecionar esse ELF na configuração de debug do IDE.
 
 ### Configuração Debug indisponível ou aviso de encoding
 
@@ -27,7 +27,7 @@ Foi corrigida a falta do marcador `<?fileVersion 4.0.0?>` na segunda linha do `.
 
 O aviso `has no explicit encoding set` é independente: a preferência UTF-8 está agora guardada em `.settings/org.eclipse.core.resources.prefs`.
 
-Se tiver sido importada a versão antiga, fechar o CubeIDE, executar `git pull` na raiz do repositório e voltar a abrir o projeto atualizado. Se as configurações continuarem em cache ou o projeto tiver sido copiado para o workspace, usar um workspace novo e importar a pasta `firmware/PRUMO` diretamente do clone atualizado. Não é preciso apagar os ficheiros do projeto.
+Se tiver sido importada a versão antiga, fechar o CubeIDE, verificar `git status` para preservar alterações locais, atualizar o repositório e voltar a abrir o projeto atualizado. Se as configurações continuarem em cache ou o projeto tiver sido copiado para o workspace, usar um workspace novo e importar a pasta `firmware/PRUMO` diretamente do clone atualizado. Não é preciso apagar os ficheiros do projeto.
 
 ## 2. Debug com ST-LINK
 
@@ -42,7 +42,7 @@ Se tiver sido importada a versão antiga, fechar o CubeIDE, executar `git pull` 
 
 O debug deve manter SWD: o firmware desativa JTAG para libertar PB4, usado pelo reset do TFT. Para medir a taxa de aquisição, deixar correr sem breakpoints. Pausar o CPU altera os tempos.
 
-## 3. Comportamento previsto
+## 3. Configuração e comportamento
 
 - Clock: HSI/2 × PLL16 = **64 MHz**, sem depender de cristal/MCO externo.
 - I²C2: PB10/PB11, 100 kHz; SA0/PB12 alto, endereço 0x1D.
@@ -74,9 +74,9 @@ Abrir `Core/Inc/prumo_config.h` e recompilar após cada alteração:
 - Para vermelho/azul trocados, experimentar `PRUMO_TFT_MADCTL = 0xC8` em vez de `0xC0`.
 - Alguns painéis necessitam de offsets. Começar pelo perfil `0,0`; se necessário testar X=2/Y=1 conforme a variante. Não tratar esse perfil como confirmado para este exemplar.
 - Para imagem rodada 180°, experimentar MADCTL 0x00 (ou 0x08 para BGR).
-- Se a comunicação parecer instável, reduzir `PRUMO_TFT_SPI_DIV` para `SPI_BAUDRATEPRESCALER_64` (1 MHz). A taxa de atualização visual diminuirá.
+- Se a comunicação parecer instável, reduzir a frequência SPI, aumentando `PRUMO_TFT_SPI_DIV` para `SPI_BAUDRATEPRESCALER_64` (1 MHz). A taxa de atualização visual diminuirá.
 
-Não há MISO do TFT ligado, pelo que uma escrita SPI bem-sucedida só comprova que o periférico transmitiu. Não confirma que o painel recebeu ou mostrou a imagem. A compatibilidade da inicialização com o exemplar físico precisa do primeiro ensaio.
+Não há MISO do TFT ligado, pelo que uma escrita SPI bem-sucedida só comprova que o periférico transmitiu. Não confirma que o painel recebeu ou mostrou a imagem. O grupo relata apresentação funcional no TFT; a revisão não confirmou individualmente os offsets, as cores ou o perfil do painel.
 
 ## 6. Se o acelerómetro não responder
 
@@ -98,7 +98,7 @@ t_ms,sample_ms,seq,ax_mg,ay_mg,az_mg,x_cdeg,y_cdeg,zero_x_cdeg,zero_y_cdeg,tol_c
 - `mg`: dividir por 1000 para obter g; os dados XYZ são as amostras originais convertidas.
 - `cdeg`: dividir por 100 para obter graus; X/Y são os ângulos filtrados antes do zero relativo.
 - Ângulo relativo: `x_cdeg - zero_x_cdeg` (idem para Y).
-- `sample_ms` é o tempo da última amostra real; `t_ms` é o tempo de emissão do registo.
+- `sample_ms` é o tick associado à última leitura bem-sucedida; não é um timestamp de data-ready do sensor. `t_ms` é o tick usado ao preparar o registo, antes da transmissão.
 - `hold` afeta só a UI. Validar os dados com `sensor_ok` e `tilt_valid` e não assumir que todos os registos contêm amostras novas (há registos de erro).
 - `missed_polls` conta períodos do scheduler perdidos; não é um contador exato de amostras perdidas dentro do sensor.
 
@@ -137,7 +137,7 @@ Os binários compilados neste PC servem de referência. Para depuração com as 
 
 ## 9. Testes no PC
 
-Com GCC nativo instalado no Linux, a partir da raiz da entrega:
+Com GCC nativo e Python 3.12 ou posterior instalados no Linux, a partir da raiz da entrega:
 
 ```bash
 python3 tools/run_tests.py

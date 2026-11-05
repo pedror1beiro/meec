@@ -4,21 +4,21 @@ Fontes principais: [esquema 3S0 Board 1.2](referencias/sisem.pdf), [datasheet ST
 
 ## Recursos do microcontrolador
 
-STM32F103RBT6: Cortex-M3, até 72 MHz, 128 KiB de Flash e 20 KiB de SRAM. Não tem FPU. Não assumir 72 MHz no código antes de confirmar e configurar o clock da placa principal.
+STM32F103RBT6: Cortex-M3, até 72 MHz, 128 KiB de Flash e 20 KiB de SRAM. Não tem FPU. O firmware entregue configura HSI/2 × PLL16: 64 MHz nominais, AHB/APB2 a 64 MHz e APB1 a 32 MHz.
 
 ## Acelerómetro — I²C2
 
-| Sinal | GPIO | Configuração inicial |
+| Sinal | GPIO | Configuração implementada |
 |---|---|---|
 | SCL | PB10 | I2C2_SCL, alternate function open-drain |
 | SDA | PB11 | I2C2_SDA, alternate function open-drain |
-| SA0 | PB12 | Saída alta ou entrada sem pull-down, mantendo o pull-up externo; endereço de 7 bits 0x1D |
-| INT1 | PC8 | Opcional na primeira versão |
-| INT2 | PC9 | Opcional na primeira versão |
+| SA0 | PB12 | Saída alta; endereço de 7 bits 0x1D |
+| INT1 | PC8 | Não utilizado; aquisição por consulta periódica |
+| INT2 | PC9 | Não utilizado; aquisição por consulta periódica |
 
 O esquema já inclui pull-ups de 10 kΩ para SCL, SDA e SA0, alimentação de 3,3 V e condensadores. PB12 baixo seleciona 0x1C. Nas funções HAL I2C que recebem `DevAddress`, usar o endereço de 7 bits deslocado uma posição para a esquerda: `0x1D << 1`.
 
-Primeiro teste: ler `WHO_AM_I`, registo 0x0D, cujo valor esperado é 0x2A. Depois configurar standby, escala ±2 g, ODR de 50 Hz e modo ativo. Em 12 bits e ±2 g, usar 1024 contagens/g; combinar MSB/LSB e fazer corretamente a extensão de sinal. Aceleração em repouso inclui a gravidade.
+O driver lê `WHO_AM_I` no registo 0x0D e exige o valor 0x2A. Coloca o sensor em standby, configura a escala ±2 g e ativa-o com ODR de 50 Hz. Em 12 bits e ±2 g, converte com 1024 contagens/g, após combinar MSB/LSB e estender o sinal. Aceleração em repouso inclui a gravidade.
 
 ## TFT — SPI1
 
@@ -33,9 +33,9 @@ Embora o símbolo do ecrã use os nomes SDA e SCL, estas linhas correspondem à 
 | RESET | PB4 | GPIO de reset, ativo a zero |
 | LEDK via Q1 | PA0 | Controlo da retroiluminação; nível alto liga o MOSFET |
 
-Não há uma linha MISO do TFT neste esquema. A validação inicial deve usar padrões visuais, sem depender de leitura de ID do controlador. A linha PA6 pertence ao cartão SD no esquema; o SD fica desativado na primeira versão. Manter os chip-selects dos outros dispositivos do mesmo SPI em estado inativo, se esses componentes estiverem montados.
+Não há uma linha MISO do TFT neste esquema. A validação inicial deve usar padrões visuais, sem depender de leitura de ID do controlador. A linha PA6 pertence ao cartão SD no esquema; o SD não é utilizado nesta versão. Manter os chip-selects dos outros dispositivos do mesmo SPI em estado inativo, se esses componentes estiverem montados.
 
-**PB4 é partilhado com NJTRST.** Configurar `SYS > Debug = Serial Wire`, mantendo SWD em PA13/PA14 e libertando os pinos de JTAG. Verificar que o código HAL gerado aplica o remapeamento de SWJ para JTAG desativado / SWD ativo.
+**PB4 é partilhado com NJTRST.** `HAL_MspInit()` aplica `__HAL_AFIO_REMAP_SWJ_NOJTAG()`, desativando JTAG e mantendo SWD em PA13/PA14 para libertar o reset do TFT. SPI1 está configurado em modo 0, 8 bits, MSB primeiro e 4 MHz nominais.
 
 Painel indicado: JD-T18003-T01, família de controlador ST7735. O desenho do fabricante indica:
 
@@ -48,7 +48,7 @@ Fonte: [desenho técnico](https://dl.singtown.com/datasheet/JD-T18003-T01.pdf), 
 
 ## Botões
 
-| Botão | GPIO | Função proposta |
+| Botão | GPIO | Função |
 |---|---|---|
 | SW1 | PC13 | Alternar vista |
 | SW2 | PC10 | Aumentar tolerância |
@@ -57,11 +57,11 @@ Fonte: [desenho técnico](https://dl.singtown.com/datasheet/JD-T18003-T01.pdf), 
 | SW5 | PA1 | ZERO relativo |
 | SW6 | NRST | Reset físico do MCU |
 
-SW1–SW5: entrada com pull-up; pressionado equivale a nível baixo. O circuito tem RC, mas acrescentar debounce e deteção de uma transição por pressão em software. SW6 não é um GPIO de aplicação e não deve ser tratado como um evento de botão comum.
+SW1–SW5: entrada com pull-up; pressionado equivale a nível baixo. O circuito tem RC e o software acrescenta debounce de 25 ms com um evento por transição de pressão. SW6 não é um GPIO de aplicação e não deve ser tratado como um evento de botão comum.
 
 ## USART e debug
 
-- Preferência: USART2, PA2 = TX e PA3 = RX. No esquema P2, PA2 e PA3 estão nos contactos 35 e 37.
+- Configuração usada: USART2, PA2 = TX e PA3 = RX. No esquema P2, PA2 e PA3 estão nos contactos 35 e 37.
 - A NUCLEO-F103RB dispõe de ST-LINK e VCP; confirmar a ligação USART2/VCP e as pontes na revisão física utilizada antes do ensaio.
 - O manual UM1724 descreve a ligação USART2/VCP por defeito com SB13/SB14 fechadas e SB62/SB63 abertas; verificar o esquema e as pontes da revisão real, sem as alterar por suposição. Fonte: [UM1724, secção USART communication](https://www.st.com.cn/resource/en/user_manual/um1724-stm32-nucleo64-boards-mb1136-stmicroelectronics.pdf).
 - Algumas anotações no esquema rotulam PA2/PA3 de forma ambígua. Usar os papéis TX/RX do datasheet do MCU e do esquema da NUCLEO.
@@ -69,4 +69,4 @@ SW1–SW5: entrada com pull-up; pressionado equivale a nível baixo. O circuito 
 - PA9/PA10 também estão ligados ao ESP8266. Não usar essa alternativa sem resolver a partilha elétrica com o módulo.
 - SWD: PA13/SWDIO, PA14/SWCLK; usar ST-LINK integrado.
 
-PB6/PB7 estão ligados ao LED RGB; não usar a pinagem genérica de I²C1 sugerida antes de se conhecer o esquema.
+PB6/PB7 estão ligados ao LED RGB. O acelerómetro da placa usa I²C2 em PB10/PB11.

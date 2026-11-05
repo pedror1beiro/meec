@@ -1,32 +1,32 @@
-# PRUMO — nível digital para SISEM.
+# Nível digital — SISEM
 
-Projeto com STM32F103RBT6 numa NUCLEO-F103RB, acelerómetro MMA8452Q por I²C e interface no TFT da placa de expansão 3S0 Board 1.2.
+Aplicação para STM32F103RBT6 na NUCLEO-F103RB, com acelerómetro MMA8452Q por I²C e TFT da placa de expansão 3S0 Board 1.2. O projeto de firmware chama-se PRUMO.
 
-## Estado em 2026-10-31
+O sistema estima duas inclinações a partir da gravidade, apresenta os valores e uma bolha no ecrã e transmite dados por USART2. Os botões permitem definir ZERO relativo, ativar HOLD, ajustar a tolerância e alternar a vista. A utilização pressupõe uma superfície aproximadamente horizontal e imóvel.
 
-- Aplicação e interface aprovadas: bolha, ângulos X/Y, zero relativo, HOLD, tolerância e vista alternativa por eixos.
-- Utilizador confirmou HAL/STM32CubeMX e NUCLEO-F103RB com ST-LINK.
-- Firmware HAL implementado em [firmware/PRUMO](firmware/PRUMO/README.md): sensor, TFT, UI, botões, tratamento de erros e telemetria.
-- Dependências HAL/CMSIS incluídas e fixadas; projeto nativo STM32CubeIDE com paths relativos.
-- Compilação cruzada Debug e Release verificada com Arm GNU 13.2.Rel1. A importação gráfica no CubeIDE/Linux e o ensaio na board continuam pendentes.
-- Testes da lógica numérica, controlo, formatação e renderer passaram no PC. A imagem `evidencias/ui-render-host.png` foi produzida pelo renderer C, com valores simulados.
-- Nenhuma medição física foi recolhida. O perfil de inicialização/offsets/cores do TFT precisa da confirmação no exemplar real.
+## Estado da entrega — 4 de novembro de 2026
 
-## Documentação de trabalho
+- Firmware implementado com HAL/CMSIS incluídos e configuração de pinos e clocks em C. Não é necessário gerar um projeto CubeMX para o compilar.
+- Compilação Debug/Release anteriormente verificada com Arm GNU 13.2.Rel1; relatórios em `evidencias/`.
+- Testes de lógica, formatação, botões, desenho e metadados do projeto verificados no PC na revisão final.
+- O grupo relata execução na placa, apresentação no TFT e funcionamento dos botões/modos. Estes ensaios são funcionais; não foram repetidos na revisão documental.
+- Não foram disponibilizados dados numéricos de aquisição nem comparação com referência angular. A precisão, a repetibilidade e os tempos reais de resposta continuam por caracterizar.
+- O gráfico e a ilustração da interface na apresentação são simulações identificadas como tal.
 
-1. [Requisitos, decisões e dúvidas](docs/01-requisitos-e-decisoes.md)
-2. [Hardware e pinagem](docs/02-hardware-e-pinagem.md)
-3. [Bibliotecas e ferramentas](docs/03-bibliotecas-e-ferramentas.md)
-4. [Compilação, debug e validação](docs/04-compilacao-debug-validacao.md)
-5. [Base para a apresentação](docs/05-apresentacao.md)
-6. [Diário de desenvolvimento](docs/06-diario.md)
-7. [Referências e proveniência](docs/07-fontes.md)
-8. **[Como compilar e depurar em Linux](docs/08-linux-cubeide.md)**
+## Consultar e executar
 
-Os PDFs originais ficam em `docs/referencias/`, com nomes e hashes em `docs/referencias/manifest.json`. O desenho interativo escolhido está em `design/prumo-tft-board.html`; é um fragmento para pré-visualização, não código para o STM32.
+1. [Apresentação final](docs/Nivel_Digital_SISEM.pptx): 10 slides principais e 2 slides técnicos de apoio.
+2. [Importação, compilação e debug](docs/08-linux-cubeide.md): abrir `firmware/PRUMO` no STM32CubeIDE.
+3. [Hardware e pinagem](docs/02-hardware-e-pinagem.md).
+4. [Arquitetura e bibliotecas](docs/03-bibliotecas-e-ferramentas.md).
+5. [Configuração, processamento e validação](docs/04-compilacao-debug-validacao.md).
+6. [Requisitos e funcionalidades](docs/01-requisitos-e-decisoes.md).
+7. [Guião da apresentação](docs/05-apresentacao.md), [fontes](docs/07-fontes.md) e [histórico de desenvolvimento](docs/06-diario.md).
 
-## Próximo marco
+Com GCC nativo e Python 3.12 ou posterior, os testes no PC correm com `python3 tools/run_tests.py`. Para compilar o alvo, é necessário o toolchain Arm GNU com newlib ou o compilador incluído no CubeIDE.
 
-Importar `firmware/PRUMO` no STM32CubeIDE do PC Linux, compilar localmente e entrar em debug por SWD. Validar USART2, identificação do sensor e o TFT na board. O clock interno foi escolhido para o firmware não depender da configuração HSE/MCO da NUCLEO.
+O logger opcional em `tools/log_serial.py` guarda os dados reais da USART. Os originais devem ficar em `dados/`, acompanhados das condições do ensaio.
 
-Cada marco deve acrescentar evidência real à pasta `evidencias/` e uma entrada ao diário. O texto da apresentação deve distinguir proposta, simulação, cálculo e resultado medido.
+## Preparar o pacote
+
+Executar `python3 tools/package_delivery.py` a partir desta pasta. O pacote `entrega/Nivel_Digital_SISEM-entrega.zip` inclui apresentação, fontes, dependências, documentação e evidências disponíveis. Ficheiros temporários e ferramentas de desenvolvimento ficam excluídos.
