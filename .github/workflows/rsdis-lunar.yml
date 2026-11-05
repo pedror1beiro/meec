@@ -68,7 +68,7 @@ jobs:
           source install/setup.bash
           python3 scripts/smoke_test_ros.py --config src/rsdis_lunar/config/mission_small.json --complete-mission --dashboard --timeout 600
       - name: Save the compact console checkpoint
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: compact-console-checkpoint
           path: |
@@ -81,7 +81,7 @@ jobs:
           source install/setup.bash
           python3 scripts/create_scenarios.py --count 1 --output results/ci_scenarios
           python3 scripts/run_experiment_ros.py --config results/ci_scenarios/failure_00.json --strategy energy --wall-timeout 1400
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: linux-integration-logs
@@ -123,7 +123,7 @@ jobs:
           source /opt/ros/jazzy/setup.bash
           source install/setup.bash
           python3 scripts/smoke_test_ros.py --model viper --config src/rsdis_lunar/config/mission_small.json --complete-mission --dashboard --timeout 900
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: viper-integration-logs
