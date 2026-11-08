@@ -363,7 +363,7 @@ void RechargeableBatteryPlugin::Configure(const gz::sim::Entity &_entity,
     // callbacks only update a mutex-protected sample; physics owns the consumer.
     if (_sdf->HasElement("power_load_topic"))
     {
-        this->dataPtr->node.Subscribe(_sdf->Get<std::string>("power_load_topic"),
+        this->dataPtr->node.Subscribe<gz::msgs::Float>(_sdf->Get<std::string>("power_load_topic"),
             [this](const gz::msgs::Float &_msg)
             {
                 if (!std::isfinite(_msg.data()) || _msg.data() < 0) return;
