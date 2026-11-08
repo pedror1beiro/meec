@@ -1,0 +1,20 @@
+{
+  "model_profile": "space_ros_viper",
+  "mesh_files_materialized": true,
+  "gazebo_conversion_checked": true,
+  "physical_runtime_checked": false,
+  "robots": {
+    "rover1": {
+      "links": 29,
+      "joints": 28,
+      "plugins": 10,
+      "conversion_diagnostics": "\u001b[1;33mWarning [Utils.cc:132]\u001b[0m [/sdf/model[@name=\"rover1\"]/link[@name=\"base_footprint\"]/sensor[@name=\"safety_lidar\"]/gz_frame_id:/__w/meec/meec/unidades-curriculares/rsdis/projeto/results/prepared_viper/rover1.urdf:L0]: XML Element[gz_frame_id], child of element[sensor], not defined in SDF. Copying[gz_frame_id] as children of [sensor].\n"
+    },
+    "rover2": {
+      "links": 29,
+      "joints": 28,
+      "plugins": 10,
+      "conversion_diagnostics": "\u001b[1;33mWarning [Utils.cc:132]\u001b[0m [/sdf/model[@name=\"rover2\"]/link[@name=\"base_footprint\"]/sensor[@name=\"safety_lidar\"]/gz_frame_id:/__w/meec/meec/unidades-curriculares/rsdis/projeto/results/prepared_viper/rover2.urdf:L0]: XML Element[gz_frame_id], child of element[sensor], not defined in SDF. Copying[gz_frame_id] as children of [sensor].\n"
+    }
+  }
+}

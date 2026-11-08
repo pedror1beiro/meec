@@ -85,8 +85,12 @@ checks using its manual `viper` input. The conversion preflight's
 `physical_runtime_checked: false` describes that preparation step only; runtime
 evidence is in the separate drive and smoke reports.
 
-The flat test field and synthetic energy model are retained. This adapter does
-not yet use Mons Mouton as traversable terrain or the physical solar/battery plugins.
+The flat test field is retained. Native batteries and solar plugins now run
+through the vendored `rsdis_energy_plugins` package by default. Its source
+manifest preserves exact upstream provenance, licences and adapted hashes.
+The lightweight solar/shade/recharge bench and complete missions pass in Linux.
+The optional detailed rover has a separate native-energy gate; see `VALIDATION.md`
+for its actual result. Mons Mouton is not used as traversable evaluated terrain.
 
 ## Remaining integration milestones
 
@@ -96,9 +100,8 @@ not yet use Mons Mouton as traversable terrain or the physical solar/battery plu
    enlarged map before using the detailed profile in comparative experiments.
 3. Validate contact, steering and clearance on additional surfaces. The current
    physical evidence covers a level field and fixed camera mast.
-4. Replace the synthetic energy input with the battery plugin's charge state,
-   and account for panel charging. Calibrate experiment duration and battery units
-   before comparing outcomes; the upstream battery is intended for long missions.
+4. Calibrate the now-integrated electrical model against a real vehicle before
+   interpreting the accelerated demonstration parameters as lunar performance.
 5. Move to a verified terrain patch, ground the starting poses and targets, and
    introduce terrain-aware navigation. The existing 2D image-to-world projection
    is not adequate for arbitrary rover roll/pitch or terrain elevations.

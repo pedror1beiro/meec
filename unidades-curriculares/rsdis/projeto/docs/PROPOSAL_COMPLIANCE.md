@@ -13,7 +13,7 @@ do not require a UAV team, a maritime setting, SLAM, or a specific task allocato
 | Information sharing and complementary tasks | Detections shared between rovers; different search sectors; one detects and another can inspect; work transferred after failures | A recorded cross-rover assignment and a recorded task reassignment |
 | IEEE scientific paper describing work, results and conclusions | IEEE-format draft and a matched experiment protocol | Completed measurements, figures, references and conclusions based on actual runs |
 | Originality of chosen challenge | Lunar mission with an explicit energy/assignment trade-off | Demonstration and discussion of what the team developed versus reused |
-| Integration of existing ROS packages | Gazebo, ros_gz, ROS 2 message tools, OpenCV/cv_bridge; Space ROS assets planned | Versions, upstream citations, integration explanation and licence notices |
+| Integration of existing ROS packages | Gazebo, ros_gz, ROS 2 message tools, OpenCV/cv_bridge; pinned Space ROS model and adapted native energy plugins | Versions, upstream citations, per-file provenance and Apache-2.0 notices |
 | Overall solution meets its objectives | Discover, inspect, recover and return to base | End-to-end Linux run and failure scenario |
 
 ## Deliverables from page 13
@@ -22,8 +22,8 @@ do not require a UAV team, a maritime setting, SLAM, or a specific task allocato
 | --- | --- |
 | World and robot models in SDF/URDF | Procedural SDF source and exported test world; optional adapter for detailed upstream rover URDFs |
 | ROS packages, launch files, README | Built on Jazzy; lightweight compact and expanded missions validated in Linux CI |
-| Multi-robot mission video | Recording script/checklist prepared; capture after successful Gazebo integration |
-| Final report and presentation | Paper draft and presentation outline prepared; results and final slides pending |
+| Multi-robot mission video | Actual rendered-camera recorder, FFmpeg encoding and optional ROS bag integrated; retained recording linked in validation |
+| Final report and presentation | Expanded IEEE paper with methods, figures and measured evidence; presentation guide and suggested study division for the three members |
 
 ## Minimum acceptance gate
 

@@ -2,6 +2,38 @@
 
 This record separates portable checks from actual ROS/Gazebo execution.
 
+## Current checkpoint, 8 November 2026
+
+The code is published so it can be continued from another PC. Presentation work
+is deferred. `report/rsdis_paper_working.pdf` and the editable paper are working
+drafts: the paired-results section will be filled after all frozen runs finish.
+The PowerPoint in `report/` is also a working draft, with a pending results table.
+
+- 67 portable tests pass, with Ruff and Python compilation clean.
+- Native energy and 30-hazard map gate: [6351d85, all steps pass](https://github.com/pedror1beiro/meec/actions/runs/42502766396).
+  The compact mission takes 235.0 simulated seconds. The expanded failure mission
+  takes 746.5 s, travels 423.4 m, confirms all five targets and returns both rovers.
+  Minimum conservative obstacle gap 0.2824 m, zero footprint overlaps. Both
+  intervention calls succeed; the red task transfers from rover1 to rover2.
+- Frozen runtime [6223585](https://github.com/pedror1beiro/meec/commit/6223585b59fb46ba7cdc5a7f3a7fbd59053e06ba)
+  builds all three ROS packages and passes portable tests, native empty-battery
+  recovery, sunlight/shade/recharge, physical motion, sensors and compact mission.
+  [Expanded-map video and ROS bag gate](https://github.com/pedror1beiro/meec/actions/runs/42505771985)
+  is still running at this checkpoint.
+- [VIPER native-energy gate](https://github.com/pedror1beiro/meec/actions/runs/42506366909)
+  passes physical turning, translation, joint feedback, cameras/lidar and complete
+  compact mission: 157.0 s, 72.0 m, minimum obstacle gap 0.5222 m, zero overlaps.
+  This does not independently validate VIPER solar occlusion or rough terrain.
+- [Sixteen paired policy runs](https://github.com/pedror1beiro/meec/actions/runs/42505786863)
+  use the same frozen runtime/configurations. At this checkpoint the first twelve
+  pass; the last four are running. Results will be added as they finish.
+
+Retained raw functional evidence is in `examples/gazebo_validation_20261108/`.
+The old `synthetic_energy_used` key in the 6351d85 summary is a historical naming
+error: metadata and power CSV establish native Gazebo energy. The new runtime
+uses `energy_source` and `energy_used_fraction`; electrical integration reports Wh.
+These functional cases are not pooled with the compact policy comparison.
+
 ## Navigation update, 30 October 2026
 
 - 56 portable tests with OpenCV and Xacro, including sensor-only pole avoidance,

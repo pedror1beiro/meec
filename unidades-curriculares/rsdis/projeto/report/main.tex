@@ -1,213 +1,362 @@
 \documentclass[conference]{IEEEtran}
 \usepackage[T1]{fontenc}
-\usepackage{amsmath}
-\usepackage{graphicx}
-\usepackage{url}
-\usepackage{booktabs}
-\usepackage{etoolbox}
-% Keep IEEE typography while using colons for the abstract and keyword labels.
+\usepackage{amsmath,graphicx,url,booktabs,etoolbox}
 \patchcmd{\abstract}{---}{:\space}{}{\PackageError{rsdis}{Abstract separator patch failed}{}}
 \patchcmd{\IEEEkeywords}{---}{:\space}{}{\PackageError{rsdis}{Keyword separator patch failed}{}}
-\title{Energy-Aware Task Allocation for Cooperative Lunar Exploration\\
-\large Prototype Design and Evaluation Protocol}
+\title{Cooperative Lunar Exploration with ROS 2:\\Energy, Communication and Recoverable Task Allocation}
 \author{\IEEEauthorblockN{Henrique Correia}
 \IEEEauthorblockA{Instituto Superior de\\Engenharia do Porto\\1221309}
-\and
-\IEEEauthorblockN{Pedro Ribeiro}
+\and \IEEEauthorblockN{Pedro Ribeiro}
 \IEEEauthorblockA{Instituto Superior de\\Engenharia do Porto\\1231177}
-\and
-\IEEEauthorblockN{Francisco Liquito}
+\and \IEEEauthorblockN{Francisco Liquito}
 \IEEEauthorblockA{Instituto Superior de\\Engenharia do Porto\\1231216}}
 \begin{document}
 \maketitle
 \begin{abstract}
-Two rovers explore a lunar test field, share visual marker detections, allocate
-inspections, recover unfinished work and return to base. Nearest-rover and
-energy-aware policies share battery feasibility constraints. Typed ROS 2 modules,
-camera perception and a generated Gazebo world support complete physical
-simulation missions. This draft reports functional validation and an evaluation
-protocol. Matched policy comparisons remain pending.
+This work integrates two simulated rovers, visual perception, energy management
+and recoverable task allocation for cooperative lunar exploration. ROS 2 Jazzy
+nodes communicate with Gazebo Harmonic through typed bridges. Adapted Space ROS
+plugins provide rechargeable batteries and solar generation with rendered
+occlusion, while a mission gateway introduces repeatable communication faults.
+Rovers share camera discoveries, inspect allocated sites and return to separate
+bases. A nearest-rover baseline and an energy-aware heuristic use the same
+feasibility and navigation rules. Actual Gazebo validation completes a compact
+mission and an 80 by 60 m obstacle-rich failure scenario, with five confirmations,
+both rovers returned and no conservative footprint overlaps. A frozen paired
+experiment separates policy effects from layout and fault changes. The system
+demonstrates package integration and observable failure recovery; its accelerated
+power model, known terrain and ground-truth localisation constrain conclusions
+about real lunar operation.
 \end{abstract}
 \begin{IEEEkeywords}
-multi-robot systems, lunar exploration, task allocation, ROS 2, Gazebo, energy
+multi-robot systems, ROS 2, Gazebo, task allocation, energy, fault recovery
 \end{IEEEkeywords}
 
 \section{Introduction}
-Multi-robot task allocation separates missions, tasks and robot capabilities
-\cite{gerkey}. Here, two rovers search separate regions and exchange detections.
-An inspection can be assigned to a teammate when travel cost and energy
-availability favour that choice.
+Exploration requires more than sending independent robots to waypoints. A rover
+may discover a site that another can inspect with less travel or greater
+remaining energy. A temporary failure can leave an assignment unfinished.
+The team needs shared observations, explicit ownership, resource-aware
+decisions and a defined completion condition. Multi-robot task allocation offers
+a framework for distinguishing task requirements and robot resources
+\cite{gerkey}.
 
-The research question is whether energy-aware allocation improves completion
-and safe return compared with distance-only allocation. The contribution is an
-integration and evaluation protocol, without claiming optimal allocation.
+Our RSDIS project investigates these concerns in a lunar-inspired mission.
+Two rovers survey different sectors, discover five visual markers, exchange their
+estimated locations and allocate inspections. Success requires all five
+sites to be confirmed and both vehicles to return to their own bases. The
+research question is whether adding battery risk to a greedy distance score
+changes completion, travel and energy use under identical safety constraints.
 
-\section{Related Software and Scope}
-Space ROS supplies a VIPER-inspired rover, Mons Mouton terrain, cameras and
-energy plugins \cite{spacedemos,spacesim}, pinned at fixed revisions. The
-baseline uses lightweight models. An optional adapter retains upstream rover
-geometry and steerable joints with namespaced controllers. Its compact mission
-is validated; detailed terrain and physical solar integration remain pending.
+The engineering contribution is the integration of existing simulation,
+middleware and perception facilities into a reproducible cooperative system.
+The group develops the mission agents, task protocol, perception pipeline,
+navigation safeguards, power governor, communication gateway and observers.
+Existing models, plugins and standard algorithms are credited explicitly.
+We do not claim a novel optimal allocator or flight-qualified lunar autonomy.
 
-ROS 2 Jazzy and Gazebo Harmonic communicate through \texttt{ros\_gz}; OpenCV
-performs colour segmentation. Ground-truth odometry isolates allocation from
-localisation error. SLAM, rough terrain, mineral identification and physical
-solar management are outside the validated scope.
+\section{Reused Components and Integration}
+The runtime targets Ubuntu 24.04, ROS 2 Jazzy and Gazebo Harmonic. Stock Gazebo
+systems provide physics, differential drive, joint control, cameras, lidar and
+ground-truth odometry. The installed \texttt{ros\_gz} bridge translates sensor,
+command and power messages between Gazebo Transport and ROS 2 \cite{bridge}.
+OpenCV supplies image conversion, HSV segmentation and contour operations
+\cite{opencv}. These dependencies provide infrastructure rather than the
+cooperative mission itself.
 
-\section{Mission and Architecture}
-The mission comprises deployment, sector exploration, visual discovery, allocated
-inspection and return to base. Uniquely coloured spheres represent five points
-of scientific interest. The rovers have different routes and initial battery
-fractions. Success requires every target to be confirmed and both rovers parked
-at their respective bases.
+Space ROS supplies a lunar exploration demonstration and simulation repository
+\cite{spacedemos,spacesim}. We pin these at revisions
+\texttt{4b4eb8447423} and \texttt{13226b067d92}, respectively. The default world
+uses lightweight rover geometry for practical software-rendered experiments.
+An optional adapter retains the upstream VIPER-inspired meshes, inertias and
+steerable joints, with namespaced controllers and steering-feedback interlocks.
+Upstream terrain assets are available separately; the evaluated outpost is
+our generated planar scene.
 
-\subsection{ROS Components}
-Each rover has a custom agent and camera detector. A central coordinator receives
-shared detections and status, publishes leased inspection goals and records
-telemetry. The agent produces velocity commands, tracks its battery, confirms
-nearby targets from local camera observations and handles returning and charging.
-A monitoring node publishes RViz markers and paths. A local mission console
-shows camera feeds, routes and events, with pause, resume and return controls.
+The energy package adapts five Space ROS C++ source/header files implementing
+rechargeable batteries and solar panels. Changes include per-rover power
+interfaces, held inputs with watchdogs, ROS battery units, exhaustion recovery
+and rendering-thread handling. Original Apache-2.0 notices remain in the files.
+A manifest records immutable upstream URLs and original/adapted SHA256 hashes;
+an automated check verifies attribution. The source guide distinguishes copied
+code, installed dependencies and group-authored logic.
 
-Typed messages separate observations, resource state, ownership and completion.
-Sensor and command topics are namespaced; mission topics are shared. All mission
-coordinates use the world frame.
+\section{Mission Architecture}
+Figure~\ref{fig:architecture} shows the runtime boundaries. Each rover has an
+agent, camera detector and power governor. A shared coordinator allocates
+inspections. A gateway mediates mission traffic, while local sensors and motion
+control remain available during a mission-link outage. Independent observers
+collect geometry audits, electrical telemetry, camera error and outcomes.
 
-\subsection{Visual Perception}
-HSV masks and contour filters detect five marker colours. Small, clipped or
-strongly non-circular blobs are rejected. Pinhole intrinsics map the two
-horizontal silhouette edges to tangent rays. For marker diameter $D$, their
-half angular separation $\alpha$ and mean bearing $\beta$, the estimate is
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/architecture.pdf}
+\caption{Runtime integration. Grey blocks contain existing simulation facilities;
+white blocks contain project ROS logic. Observer truth is never fed into target
+detection or task allocation.}
+\label{fig:architecture}
+\end{figure}
+
+\subsection{Interfaces and State Ownership}
+Custom messages represent detections, rover status, leased goals, results and
+authoritative mission state. Sensor and actuator topics use
+\texttt{/rover1} and \texttt{/rover2} namespaces; shared topics use
+\texttt{/mission}. All mission positions refer to a common world frame.
+The coordinator alone decides whether a result belongs to the current owner
+and task identifier. It publishes accepted results and a complete latched
+snapshot, preventing a delayed obsolete result from making a site appear
+confirmed in the console.
+
+Local images, lidar, odometry and status use sensor-style best-effort delivery.
+Goals, detections and results use reliable mission interfaces. Authoritative
+state uses reliable, transient-local delivery with depth one, so a late observer
+can reconstruct the current state. These are existing ROS 2 DDS QoS facilities
+\cite{qos}; application leases provide a separate freshness contract.
+
+The local web console shows actual RGB frames, observed sites, planned and
+travelled routes, battery voltage/current and source power. Operators can pause,
+resume, recall, disable a rover or disconnect its mission link. Recorded
+checkpoints are labelled and their control buttons disabled. Pausing stops
+mission commands while Gazebo and native battery physics continue.
+
+\subsection{Discovery and Local Confirmation}
+Five uniquely coloured spheres stand in for scientific sites. The detector
+thresholds HSV masks and rejects small, clipped or strongly non-circular
+contours. Known marker diameter and camera calibration give approximate range.
+If $D$ is the diameter, $\alpha$ half the angular separation of the horizontal
+silhouette edges and $\beta$ their mean bearing, the level-camera estimate is
 \begin{equation}
-z_c \approx \frac{D\cos\beta}{2\sin\alpha}, \qquad
-y_c \approx -\frac{D\sin\beta}{2\sin\alpha}.
+z_c \simeq \frac{D\cos\beta}{2\sin\alpha},\qquad
+y_c \simeq -\frac{D\sin\beta}{2\sin\alpha}.
 \end{equation}
-The camera offset and closest timestamped rover pose transform the estimate
-into world coordinates. This approximation assumes a mostly level field.
-Detection error must be measured separately against simulator truth.
+Camera extrinsics and the closest timestamped rover pose project the estimate
+into world coordinates. Images without a pose within 0.2 s are discarded.
+Unique colour IDs suppress duplicate target records; inconsistent position
+updates are rejected. This is known-size marker ranging, not mineral recognition.
 
-An inspection requires the assigned rover to reach its stand-off, face the
-marker and receive recent local observations over a dwell period. A teammate's
-report alone cannot confirm a task.
+An inspection requires reaching a stand-off, facing the marker and receiving
+recent local camera observations over a dwell interval. A teammate's report can
+create an assignment but cannot alone confirm it. The detector does not load
+target coordinates. A separate supervisor compares delivered estimates with
+simulator truth solely for evaluation.
 
-\subsection{Control}
-Agents follow sector routes and sweep cameras at survey stops. The 80 by 60 m
-scene includes mapped rocks, structures and crater exclusions. Bounded A* inflates
-hazards, marker estimates and peers by the footprint and a safety margin. A
-forward laser detects unlabelled obstacles. Commands are checked for curved
-motion and braking; missing range data stops motion. Opposing rovers pass on the
-right. Fixed inspection approaches avoid chasing noisy marker estimates. These
-safeguards assume the supplied level scene.
+\section{Map and Motion Control}
+The expanded outpost covers 80 by 60 m under lunar gravity. It contains 24 rocks,
+four crater exclusions, a habitat and a solar array. Fourteen added rocks create
+detours between survey stops without enclosing scientific sites or blocking
+charging pads. All 20 prescribed survey legs remain connected for conservative
+rover radii of 0.72 m and 1.35 m; 18 require deviations from the direct segment.
+Figure~\ref{fig:map} depicts design geometry, not a recorded trajectory.
+A 40 by 30 m compact field supports faster matched experiments.
 
-\section{Allocation and Energy}
-Each target has at most one owner, and each rover receives at most one inspection
-at a time. Unique target IDs suppress duplicates. Leases distinguish current
-assignments from expired work, and every reassignment receives a new task ID.
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/map.pdf}
+\caption{Expanded outpost and illustrative planned survey routes. Darker rocks
+are the added barriers. Paths illustrate A* detours; target locations are shown
+for map design, but are discovered from images at runtime.}
+\label{fig:map}
+\end{figure}
 
-Let $d_{ij}$ be rover $i$'s approximate distance to target $j$'s stand-off,
-$h_{ij}$ its estimated return distance, $b_i$ its battery fraction and $r$ a
-reserve. The synthetic energy estimate is
+A bounded planar A* planner \cite{astar} inflates prior hazards by vehicle
+footprint and safety margin. Camera-derived marker estimates and peer positions
+also form exclusions. Continuous edge checks prevent grid connections through
+obstacles. The agent aligns before translating and evaluates a sampled curved
+sweep over reaction and braking time before issuing a command.
+
+A front-mounted, 180-degree, 721-ray lidar operates at 10 Hz. Valid endpoints
+provide eight seconds of local obstacle memory; peer returns do not leave static
+trails. Missing or invalid scans stop motion. Facing rovers commit to right-side
+passing points to avoid symmetric oscillation. Inspection approaches remain
+fixed while the vehicle turns, avoiding pursuit of a shifting noisy estimate.
+Survey stops perform camera sweeps to discover sites outside the forward view.
+
+Known terrain and ground-truth pose isolate allocation from localisation
+uncertainty. Craters are visual depressions with navigation exclusions rather
+than a physical heightmap. The conservative circular footprint audit reports
+geometric separation, not contact forces or traversability of lunar soil.
+
+\section{Energy and Task Allocation}
+\subsection{Native Simulator Energy}
+Gazebo supports battery state and consumer power as simulation entities
+\cite{battery}. Our adapted rechargeable plugin receives electrical load from a
+ROS governor using measured odometry:
+\begin{equation}
+P_L=10+100\min(|v|,1)+15\min(|\omega|,2)\quad\mathrm{W}.
+\end{equation}
+The model uses 24 V nominal voltage and 0.25 Ah capacity. Solar supply is
+$P_S=12\max(0,\mathbf n\cdot(-\mathbf s))$ W when an outward ray from the panel
+towards the directional sun is unoccluded, and zero otherwise. Scene updates
+perform the query in the rendering thread. A stationary rover within 0.3 m of
+its own pad may receive 550 W dock power in an appropriate charging state.
+These accelerated parameters make charging observable during a short
+demonstration; they are not calibrated VIPER specifications.
+
+Ignoring clipping and transient smoothing, charge evolves as
+\begin{equation}
+\dot q \simeq \frac{P_S+P_D-P_L}{3600 V},\qquad b=q/C.
+\end{equation}
+The plugin bounds $q$ within $[0,C]$, publishes at 10 Hz simulation time and
+expires a held source after one second without updates. ROS BatteryState uses
+amperes, ampere-hours, a fraction in $[0,1]$ and negative discharge current
+\cite{batterystate}. The bridge copies these fields directly; adapting the
+upstream percentage and current convention is therefore necessary.
+Stale battery data makes the agent stop and become unavailable rather than
+silently switching models. The portable rehearsal retains an explicitly
+labelled synthetic approximation.
+
+\subsection{Shared Feasibility and Different Scores}
+The coordinator stores at most one owner per target and one active inspection
+per rover. Let $d_{ij}$ be approximate outward distance to the stand-off,
+$h_{ij}$ estimated return distance, $b_i$ reported battery fraction and
+$r=0.15$ reserve. Its simple prediction is
 \begin{equation}
 e_{ij}=k_d(d_{ij}+h_{ij})+
-k_t\left(\frac{d_{ij}+h_{ij}}{v_{\mathrm{ref}}}+t_s\right).
+k_t\left((d_{ij}+h_{ij})/v_{\rm ref}+10\right).
 \end{equation}
-Both policies require $b_i \geq e_{ij}+r$. The baseline minimises $d_{ij}$.
-The energy-aware policy minimises
+Both policies reject a candidate if $b_i<e_{ij}+r$. The nearest-rover baseline
+minimises $d_{ij}$; the energy-aware heuristic minimises
 \begin{equation}
-J_{ij}=d_{ij}+\lambda\frac{e_{ij}+r}{\max(b_i,\epsilon)}.
+J_{ij}=d_{ij}+\lambda\frac{e_{ij}+r}{\max(b_i,0.01)}.
 \end{equation}
-The recorded weight $\lambda$ has distance units. This greedy heuristic does not
-solve global scheduling and may increase distance.
+Parameters are $k_d=0.006$ per metre, $k_t=0.0001$ per second,
+$v_{\rm ref}=0.3$ m/s and $\lambda=8$ m. Target-ID order and rover-ID tie-breaking
+make the greedy decision reproducible. The predictor is a resource-budget
+heuristic, distinct from the measured electrical model. It is not fitted online
+and cannot account exactly for A* detours, rotations or solar occlusion.
+Agents also check their return budget and can release work for recharging.
 
-Energy decreases with measured distance and simulation time. Recharging at a
-base is accelerated for practical demonstrations. These fractions are not
-calibrated to a real rover. A* detours may exceed the straight-line estimate, so
-the agent also checks its own return budget and may release work.
+\subsection{Recovery and Communication Faults}
+Goals carry task IDs and two-second renewable leases. Unavailable or returning
+rovers, stale heartbeats and task timeouts release ownership. Retried targets
+receive a new task ID after a cooldown, with at most three attempts.
+Duplicates and results for old assignments are ignored. Lease expiry is checked
+against the original timestamp, so delayed delivery cannot extend an obsolete
+task. A late heartbeat cannot replace a newer pose.
 
-\subsection{Recovery}
-A missing heartbeat, unavailable or returning rover, or task timeout releases
-ownership. Failed tasks enter a cooldown and have bounded attempts. Results for
-an expired task ID are ignored. A service disables and restores a rover for
-repeatable failure interventions.
+The gateway supports ideal delivery and a seeded degraded profile: 15\% loss
+per attempt, 0.12 s delay and uniform $\pm0.05$ s jitter. A rover-1 blackout from
+world time 20 to 32 s exercises loss of mission connectivity. Reliable
+application traffic retries every 0.2 s until expiry; best-effort heartbeats are
+not accumulated for later delivery. Goal renewals are coalesced and the queue
+is bounded at 512 entries. Independent random streams per rover and channel
+avoid coupling unrelated traffic through one generator.
 
-\section{Evaluation Protocol}
-Run matched experiments with the same world, initial state, camera settings,
-mission duration, resource parameters and failure schedule. Only the policy
-changes. Scenarios should include nominal exploration, asymmetric batteries,
-temporary rover failure, and the combined energy/failure case.
+This is an application-channel fault emulator above ROS, not a radio propagation
+model or measurement of DDS packet loss. Local sensing remains active, and
+operator pause, recall and final-stop channels are out-of-band. The experiment
+therefore evaluates selected mission-link faults, not a complete partition.
 
-Record target confirmations, success including return, simulation completion
-time, measured distance, synthetic energy consumption, failure-to-reassignment
-latency, and target-location error against simulator truth.
+\section{Evaluation}
+\subsection{Reproducible Design and Measurements}
+The frozen comparison contains nominal, asymmetric-energy, temporary-failure
+and communication-outage scenarios. Two seeds perturb target $x,y$ coordinates
+by at most 0.2 m before collecting outcomes. Each configuration is executed
+under both policies, giving eight matched layouts and 16 Gazebo runs.
+Nominal batteries start at 0.95 and 0.55; the asymmetric case uses 0.30 and 0.95.
+Failure disables rover 1 at fixed world time 30 s for 30 s under both policies.
+The separate expanded-map functional gate can trigger failure on an active task;
+it is not pooled with matched comparisons. Each run has a 900 s simulated
+deadline and uses native energy.
 
-Retain failed runs and report success rates alongside completion times. Pair
-predefined layouts and random seeds. Save revisions, configuration, telemetry,
-events and platform details with each run.
+Observers retain success including return, confirmations, elapsed simulation
+time, odometry distance, minimum geometric gap and overlap samples. Electrical
+discharge is integrated as $\int\max(0,-VI)dt/3600$ Wh over the mission window;
+solar and dock inputs are recorded separately so charging cannot cancel prior
+discharge. Gateway counters record attempts, losses, retries, expiries and
+delivery delay. Camera-location error is evaluated against truth outside the
+control loop. Failed runs remain in the dataset.
 
-\subsection{Validation Boundary}
-Portable tests cover ownership, feasibility, recovery, detours and synthetic
-images. Offline rehearsals use shared mission logic, kinematic motion and oracle
-detections. Separate Linux gates require real rendered cameras, laser scans,
-odometry, assignments and full missions. Their conservative geometric footprint
-audit does not measure contact forces or validate physical lunar operation.
+Each run stores configuration, CSV telemetry, JSONL events, source fingerprint,
+package versions, intervention service outcomes and termination reason.
+The recorder combines genuine Gazebo overhead/RGB images with ROS telemetry
+and can save a ROS bag. It does not generate a mission from oracle detections.
+Software rendering makes wall time host-dependent; comparisons use simulation
+time. With only two seeds per scenario, results are descriptive rather than
+evidence of statistical superiority.
 
-\section{Functional Validation and Planned Comparison}
-Actual Jazzy/Harmonic runs with software rendering confirm all five targets and
-return both rovers (Table~\ref{tab:validation}). The expanded failure run disables
-rover 1 at world time 20 s and restores
-it at 50 s; its red-marker task transfers to rover 2 and is confirmed by that
-rover. Both lightweight runs use source revision \texttt{1317fb3}; the detailed
-rover uses \texttt{8bcfb9a}.
+\subsection{Functional Validation}
+Revision \texttt{6351d85} passes Jazzy/Harmonic integration, including physical
+rotation in both directions, translation, lidar, actual cameras and task
+messages. The compact mission finishes in 235.0 simulated seconds. The expanded
+obstacle/failure mission confirms all five sites and returns both rovers in
+746.5 s, travelling 423.4 m with minimum conservative obstacle clearance
+0.2824 m and zero overlap samples. Both failure service calls succeed. Red-site
+ownership transfers from rover 1 to rover 2, which confirms it; this is actual
+cross-rover recovery rather than an offline rehearsal.
 
-\begin{table}[t]
-\caption{Functional Gazebo checks (energy policy). Gap: minimum conservative
-obstacle clearance; zero overlap samples.}
-\label{tab:validation}
+The native energy bench verifies exposed-panel production, rendered shade,
+discharge, dock recharge and ROS units. Figure~\ref{fig:power} shows recorded
+electrical telemetry. The exposed panel supplies approximately 7.17 W under the
+configured sun incidence; the covered panel supplies zero. Historical detailed
+rover checks validate its compact motion and camera mission with synthetic
+energy, but do not establish native-energy or expanded-terrain performance.
+
+\begin{figure}[t]
 \centering
-\begin{tabular}{lrr}
-\toprule
-Model and field & Time (s) & Gap (m)\\
-\midrule
-Lightweight, compact & 116.0 & 0.5421\\
-Lightweight, expanded failure & 656.5 & 0.2827\\
-VIPER, compact & 171.5 & 0.5218\\
-\bottomrule
-\end{tabular}
-\end{table}
+\includegraphics[width=\columnwidth]{figures/native_power.pdf}
+\caption{Actual native-energy bench, revision \texttt{6351d85}. Rover 1 is exposed
+to sunlight and rover 2 is under a rendered canopy. Dock recharge follows the
+initial discharge interval. Capacity and dock power accelerate the test.}
+\label{fig:power}
+\end{figure}
 
-Both models pass full-circle turning, translation, rendered cameras and laser
-checks. Configurations, events and telemetry are retained in the project
-repository. These functional checks are not an allocation-policy comparison.
-
-\textbf{The policy comparison remains pending.} Report paired counts, success
-rates, the metrics above, platform versions and a recovery timeline. Equal
-performance or an energy/time trade-off is a valid finding.
+\subsection{Paired Policy Outcomes}
+\input{comparison_results.tex}
 
 \section{Discussion and Limitations}
-Ground-truth localisation, known-size coloured markers, planar control and an
-accelerated battery limit external validity. Report sensitivity to the heuristic
-weight and error in the return-budget estimate. The central coordinator is a
-single point of failure. Further work includes the detailed rover on the expanded
-map, uneven terrain, solar charging, terrain-aware navigation and richer perception.
+The system makes the relationship between resources, observations and task
+ownership inspectable. Shared discovery permits one rover to inspect another's
+observation. Freshness checks and accepted state address the distinction between
+receiving a message and accepting a current result. The power bench tests the
+bridge independently of allocation, and the expanded map tests navigation and
+recovery independently of the compact policy comparison.
+
+Several limits remain. Ground-truth pose removes localisation drift, the prior
+map contains terrain exclusions, and coloured markers simplify perception.
+Planar control and circular audits do not evaluate soil mechanics, slopes or
+contact forces. Battery coefficients, capacity and dock power are demonstration
+parameters; the fraction-based predictor is not a physical route-energy
+optimiser. The central coordinator is a single point of failure. Seeded
+channel faults do not replace hardware network measurements. Two small layout
+perturbations cannot establish generalisation across lunar terrain or prove
+that either allocator is globally better.
+
+Useful extensions are measured route-energy prediction including detours,
+more independent layouts, onboard localisation, uneven terrain and distributed
+coordination. Each should preserve the separation between observer truth,
+operational measurements and declared assumptions.
 
 \section{Conclusion}
-Gazebo validates compact missions with both rover models and an expanded
-lightweight failure mission. The design supports cooperative discovery,
-inspection and recovery. Allocation-policy conclusions require matched comparisons.
+The project combines existing Space ROS plugins, Gazebo systems, ROS 2 QoS and
+OpenCV with custom cooperative mission logic. Actual simulation demonstrates
+camera-based discovery and confirmation, energy telemetry, charging, safe detours
+and reassignment after rover failure. Retained configurations and measurements
+make the implementation reviewable and policy comparison repeatable.
+Conclusions concern this controlled simulation setting and its explicit models.
 
 \begin{thebibliography}{9}
-\bibitem{gerkey}
-B. P. Gerkey and M. J. Matari\'c,
-\emph{A formal analysis and taxonomy of task allocation in multi-robot systems},
-International Journal of Robotics Research, vol. 23, no. 9,
-pp. 939-954, 2004, doi: 10.1177/0278364904045564.
-\bibitem{spacedemos}
-Space ROS contributors, \emph{Lunar pole exploration rover demo},
-\url{https://github.com/space-ros/demos}, revision
-\texttt{4b4eb8447423}, accessed Oct. 29, 2026.
-\bibitem{spacesim}
-Space ROS contributors, \emph{Simulation assets and plugins},
-\url{https://github.com/space-ros/simulation}, revision
-\texttt{13226b067d92}, accessed Oct. 29, 2026.
+\bibitem{gerkey} B. P. Gerkey and M. J. Matari\'c, ``A formal analysis and taxonomy
+of task allocation in multi-robot systems,'' \emph{Int. J. Robotics Research},
+vol. 23, no. 9, pp. 939-954, 2004, doi: 10.1177/0278364904045564.
+\bibitem{bridge} Gazebo contributors, ``ros\_gz bridge,'' Jazzy branch.
+\url{https://github.com/gazebosim/ros_gz/tree/jazzy/ros_gz_bridge}.
+\bibitem{opencv} OpenCV contributors, ``Changing colorspaces,'' OpenCV 4.x.
+\url{https://docs.opencv.org/4.x/df/d9d/tutorial_py_colorspaces.html}.
+\bibitem{spacedemos} Space ROS contributors, ``Lunar pole exploration rover
+demo,'' revision \texttt{4b4eb8447423}.
+\url{https://github.com/space-ros/demos}.
+\bibitem{spacesim} Space ROS contributors, ``Simulation assets and plugins,''
+revision \texttt{13226b067d92}. \url{https://github.com/space-ros/simulation}.
+\bibitem{qos} ROS 2 contributors, ``Quality of Service settings,'' Jazzy.
+\url{https://docs.ros.org/en/jazzy/Concepts/Intermediate/About-Quality-of-Service-Settings.html}.
+\bibitem{astar} P. E. Hart, N. J. Nilsson and B. Raphael, ``A formal basis for
+the heuristic determination of minimum cost paths,'' \emph{IEEE Trans. Systems
+Science and Cybernetics}, vol. 4, no. 2, pp. 100-107, 1968,
+doi: 10.1109/TSSC.1968.300136.
+\bibitem{battery} Gazebo contributors, ``Battery,'' Gazebo Sim 8.
+\url{https://gazebosim.org/api/sim/8/battery.html}.
+\bibitem{batterystate} ROS 2 contributors, ``sensor\_msgs/BatteryState,'' Jazzy.
+\url{https://github.com/ros2/common_interfaces/blob/jazzy/sensor_msgs/msg/BatteryState.msg}.
 \end{thebibliography}
 \end{document}

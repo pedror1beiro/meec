@@ -12,12 +12,14 @@ allocation under the same safety rules.
 | 1231177 | Pedro Ribeiro |
 | 1231216 | Francisco Liquito |
 
-**Status: lightweight mission validated in Linux CI.** Both map sizes complete
-with real Gazebo cameras, and the expanded map recovers from a temporary rover
-failure. Mission logic, image tests and replays can also run on Windows.
-The optional VIPER model also completes the compact mission with real wheel
-physics, cameras and lidar. Allocation-policy comparisons and Docker remain
-separate validation milestones. See [the retained evidence](examples/gazebo_validation_20261030/).
+**Status: native energy and the obstacle-rich map validated in Linux CI.**
+Both map sizes complete with actual Gazebo cameras, rechargeable batteries and
+solar generation. The 80 x 60 m map now has 30 hazards/exclusions, including
+14 additional rocks, and recovers from a temporary rover failure with zero
+conservative footprint overlaps. The final evaluation uses frozen paired cases
+under nearest-rover and energy-aware allocation.
+See [validation](docs/VALIDATION.md), [integration sources](docs/INTEGRATION_SOURCES.md)
+and [the presentation study guide](docs/ESTUDO_APRESENTACAO_PT.md).
 
 ## Start here on the other PC
 
@@ -70,10 +72,11 @@ belonging to that experiment.
 | Allocation | Nearest-rover baseline and battery-aware scoring with identical feasibility checks |
 | Navigation | Bounded A*, footprint inflation, mapped hazards, shared markers, peer detours, laser obstacle memory and braking/curve checks |
 | Operator control | Local web console with cameras, live paths and mission controls; ROS pause/resume and recall services |
-| Energy | Accelerated synthetic depletion and recharging at each rover's base |
+| Energy | Adapted Space ROS Gazebo batteries, rendered solar shadowing, measured-motion load and charging-pad power; standard ROS BatteryState |
+| Communication | Explicit DDS QoS and seeded application-channel loss/delay/outages, bounded retries, expiry checks and reconnect controls |
 | Recovery | A service disables a rover; its task is released and can be reassigned |
 | Completion | All five markers confirmed by camera, then both rovers parked at base |
-| Results | CSV telemetry, JSONL mission events, JSON run configuration and summary |
+| Results | Electrical CSV telemetry in V/A/Wh, mission/network events, configuration, source fingerprint, summary; optional genuine camera video and ROS bag |
 
 The default world uses our lightweight rover models. An **optional
 `model:=viper` option** adapts the actual Space ROS rover meshes, inertias and
@@ -81,8 +84,8 @@ steerable wheels to the same mission, with namespaced Gazebo joint controllers
 and joint-feedback interlocks. Linux CI validates full-circle turning, translation,
 joint feedback, real cameras/lidar and a complete compact mission with no
 conservative footprint overlaps. This does not validate its enlarged-map mission,
-uneven terrain or physical solar/battery plugins. The detailed terrain and
-physical solar/battery plugins are later milestones. See [the upstream guide](docs/UPSTREAM.md).
+uneven terrain. Native energy is the default for both profiles; the detailed
+rover has a separate validation record. See [the upstream guide](docs/UPSTREAM.md).
 
 To prepare the detailed rover on Linux after the default smoke test passes:
 
@@ -100,8 +103,10 @@ Crater depressions are visual features with navigation exclusions, not a physica
 heightmap. Laser returns provide short-lived local obstacle memory and a command
 safety gate. The controller does not implement SLAM, rough-terrain navigation,
 or scientific sample analysis.
-Coloured spheres stand in for points of scientific interest. The battery values
-are dimensionless, accelerated demonstration parameters, not calibrated VIPER data.
+Coloured spheres stand in for points of scientific interest. Battery capacity,
+electrical coefficients and dock power are accelerated demonstration parameters,
+not calibrated VIPER data. The allocator uses a separate fraction-based budget
+heuristic; measured electrical energy is reported in Wh.
 
 ## Useful runs
 
@@ -111,6 +116,12 @@ bash scripts/run_demo.sh strategy:=nearest
 
 # Gazebo server with EGL sensor rendering, without the desktop GUI
 bash scripts/run_demo.sh headless:=true
+
+# Repeatable mission-link fault experiment (application level)
+bash scripts/run_demo.sh network_profile:=outage
+
+# Explicit legacy synthetic energy, useful for isolating mission logic
+bash scripts/run_demo.sh energy_source:=synthetic
 
 # Optional RViz view (install ros-jazzy-rviz2 first)
 bash scripts/run_demo.sh rviz:=true
@@ -137,6 +148,8 @@ ros2 service call /rover1/set_enabled std_srvs/srv/SetBool '{data: true}'
 ros2 topic echo /mission/status
 ros2 topic echo /mission/detections
 ros2 topic echo /mission/results
+ros2 topic echo /mission/state
+ros2 topic echo /rover1/battery
 ```
 
 The GUI opens Gazebo. Select a rover in the entity tree and press **F** to focus it.
@@ -191,6 +204,19 @@ The project workflow also runs a complete compact mission and audits conservativ
 footprint clearance, then checks the expanded map with an injected rover failure.
 See [the validation record](docs/VALIDATION.md) for what was
 actually executed and what remains pending.
+
+For the frozen native-energy comparison, follow [the experiment protocol](docs/EXPERIMENTS.md).
+For an actual expanded-map recording and metrics-only ROS bag:
+
+```bash
+python3 scripts/create_scenarios.py --count 1 --output results/demo_scenarios
+python3 scripts/run_experiment_ros.py --config results/demo_scenarios/failure_00.json \
+  --strategy energy --record-video --record-bag --wall-timeout 2400
+```
+
+The unique run folder contains `mission.mp4`, `video_metadata.json`,
+`rosbag/`, camera checkpoints and the measurements. Recording uses real rendered
+Gazebo images at nominal 5x simulation playback speed; it requires FFmpeg.
 
 The console saves its latest map, paths, site states and camera frames as a
 checkpoint in the run directory. To inspect a downloaded ROS run on Windows:
