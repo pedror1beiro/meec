@@ -190,6 +190,7 @@ class Rover:
         self.dwell = 0.0
         self.travelled = 0.0
         self.energy_used = 0.0
+        self.external_energy = False
         self.returning = False
         self.park = False
         self.known_targets = {}
@@ -266,9 +267,10 @@ class Rover:
         self.travelled += travelled
         self.pose = tuple(pose)
         # Distance comes from odometry, rather than requested velocity.
-        used = min(self.battery, self.energy.cost(travelled, 0.0 if self.paused else dt))
-        self.energy_used += used
-        self.battery = max(0.0, self.battery - used)
+        if not self.external_energy:
+            used = min(self.battery, self.energy.cost(travelled, 0.0 if self.paused else dt))
+            self.energy_used += used
+            self.battery = max(0.0, self.battery - used)
         if not self.enabled:
             self.finish(False, "disabled")
             self.mode = "unavailable"
@@ -296,7 +298,8 @@ class Rover:
             if home_distance < 0.3:
                 self.mode = "parked" if self.park else "charging"
                 self.navigator.state = self.mode
-                self.battery = min(1.0, self.battery + self.energy.charge_per_second * dt)
+                if not self.external_energy:
+                    self.battery = min(1.0, self.battery + self.energy.charge_per_second * dt)
                 if self.battery >= self.energy.resume_level and not self.park:
                     self.returning = False
                 return 0.0, 0.0

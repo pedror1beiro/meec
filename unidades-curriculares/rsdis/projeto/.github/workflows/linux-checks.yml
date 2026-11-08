@@ -31,6 +31,12 @@ jobs:
           colcon build
           source install/setup.bash
           python3 -m unittest discover -s tests -v
+      - name: Verify native battery, solar shadows and dock recharge
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          source install/setup.bash
+          python3 scripts/check_power_ros.py
       - name: Check physical full-circle steering and translation
         shell: bash
         run: |

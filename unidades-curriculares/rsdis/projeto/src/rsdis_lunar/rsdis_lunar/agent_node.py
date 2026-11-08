@@ -6,7 +6,7 @@ from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy, qos_profile_sensor_data
 from geometry_msgs.msg import PoseStamped, Twist
 from nav_msgs.msg import Odometry, Path
-from sensor_msgs.msg import LaserScan
+from sensor_msgs.msg import BatteryState, LaserScan
 from std_msgs.msg import Bool, String
 from std_srvs.srv import SetBool
 from rsdis_interfaces.msg import Detection, RoverStatus, TaskGoal, TaskResult
@@ -25,6 +25,9 @@ class RoverAgent(Node):
         self.rover_id = self.get_parameter("rover_id").value
         spec = next(r for r in config["rovers"] if r["id"] == self.rover_id)
         self.rover = Rover(spec, config)
+        self.rover.external_energy = config.get("energy_source") == "gazebo"
+        self.battery_at = -math.inf
+        self.battery_stamp = None
         self.rover.navigator.require_scan = True
         self.pose = None
         self.odom_received = -math.inf
@@ -40,6 +43,10 @@ class RoverAgent(Node):
         self.plan_pub = self.create_publisher(Path, prefix + "/plan", 10)
         self.create_subscription(Odometry, prefix + "/odom", self.on_odom, qos_profile_sensor_data)
         self.create_subscription(LaserScan, prefix + "/scan", self.on_scan, qos_profile_sensor_data)
+        if self.rover.external_energy:
+            self.create_subscription(
+                BatteryState, prefix + "/battery", self.on_battery, qos_profile_sensor_data
+            )
         self.create_subscription(TaskGoal, "/mission/goals", self.on_goal, 10)
         self.create_subscription(Detection, "/mission/detections", self.on_detection, 10)
         self.create_subscription(RoverStatus, "/mission/status", self.on_status, 10)
@@ -84,6 +91,27 @@ class RoverAgent(Node):
         self.rover.paused = msg.data
         if msg.data:
             self.velocity_pub.publish(Twist())
+
+    def on_battery(self, msg):
+        stamp = stamp_seconds(msg.header.stamp)
+        if not (
+            math.isfinite(msg.percentage)
+            and 0 <= msg.percentage <= 1
+            and math.isfinite(msg.voltage)
+            and msg.voltage > 0
+            and math.isfinite(msg.capacity)
+            and msg.capacity > 0
+        ):
+            return
+        if self.battery_stamp is not None and stamp <= self.battery_stamp:
+            return
+        if self.battery_stamp is not None:
+            dt = min(1.0, stamp - self.battery_stamp)
+            if math.isfinite(msg.current):
+                self.rover.energy_used += max(0.0, -msg.current) * dt / (msg.capacity * 3600)
+        self.battery_stamp = stamp
+        self.battery_at = self.now_seconds()
+        self.rover.battery = msg.percentage
 
     def on_goal(self, msg):
         now = self.now_seconds()
@@ -136,11 +164,19 @@ class RoverAgent(Node):
         dt = 0.0 if self.last_time is None else max(0.0, now - self.last_time)
         self.last_time = now
         command = Twist()
+        battery_fresh = not self.rover.external_energy or 0 <= now - self.battery_at < 1.0
         if self.mission_finished:
             self.rover.navigator.state = "finished"
         elif self.pose is None or now - self.odom_received >= 0.5:
             self.rover.navigator.state = "waiting_for_odometry"
-        if self.pose is not None and now - self.odom_received < 0.5 and not self.mission_finished:
+        elif not battery_fresh:
+            self.rover.navigator.state = "waiting_for_battery"
+        if (
+            self.pose is not None
+            and now - self.odom_received < 0.5
+            and battery_fresh
+            and not self.mission_finished
+        ):
             command.linear.x, command.angular.z = self.rover.step(
                 self.pose, dt, now, self.peers.values()
             )
@@ -158,7 +194,11 @@ class RoverAgent(Node):
         status.mode = (
             "finished"
             if self.mission_finished
-            else ("unavailable" if now - self.odom_received >= 0.5 else self.rover.mode)
+            else (
+                "unavailable"
+                if now - self.odom_received >= 0.5 or not battery_fresh
+                else self.rover.mode
+            )
         )
         status.distance_travelled = self.rover.travelled
         status.energy_used = self.rover.energy_used

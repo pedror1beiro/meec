@@ -139,6 +139,13 @@ def adapt_urdf(expanded, simulation_path, rover_id, config, require_assets=True)
                         )
             mesh.set("filename", file.as_uri())
     systems = element(robot, "gazebo")
+    if config.get("energy_source") == "gazebo":
+        from .power import energy_plugins
+
+        spec = next(r for r in config["rovers"] if r["id"] == rover_id)
+        energy_plugins(systems, spec, config, "rear_solar_panel")
+        preserve = element(robot, "gazebo", reference="rear_solar_panel_joint")
+        element(preserve, "preserveFixedJoint", "true")
     for wheel in WHEELS:
         velocity = plugin(systems, "joint-controller", "JointController")
         element(velocity, "joint_name", wheel + "_wheel_joint")
