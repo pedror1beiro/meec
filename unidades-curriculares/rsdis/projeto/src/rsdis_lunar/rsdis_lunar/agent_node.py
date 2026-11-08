@@ -14,6 +14,7 @@ from rsdis_interfaces.msg import Detection, RoverStatus, TaskGoal, TaskResult
 from .common import load_config, pose_tuple, stamp_seconds
 from .core import Goal, Rover, Snapshot
 from .navigation import scan_points
+from .qos import mission_qos
 
 
 class RoverAgent(Node):
@@ -36,8 +37,12 @@ class RoverAgent(Node):
         self.peers = {}
         prefix = "/" + self.rover_id
         self.velocity_pub = self.create_publisher(Twist, prefix + "/cmd_vel", 10)
-        self.status_pub = self.create_publisher(RoverStatus, "/mission/status", 10)
-        self.result_pub = self.create_publisher(TaskResult, "/mission/results", 10)
+        self.status_pub = self.create_publisher(
+            RoverStatus, prefix + "/local/status", qos_profile_sensor_data
+        )
+        self.result_pub = self.create_publisher(
+            TaskResult, prefix + "/local/results", mission_qos()
+        )
         self.nav_pub = self.create_publisher(String, prefix + "/navigation_state", 10)
         self.debug_pub = self.create_publisher(String, prefix + "/navigation_debug", 10)
         self.plan_pub = self.create_publisher(Path, prefix + "/plan", 10)
@@ -47,8 +52,11 @@ class RoverAgent(Node):
             self.create_subscription(
                 BatteryState, prefix + "/battery", self.on_battery, qos_profile_sensor_data
             )
-        self.create_subscription(TaskGoal, "/mission/goals", self.on_goal, 10)
-        self.create_subscription(Detection, "/mission/detections", self.on_detection, 10)
+        self.create_subscription(TaskGoal, prefix + "/inbox/goals", self.on_goal, mission_qos())
+        self.create_subscription(Detection, "/mission/detections", self.on_detection, mission_qos())
+        self.create_subscription(
+            Detection, prefix + "/local/detections", self.on_detection, mission_qos()
+        )
         self.create_subscription(RoverStatus, "/mission/status", self.on_status, 10)
         latched = QoSProfile(
             depth=1,
@@ -115,11 +123,16 @@ class RoverAgent(Node):
 
     def on_goal(self, msg):
         now = self.now_seconds()
-        if self.mission_finished or now - stamp_seconds(msg.header.stamp) > msg.lease_seconds:
+        if (
+            self.mission_finished
+            or not 0 <= now - stamp_seconds(msg.header.stamp) <= msg.lease_seconds
+        ):
             return
         self.rover.assign(
             Goal(msg.task_id, msg.target_id, (msg.position.x, msg.position.y), msg.rover_id), now
         )
+        if self.rover.goal and self.rover.goal.task_id == msg.task_id:
+            self.rover.lease_until = stamp_seconds(msg.header.stamp) + msg.lease_seconds
 
     def on_detection(self, msg):
         if (
@@ -137,7 +150,10 @@ class RoverAgent(Node):
             self.rover.return_home()
 
     def on_status(self, msg):
-        if msg.rover_id != self.rover_id:
+        if msg.rover_id != self.rover_id and (
+            msg.rover_id not in self.peers
+            or stamp_seconds(msg.header.stamp) >= self.peers[msg.rover_id].seen_at
+        ):
             self.peers[msg.rover_id] = Snapshot(
                 msg.rover_id,
                 pose_tuple(msg.pose),

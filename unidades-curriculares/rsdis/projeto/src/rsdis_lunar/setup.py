@@ -28,6 +28,7 @@ setup(
             "viper_driver = rsdis_lunar.viper_driver_node:main",
             "mission_dashboard = rsdis_lunar.dashboard_node:main",
             "power_governor = rsdis_lunar.power_node:main",
+            "mission_network = rsdis_lunar.network_node:main",
         ]
     },
 )

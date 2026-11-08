@@ -29,7 +29,11 @@ class MissionRehearsalTests(unittest.TestCase):
         config = load_config(ROOT / "src/rsdis_lunar/config/mission.json")
         with tempfile.TemporaryDirectory() as temp:
             summary, path = rehearse(
-                config, failure_at=20, failure_duration=30, output=Path(temp) / "failure"
+                config,
+                failure_at=20,
+                failure_duration=30,
+                failure_on_assignment=True,
+                output=Path(temp) / "failure",
             )
             events = [json.loads(line) for line in (path / "events.jsonl").read_text().splitlines()]
             released = [e for e in events if e["event"] == "released" and e["rover"] == "rover1"]

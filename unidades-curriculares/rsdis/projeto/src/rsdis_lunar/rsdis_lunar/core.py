@@ -1,6 +1,8 @@
 """Mission logic shared by ROS nodes and the portable, non-physics rehearsal.
 
-Energy units are fractions of a deliberately accelerated, synthetic battery.
+Energy budgets use fractions of a demonstration battery. ROS agents can consume
+actual simulator BatteryState measurements; only the offline baseline integrates
+its own linear consumption approximation.
 Coordinates are metres in a shared world frame. This is not SLAM or Nav2.
 """
 
@@ -95,7 +97,10 @@ class Coordinator:
                 t.observations += 1
 
     def update(self, snapshot):
-        if snapshot.rover_id in self.homes:
+        if snapshot.rover_id in self.homes and (
+            snapshot.rover_id not in self.rovers
+            or snapshot.seen_at >= self.rovers[snapshot.rover_id].seen_at
+        ):
             self.rovers[snapshot.rover_id] = snapshot
 
     def result(self, rover_id, task_id, success, now, detail=""):

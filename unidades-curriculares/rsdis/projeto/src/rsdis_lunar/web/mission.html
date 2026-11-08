@@ -13,7 +13,7 @@ body{margin:0;background:var(--bg);color:#e7edf6;font:14px system-ui,sans-serif}
 <div class="toolbar"><button class="primary" id="pause">Pause mission</button><button id="recall">Return both to base</button><select id="focus" aria-label="Map focus"><option value="all">Whole map</option><option value="rover1">Follow rover 1</option><option value="rover2">Follow rover 2</option></select><label class="toggle"><input type="checkbox" id="paths" checked>Routes</label><span class="command" id="command" role="status">Waiting for telemetry</span></div>
 <div class="layout"><section class="map"><div class="maphead"><strong id="mapname">Survey map</strong><span id="clock">0.0 s</span></div><canvas id="map" width="1140" height="790" aria-label="Live map with hazards, rover positions, routes and camera-discovered sites"></canvas><div class="legend">Blue: rover 1 · Amber: rover 2 · Dashed: planned route · Solid: travelled path · Grey disks: mapped hazards · Rings: camera detections</div></section><aside><div class="card"><div class="eyebrow">SCIENCE OBJECTIVES</div><div class="metric" id="progress">0 / 5</div><div class="muted" id="missionstate">Waiting for rover status</div></div><div class="rovers" id="rovers"></div></aside></div>
 <div class="lower"><section class="card"><h2>Discovered sites</h2><table><thead><tr><th>Site</th><th>Observed by</th><th>Inspection</th></tr></thead><tbody id="sites"><tr><td colspan="3">No camera detections yet</td></tr></tbody></table></section><section class="card"><h2>Mission activity</h2><div class="events" id="events" aria-live="polite">Waiting for events</div></section></div>
-<footer>Positions use simulation ground truth. Scientific sites appear after camera detections. Rocks, outpost structures and crater exclusions are the prior terrain map. Energy is a synthetic demonstration model. Pause stops mission commands; Return both to base ends exploration.</footer></main>
+<footer>Positions use simulation ground truth. Scientific sites appear after camera detections. Rocks, outpost structures and crater exclusions are the prior terrain map. Energy uses configurable demonstration parameters. Link faults are an application-channel experiment. Pause stops mission commands; Return both to base ends exploration.</footer></main>
 <script>
 const $=id=>document.getElementById(id),canvas=$('map'),ctx=canvas.getContext('2d'),palette=['#9ac8ff','#f0c286'];let state=null,online=false,cameraTick=0;
 function roverColour(id){return palette[Math.max(0,state.bases.findIndex(b=>b.id===id))%palette.length]}
@@ -51,13 +51,19 @@ function render(){
       const mode=element('div',undefined,'mode'),buttons=element('div',undefined,'controls');
       const toggle=element('button','Disable rover'),focus=element('button','Follow');
       toggle.onclick=()=>{const latest=state.rovers.find(x=>x.id===r.id);command(latest.mode==='unavailable'?'enable':'disable',r.id)};
-      focus.onclick=()=>{$('focus').value=r.id;draw()};buttons.append(toggle,focus);
+      const link=element('button','Disconnect link');
+      link.onclick=()=>command(state.network?.online?.[r.id]===false?'reconnect':'disconnect',r.id);
+      focus.onclick=()=>{$('focus').value=r.id;draw()};buttons.append(toggle,link,focus);
+      buttons.style.flexWrap='wrap';
+      const energy=element('div',undefined,'mode'),connection=element('div',undefined,'muted');
+      connection.style.fontSize='12px';
       const frame=element('div',undefined,'camera-frame'),image=element('img');
       image.className='camera';image.alt=r.id+' camera';image.style.visibility='hidden';
-      frame.append(element('span','Waiting for camera frames'),image);
-      image.onload=()=>{image.style.visibility='visible'};
-      image.onerror=()=>{image.style.visibility='hidden'};
-      card.append(h,bar,mode,buttons,frame);card.ui={battery,fill,bar,mode,toggle,image};
+      const placeholder=element('span','Waiting for camera frames');
+      frame.append(placeholder,image);
+      image.onload=()=>{image.style.visibility='visible';placeholder.hidden=true};
+      image.onerror=()=>{image.style.visibility='hidden';placeholder.hidden=false};
+      card.append(h,bar,mode,energy,connection,buttons,frame);card.ui={battery,fill,bar,mode,toggle,link,energy,connection,image};
       $('rovers').append(card);
     }
     const ui=card.ui;
@@ -66,6 +72,11 @@ function render(){
     ui.mode.textContent=(state.time-r.stamp>2?'Telemetry stale / ':'')+clean(r.mode)+' / '+clean(state.navigation[r.id]||'waiting for navigation');
     ui.toggle.textContent=r.mode==='unavailable'?'Enable rover':'Disable rover';
     ui.toggle.disabled=state.finished||!online||state.recorded;ui.toggle.setAttribute('aria-label',r.id+': '+ui.toggle.textContent);
+    const power=state.energy?.[r.id],connected=state.network?.online?.[r.id]!==false;
+    ui.energy.textContent=power&&Number.isFinite(power.voltage_v)?power.voltage_v.toFixed(1)+' V · '+power.current_a.toFixed(2)+' A | Solar '+(power.solar_w||0).toFixed(1)+' W | Dock '+(power.dock_w||0).toFixed(0)+' W':'';
+    ui.connection.textContent=state.network?.online?'Mission link: '+(connected?'connected':'disconnected'):'';
+    ui.link.textContent=connected?'Disconnect link':'Reconnect link';
+    ui.link.disabled=state.finished||!online||state.recorded;ui.link.setAttribute('aria-label',r.id+': '+ui.link.textContent);
     if(cameraTick%4===0)ui.image.src='/camera/'+encodeURIComponent(r.id)+'.jpg?t='+Date.now();
   }
   const sites=$('sites');sites.replaceChildren();

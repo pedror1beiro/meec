@@ -49,6 +49,7 @@ jobs:
           colcon build
           source install/setup.bash
           python3 -m unittest discover -s tests -v
+          python3 scripts/check_attributions.py
       - name: Verify native battery, solar shadows and dock recharge
         shell: bash
         run: |

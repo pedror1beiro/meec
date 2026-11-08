@@ -203,7 +203,9 @@ void SolarPanelPlugin::Configure(const gz::sim::Entity &_entity,
   // The line-of-sight check needs the rendering scene, which may only be used
   // from the render thread. PostUpdate runs on parallel worker threads, so the
   // ray cast is done from the post-render event instead.
-  this->dataPtr->postRenderConn = _eventMgr.Connect<gz::sim::events::PostRender>(
+  // SceneUpdate is on the render thread but does not force rendering at every
+  // physics tick, unlike a PostRender subscriber in Harmonic Sensors.
+  this->dataPtr->postRenderConn = _eventMgr.Connect<gz::sim::events::SceneUpdate>(
       std::bind(&SolarPanelPluginPrivate::OnPostRender, this->dataPtr.get()));
   this->dataPtr->teardownConn = _eventMgr.Connect<gz::sim::events::RenderTeardown>(
       [this]() {
@@ -289,8 +291,11 @@ void SolarPanelPlugin::PostUpdate(const gz::sim::UpdateInfo &_info,
     // Use the same directional sunlight as the incidence calculation. The
     // light's arbitrary display position must not alter geometric shadowing.
     const auto incoming = sunDirection.Normalized();
-    this->dataPtr->rayOrigin = linkPose.Pos() - 100.0 * incoming;
-    this->dataPtr->rayDirection = incoming;
+    const auto normal = linkPose.Rot().RotateVector(gz::math::Vector3d::UnitZ);
+    // Start just above the panel surface and cast towards the directional sun.
+    // A self-hit on the panel is avoided without relying on renderer node names.
+    this->dataPtr->rayOrigin = linkPose.Pos() + 0.03 * normal;
+    this->dataPtr->rayDirection = -incoming;
     this->dataPtr->rayValid = true;
     isInLOS = this->dataPtr->isInLOS;
   }
@@ -370,6 +375,7 @@ void SolarPanelPluginPrivate::OnPostRender()
     origin = this->rayOrigin;
     direction = this->rayDirection;
     visualChildren = this->scopedVisualChildren;
+    this->rayValid = false;
   }
 
   // Perform ray cast from the sun to the panel: the panel is lit if it is
@@ -385,17 +391,7 @@ void SolarPanelPluginPrivate::OnPostRender()
           << (visualChildren.empty() ? "none" : visualChildren.front()) << std::endl;
   }
 
-  bool inLOS = false;
-  if (result)
-  {
-    gz::rendering::NodePtr node = this->scene->NodeById(result.objectId);
-    if (node)
-    {
-      const std::string objectName = node->Name();
-      inLOS = std::any_of(visualChildren.begin(), visualChildren.end(),
-                          [&](const std::string &_elem) { return _elem == objectName; });
-    }
-  }
+  const bool inLOS = !result || result.distance > 100.0;
 
   std::lock_guard<std::mutex> lock(this->mutex);
   this->isInLOS = inLOS;

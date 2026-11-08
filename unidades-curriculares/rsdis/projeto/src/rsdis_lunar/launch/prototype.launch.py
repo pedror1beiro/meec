@@ -22,6 +22,7 @@ from launch_ros.actions import Node
 from rsdis_lunar.common import load_config
 from rsdis_lunar.world import build_world
 from rsdis_lunar.power import power_bridges, power_config
+from rsdis_lunar.communications import link_config
 from rsdis_lunar.viper import adapt_urdf, command_bridges, expand_upstream, profile
 
 
@@ -33,6 +34,7 @@ def configure(context):
     config = load_config(config_path)
     config["energy_source"] = LaunchConfiguration("energy_source").perform(context)
     config["power"] = power_config(config)
+    config["network"] = link_config(config, LaunchConfiguration("network_profile").perform(context))
     model = LaunchConfiguration("model").perform(context)
     if strategy not in ("nearest", "energy"):
         raise ValueError("strategy must be nearest or energy")
@@ -118,6 +120,13 @@ def configure(context):
     )
     nodes = [
         bridge,
+        Node(
+            package="rsdis_lunar",
+            executable="mission_network",
+            condition=IfCondition(LaunchConfiguration("autonomy")),
+            parameters=[{"use_sim_time": True, "config": config_path, "output": output}],
+            output="screen",
+        ),
         Node(
             package="rsdis_lunar",
             executable="mission_manager",
@@ -263,6 +272,11 @@ def generate_launch_description():
             DeclareLaunchArgument("dashboard_port", default_value="8765"),
             DeclareLaunchArgument(
                 "energy_source", default_value="gazebo", choices=["gazebo", "synthetic"]
+            ),
+            DeclareLaunchArgument(
+                "network_profile",
+                default_value="config",
+                choices=["config", "ideal", "degraded", "outage"],
             ),
             DeclareLaunchArgument(
                 "model", default_value="lightweight", choices=["lightweight", "viper"]

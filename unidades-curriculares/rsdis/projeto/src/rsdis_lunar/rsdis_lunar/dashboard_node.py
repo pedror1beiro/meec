@@ -15,7 +15,8 @@ import rclpy
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy, qos_profile_sensor_data
 from nav_msgs.msg import Path as NavPath
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import BatteryState, Image
+from std_msgs.msg import Float32
 from std_msgs.msg import Bool, String
 from std_srvs.srv import SetBool, Trigger
 from rsdis_interfaces.msg import Detection, RoverStatus, TaskGoal, TaskResult
@@ -38,6 +39,7 @@ class MissionDashboard(Node):
         self.rovers, self.targets, self.plans = {}, {}, {}
         self.tasks, self.owners = {}, {}
         self.navigation = {}
+        self.energy_data, self.network_data = {}, {}
         self.events = deque(maxlen=30)
         self.paused = self.finished = False
         self.last_command = "Ready"
@@ -57,6 +59,12 @@ class MissionDashboard(Node):
         self.create_subscription(Detection, "/mission/detections", self.on_detection, 10)
         self.create_subscription(TaskGoal, "/mission/goals", self.on_goal, 10)
         self.create_subscription(TaskResult, "/mission/results", self.on_result, 10)
+        self.create_subscription(
+            String,
+            "/mission/network",
+            lambda m: setattr(self, "network_data", json.loads(m.data)),
+            10,
+        )
         latched = QoSProfile(
             depth=1,
             reliability=ReliabilityPolicy.RELIABLE,
@@ -72,6 +80,24 @@ class MissionDashboard(Node):
         for spec in config["rovers"]:
             name = spec["id"]
             self.service_clients[name] = self.create_client(SetBool, f"/{name}/set_enabled")
+            self.service_clients[name + "_link"] = self.create_client(
+                SetBool, f"/{name}/set_link_enabled"
+            )
+            self.create_subscription(
+                BatteryState,
+                f"/{name}/battery",
+                lambda m, n=name: self.on_battery(n, m),
+                qos_profile_sensor_data,
+            )
+            for topic in ("solar_w", "dock_w", "load_actual_w", "supply_w"):
+                self.create_subscription(
+                    Float32,
+                    f"/{name}/energy/{topic}",
+                    lambda m, n=name, t=topic: self.energy_data.setdefault(n, {}).__setitem__(
+                        t, m.data
+                    ),
+                    qos_profile_sensor_data,
+                )
             self.create_subscription(
                 String,
                 f"/{name}/navigation_state",
@@ -138,10 +164,18 @@ class MissionDashboard(Node):
                         raise ValueError("Invalid request")
                     body = json.loads(self.rfile.read(size))
                     action = body["action"]
-                    if action not in ("pause", "resume", "recall", "disable", "enable"):
+                    if action not in (
+                        "pause",
+                        "resume",
+                        "recall",
+                        "disable",
+                        "enable",
+                        "disconnect",
+                        "reconnect",
+                    ):
                         raise ValueError("Unknown action")
                     if (
-                        action in ("disable", "enable")
+                        action in ("disable", "enable", "disconnect", "reconnect")
                         and body.get("rover") not in dashboard.trails
                     ):
                         raise ValueError("Unknown rover")
@@ -203,6 +237,14 @@ class MissionDashboard(Node):
                 self.targets[target]["confirmed"] = True
             self.event(f"{msg.rover_id}: {target} / {msg.detail}")
 
+    def on_battery(self, name, msg):
+        self.energy_data.setdefault(name, {}).update(
+            voltage_v=msg.voltage,
+            current_a=msg.current,
+            charge_ah=msg.charge,
+            capacity_ah=msg.capacity,
+        )
+
     def on_image(self, name, msg):
         if time.monotonic() - self.camera_at.get(name, 0) < 0.8:
             return
@@ -232,11 +274,13 @@ class MissionDashboard(Node):
                 else ("recall" if action == "recall" else body.get("rover"))
             )
             client = self.service_clients.get(key)
+            if action in ("disconnect", "reconnect"):
+                client = self.service_clients.get(body["rover"] + "_link")
             if client and client.service_is_ready() and not self.finished:
                 request = (
                     Trigger.Request()
                     if action == "recall"
-                    else SetBool.Request(data=action in ("pause", "enable"))
+                    else SetBool.Request(data=action in ("pause", "enable", "reconnect"))
                 )
                 self.pending.append((action, client.call_async(request), time.monotonic()))
                 self.last_command = action + ": waiting for rover response"
@@ -271,6 +315,9 @@ class MissionDashboard(Node):
             plans=self.plans,
             trails={k: list(v) for k, v in self.trails.items()},
             navigation=self.navigation,
+            energy=self.energy_data,
+            energy_source=self.config.get("energy_source", "synthetic"),
+            network=self.network_data,
             paused=self.paused,
             finished=self.finished,
             events=list(self.events),

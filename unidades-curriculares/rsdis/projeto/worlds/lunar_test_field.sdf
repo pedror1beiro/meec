@@ -2666,6 +2666,636 @@
         </collision>
       </link>
     </model>
+    <model name="ridge_rover1_0">
+      <static>true</static>
+      <link name="obstacle">
+        <visual name="boulder">
+          <pose>-24.5 -8.5 0.25 0 0 6.88</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.86 1.0 0.6</radii>
+            </ellipsoid>
+          </geometry>
+          <material>
+            <ambient>0.24 0.235 0.22 1</ambient>
+            <diffuse>0.24 0.235 0.22 1</diffuse>
+          </material>
+        </visual>
+        <collision name="boulder">
+          <pose>-24.5 -8.5 0.25 0 0 6.88</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.86 1.0 0.6</radii>
+            </ellipsoid>
+          </geometry>
+        </collision>
+        <visual name="cap">
+          <pose>-24.3 -8.5 0.43 0 0 6.88</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.52 0.6 0.5</radii>
+            </ellipsoid>
+          </geometry>
+          <material>
+            <ambient>0.28 0.27 0.25 1</ambient>
+            <diffuse>0.28 0.27 0.25 1</diffuse>
+          </material>
+        </visual>
+        <collision name="cap">
+          <pose>-24.3 -8.5 0.43 0 0 6.88</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.52 0.6 0.5</radii>
+            </ellipsoid>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+    <model name="ridge_rover1_2">
+      <static>true</static>
+      <link name="obstacle">
+        <visual name="boulder">
+          <pose>-6.1 -12.3 0.2 0 0 7.31</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.6880000000000001 0.8 0.48</radii>
+            </ellipsoid>
+          </geometry>
+          <material>
+            <ambient>0.24 0.235 0.22 1</ambient>
+            <diffuse>0.24 0.235 0.22 1</diffuse>
+          </material>
+        </visual>
+        <collision name="boulder">
+          <pose>-6.1 -12.3 0.2 0 0 7.31</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.6880000000000001 0.8 0.48</radii>
+            </ellipsoid>
+          </geometry>
+        </collision>
+        <visual name="cap">
+          <pose>-5.9399999999999995 -12.3 0.34400000000000003 0 0 7.31</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.41600000000000004 0.48 0.4</radii>
+            </ellipsoid>
+          </geometry>
+          <material>
+            <ambient>0.28 0.27 0.25 1</ambient>
+            <diffuse>0.28 0.27 0.25 1</diffuse>
+          </material>
+        </visual>
+        <collision name="cap">
+          <pose>-5.9399999999999995 -12.3 0.34400000000000003 0 0 7.31</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.41600000000000004 0.48 0.4</radii>
+            </ellipsoid>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+    <model name="ridge_rover1_3">
+      <static>true</static>
+      <link name="obstacle">
+        <visual name="boulder">
+          <pose>10.0 -11.5 0.25 0 0 7.74</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.86 1.0 0.6</radii>
+            </ellipsoid>
+          </geometry>
+          <material>
+            <ambient>0.24 0.235 0.22 1</ambient>
+            <diffuse>0.24 0.235 0.22 1</diffuse>
+          </material>
+        </visual>
+        <collision name="boulder">
+          <pose>10.0 -11.5 0.25 0 0 7.74</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.86 1.0 0.6</radii>
+            </ellipsoid>
+          </geometry>
+        </collision>
+        <visual name="cap">
+          <pose>10.2 -11.5 0.43 0 0 7.74</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.52 0.6 0.5</radii>
+            </ellipsoid>
+          </geometry>
+          <material>
+            <ambient>0.28 0.27 0.25 1</ambient>
+            <diffuse>0.28 0.27 0.25 1</diffuse>
+          </material>
+        </visual>
+        <collision name="cap">
+          <pose>10.2 -11.5 0.43 0 0 7.74</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.52 0.6 0.5</radii>
+            </ellipsoid>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+    <model name="ridge_rover1_4">
+      <static>true</static>
+      <link name="obstacle">
+        <visual name="boulder">
+          <pose>22.5 -10.0 0.2 0 0 8.17</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.6880000000000001 0.8 0.48</radii>
+            </ellipsoid>
+          </geometry>
+          <material>
+            <ambient>0.24 0.235 0.22 1</ambient>
+            <diffuse>0.24 0.235 0.22 1</diffuse>
+          </material>
+        </visual>
+        <collision name="boulder">
+          <pose>22.5 -10.0 0.2 0 0 8.17</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.6880000000000001 0.8 0.48</radii>
+            </ellipsoid>
+          </geometry>
+        </collision>
+        <visual name="cap">
+          <pose>22.66 -10.0 0.34400000000000003 0 0 8.17</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.41600000000000004 0.48 0.4</radii>
+            </ellipsoid>
+          </geometry>
+          <material>
+            <ambient>0.28 0.27 0.25 1</ambient>
+            <diffuse>0.28 0.27 0.25 1</diffuse>
+          </material>
+        </visual>
+        <collision name="cap">
+          <pose>22.66 -10.0 0.34400000000000003 0 0 8.17</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.41600000000000004 0.48 0.4</radii>
+            </ellipsoid>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+    <model name="ridge_rover1_6">
+      <static>true</static>
+      <link name="obstacle">
+        <visual name="boulder">
+          <pose>18.5 -2.5 0.25 0 0 8.6</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.86 1.0 0.6</radii>
+            </ellipsoid>
+          </geometry>
+          <material>
+            <ambient>0.24 0.235 0.22 1</ambient>
+            <diffuse>0.24 0.235 0.22 1</diffuse>
+          </material>
+        </visual>
+        <collision name="boulder">
+          <pose>18.5 -2.5 0.25 0 0 8.6</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.86 1.0 0.6</radii>
+            </ellipsoid>
+          </geometry>
+        </collision>
+        <visual name="cap">
+          <pose>18.7 -2.5 0.43 0 0 8.6</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.52 0.6 0.5</radii>
+            </ellipsoid>
+          </geometry>
+          <material>
+            <ambient>0.28 0.27 0.25 1</ambient>
+            <diffuse>0.28 0.27 0.25 1</diffuse>
+          </material>
+        </visual>
+        <collision name="cap">
+          <pose>18.7 -2.5 0.43 0 0 8.6</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.52 0.6 0.5</radii>
+            </ellipsoid>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+    <model name="ridge_rover1_8">
+      <static>true</static>
+      <link name="obstacle">
+        <visual name="boulder">
+          <pose>-15.5 -3.5 0.2 0 0 9.03</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.6880000000000001 0.8 0.48</radii>
+            </ellipsoid>
+          </geometry>
+          <material>
+            <ambient>0.24 0.235 0.22 1</ambient>
+            <diffuse>0.24 0.235 0.22 1</diffuse>
+          </material>
+        </visual>
+        <collision name="boulder">
+          <pose>-15.5 -3.5 0.2 0 0 9.03</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.6880000000000001 0.8 0.48</radii>
+            </ellipsoid>
+          </geometry>
+        </collision>
+        <visual name="cap">
+          <pose>-15.34 -3.5 0.34400000000000003 0 0 9.03</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.41600000000000004 0.48 0.4</radii>
+            </ellipsoid>
+          </geometry>
+          <material>
+            <ambient>0.28 0.27 0.25 1</ambient>
+            <diffuse>0.28 0.27 0.25 1</diffuse>
+          </material>
+        </visual>
+        <collision name="cap">
+          <pose>-15.34 -3.5 0.34400000000000003 0 0 9.03</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.41600000000000004 0.48 0.4</radii>
+            </ellipsoid>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+    <model name="ridge_rover2_0">
+      <static>true</static>
+      <link name="obstacle">
+        <visual name="boulder">
+          <pose>-24.5 8.5 0.25 0 0 9.459999999999999</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.86 1.0 0.6</radii>
+            </ellipsoid>
+          </geometry>
+          <material>
+            <ambient>0.24 0.235 0.22 1</ambient>
+            <diffuse>0.24 0.235 0.22 1</diffuse>
+          </material>
+        </visual>
+        <collision name="boulder">
+          <pose>-24.5 8.5 0.25 0 0 9.459999999999999</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.86 1.0 0.6</radii>
+            </ellipsoid>
+          </geometry>
+        </collision>
+        <visual name="cap">
+          <pose>-24.3 8.5 0.43 0 0 9.459999999999999</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.52 0.6 0.5</radii>
+            </ellipsoid>
+          </geometry>
+          <material>
+            <ambient>0.28 0.27 0.25 1</ambient>
+            <diffuse>0.28 0.27 0.25 1</diffuse>
+          </material>
+        </visual>
+        <collision name="cap">
+          <pose>-24.3 8.5 0.43 0 0 9.459999999999999</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.52 0.6 0.5</radii>
+            </ellipsoid>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+    <model name="ridge_rover2_1">
+      <static>true</static>
+      <link name="obstacle">
+        <visual name="boulder">
+          <pose>-14.5 12.0 0.2 0 0 9.89</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.6880000000000001 0.8 0.48</radii>
+            </ellipsoid>
+          </geometry>
+          <material>
+            <ambient>0.24 0.235 0.22 1</ambient>
+            <diffuse>0.24 0.235 0.22 1</diffuse>
+          </material>
+        </visual>
+        <collision name="boulder">
+          <pose>-14.5 12.0 0.2 0 0 9.89</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.6880000000000001 0.8 0.48</radii>
+            </ellipsoid>
+          </geometry>
+        </collision>
+        <visual name="cap">
+          <pose>-14.34 12.0 0.34400000000000003 0 0 9.89</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.41600000000000004 0.48 0.4</radii>
+            </ellipsoid>
+          </geometry>
+          <material>
+            <ambient>0.28 0.27 0.25 1</ambient>
+            <diffuse>0.28 0.27 0.25 1</diffuse>
+          </material>
+        </visual>
+        <collision name="cap">
+          <pose>-14.34 12.0 0.34400000000000003 0 0 9.89</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.41600000000000004 0.48 0.4</radii>
+            </ellipsoid>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+    <model name="ridge_rover2_2">
+      <static>true</static>
+      <link name="obstacle">
+        <visual name="boulder">
+          <pose>-0.5 13.5 0.25 0 0 10.32</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.86 1.0 0.6</radii>
+            </ellipsoid>
+          </geometry>
+          <material>
+            <ambient>0.24 0.235 0.22 1</ambient>
+            <diffuse>0.24 0.235 0.22 1</diffuse>
+          </material>
+        </visual>
+        <collision name="boulder">
+          <pose>-0.5 13.5 0.25 0 0 10.32</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.86 1.0 0.6</radii>
+            </ellipsoid>
+          </geometry>
+        </collision>
+        <visual name="cap">
+          <pose>-0.3 13.5 0.43 0 0 10.32</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.52 0.6 0.5</radii>
+            </ellipsoid>
+          </geometry>
+          <material>
+            <ambient>0.28 0.27 0.25 1</ambient>
+            <diffuse>0.28 0.27 0.25 1</diffuse>
+          </material>
+        </visual>
+        <collision name="cap">
+          <pose>-0.3 13.5 0.43 0 0 10.32</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.52 0.6 0.5</radii>
+            </ellipsoid>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+    <model name="ridge_rover2_3">
+      <static>true</static>
+      <link name="obstacle">
+        <visual name="boulder">
+          <pose>13.5 13.5 0.2 0 0 10.75</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.6880000000000001 0.8 0.48</radii>
+            </ellipsoid>
+          </geometry>
+          <material>
+            <ambient>0.24 0.235 0.22 1</ambient>
+            <diffuse>0.24 0.235 0.22 1</diffuse>
+          </material>
+        </visual>
+        <collision name="boulder">
+          <pose>13.5 13.5 0.2 0 0 10.75</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.6880000000000001 0.8 0.48</radii>
+            </ellipsoid>
+          </geometry>
+        </collision>
+        <visual name="cap">
+          <pose>13.66 13.5 0.34400000000000003 0 0 10.75</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.41600000000000004 0.48 0.4</radii>
+            </ellipsoid>
+          </geometry>
+          <material>
+            <ambient>0.28 0.27 0.25 1</ambient>
+            <diffuse>0.28 0.27 0.25 1</diffuse>
+          </material>
+        </visual>
+        <collision name="cap">
+          <pose>13.66 13.5 0.34400000000000003 0 0 10.75</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.41600000000000004 0.48 0.4</radii>
+            </ellipsoid>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+    <model name="ridge_rover2_4">
+      <static>true</static>
+      <link name="obstacle">
+        <visual name="boulder">
+          <pose>24.0 10.5 0.25 0 0 11.18</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.86 1.0 0.6</radii>
+            </ellipsoid>
+          </geometry>
+          <material>
+            <ambient>0.24 0.235 0.22 1</ambient>
+            <diffuse>0.24 0.235 0.22 1</diffuse>
+          </material>
+        </visual>
+        <collision name="boulder">
+          <pose>24.0 10.5 0.25 0 0 11.18</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.86 1.0 0.6</radii>
+            </ellipsoid>
+          </geometry>
+        </collision>
+        <visual name="cap">
+          <pose>24.2 10.5 0.43 0 0 11.18</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.52 0.6 0.5</radii>
+            </ellipsoid>
+          </geometry>
+          <material>
+            <ambient>0.28 0.27 0.25 1</ambient>
+            <diffuse>0.28 0.27 0.25 1</diffuse>
+          </material>
+        </visual>
+        <collision name="cap">
+          <pose>24.2 10.5 0.43 0 0 11.18</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.52 0.6 0.5</radii>
+            </ellipsoid>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+    <model name="ridge_rover2_5">
+      <static>true</static>
+      <link name="obstacle">
+        <visual name="boulder">
+          <pose>27.0 5.0 0.2 0 0 11.61</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.6880000000000001 0.8 0.48</radii>
+            </ellipsoid>
+          </geometry>
+          <material>
+            <ambient>0.24 0.235 0.22 1</ambient>
+            <diffuse>0.24 0.235 0.22 1</diffuse>
+          </material>
+        </visual>
+        <collision name="boulder">
+          <pose>27.0 5.0 0.2 0 0 11.61</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.6880000000000001 0.8 0.48</radii>
+            </ellipsoid>
+          </geometry>
+        </collision>
+        <visual name="cap">
+          <pose>27.16 5.0 0.34400000000000003 0 0 11.61</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.41600000000000004 0.48 0.4</radii>
+            </ellipsoid>
+          </geometry>
+          <material>
+            <ambient>0.28 0.27 0.25 1</ambient>
+            <diffuse>0.28 0.27 0.25 1</diffuse>
+          </material>
+        </visual>
+        <collision name="cap">
+          <pose>27.16 5.0 0.34400000000000003 0 0 11.61</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.41600000000000004 0.48 0.4</radii>
+            </ellipsoid>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+    <model name="ridge_rover2_6">
+      <static>true</static>
+      <link name="obstacle">
+        <visual name="boulder">
+          <pose>17.0 3.0 0.25 0 0 12.04</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.86 1.0 0.6</radii>
+            </ellipsoid>
+          </geometry>
+          <material>
+            <ambient>0.24 0.235 0.22 1</ambient>
+            <diffuse>0.24 0.235 0.22 1</diffuse>
+          </material>
+        </visual>
+        <collision name="boulder">
+          <pose>17.0 3.0 0.25 0 0 12.04</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.86 1.0 0.6</radii>
+            </ellipsoid>
+          </geometry>
+        </collision>
+        <visual name="cap">
+          <pose>17.2 3.0 0.43 0 0 12.04</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.52 0.6 0.5</radii>
+            </ellipsoid>
+          </geometry>
+          <material>
+            <ambient>0.28 0.27 0.25 1</ambient>
+            <diffuse>0.28 0.27 0.25 1</diffuse>
+          </material>
+        </visual>
+        <collision name="cap">
+          <pose>17.2 3.0 0.43 0 0 12.04</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.52 0.6 0.5</radii>
+            </ellipsoid>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+    <model name="ridge_rover2_8">
+      <static>true</static>
+      <link name="obstacle">
+        <visual name="boulder">
+          <pose>-13.3 4.0 0.2 0 0 12.47</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.6880000000000001 0.8 0.48</radii>
+            </ellipsoid>
+          </geometry>
+          <material>
+            <ambient>0.24 0.235 0.22 1</ambient>
+            <diffuse>0.24 0.235 0.22 1</diffuse>
+          </material>
+        </visual>
+        <collision name="boulder">
+          <pose>-13.3 4.0 0.2 0 0 12.47</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.6880000000000001 0.8 0.48</radii>
+            </ellipsoid>
+          </geometry>
+        </collision>
+        <visual name="cap">
+          <pose>-13.14 4.0 0.34400000000000003 0 0 12.47</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.41600000000000004 0.48 0.4</radii>
+            </ellipsoid>
+          </geometry>
+          <material>
+            <ambient>0.28 0.27 0.25 1</ambient>
+            <diffuse>0.28 0.27 0.25 1</diffuse>
+          </material>
+        </visual>
+        <collision name="cap">
+          <pose>-13.14 4.0 0.34400000000000003 0 0 12.47</pose>
+          <geometry>
+            <ellipsoid>
+              <radii>0.41600000000000004 0.48 0.4</radii>
+            </ellipsoid>
+          </geometry>
+        </collision>
+      </link>
+    </model>
     <model name="rover1">
       <pose>-28.0 -6.0 0.23 0 0 0.0</pose>
       <link name="base_link">
@@ -2697,18 +3327,6 @@
             </box>
           </geometry>
         </collision>
-        <visual name="solar_panel">
-          <pose>-0.15 0 0.42 0 0 0</pose>
-          <geometry>
-            <box>
-              <size>0.65 0.82 0.025</size>
-            </box>
-          </geometry>
-          <material>
-            <ambient>0.035 0.04 0.07 1</ambient>
-            <diffuse>0.035 0.04 0.07 1</diffuse>
-          </material>
-        </visual>
         <visual name="mast">
           <pose>0.3 0 0.48 0 0 0</pose>
           <geometry>
@@ -2777,6 +3395,52 @@
           </lidar>
         </sensor>
       </link>
+      <link name="solar_panel_link">
+        <pose relative_to="base_link">-0.15 0 0.42 0 0 0</pose>
+        <inertial>
+          <mass>0.05</mass>
+          <inertia>
+            <ixx>0.001</ixx>
+            <iyy>0.001</iyy>
+            <izz>0.001</izz>
+          </inertia>
+        </inertial>
+        <visual name="panel_surface">
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.65 0.82 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.035 0.04 0.07 1</ambient>
+            <diffuse>0.035 0.04 0.07 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <joint name="solar_panel_fixed" type="fixed">
+        <parent>base_link</parent>
+        <child>solar_panel_link</child>
+      </joint>
+      <plugin filename="libRsdisRechargeableBatteryPlugin.so" name="simulation::RechargeableBatteryPlugin">
+        <battery_name>rover1_battery</battery_name>
+        <voltage>24.0</voltage>
+        <open_circuit_voltage_constant_coef>24.0</open_circuit_voltage_constant_coef>
+        <open_circuit_voltage_linear_coef>-2.0</open_circuit_voltage_linear_coef>
+        <initial_charge>0.2375</initial_charge>
+        <capacity>0.25</capacity>
+        <resistance>0.01</resistance>
+        <smooth_current_tau>0.1</smooth_current_tau>
+        <power_load>10.0</power_load>
+        <power_load_topic>/rover1/energy/load_w</power_load_topic>
+        <start_draining>true</start_draining>
+        <power_source>solar_panel_link/solar_panel_output</power_source>
+        <power_source>energy/dock_w</power_source>
+      </plugin>
+      <plugin filename="libRsdisSolarPanelPlugin.so" name="simulation::SolarPanelPlugin">
+        <link_name>solar_panel_link</link_name>
+        <nominal_power>12.0</nominal_power>
+      </plugin>
       <plugin filename="gz-sim-diff-drive-system" name="gz::sim::systems::DiffDrive">
         <left_joint>left_front_wheel_joint</left_joint>
         <left_joint>left_rear_wheel_joint</left_joint>
@@ -3050,18 +3714,6 @@
             </box>
           </geometry>
         </collision>
-        <visual name="solar_panel">
-          <pose>-0.15 0 0.42 0 0 0</pose>
-          <geometry>
-            <box>
-              <size>0.65 0.82 0.025</size>
-            </box>
-          </geometry>
-          <material>
-            <ambient>0.035 0.04 0.07 1</ambient>
-            <diffuse>0.035 0.04 0.07 1</diffuse>
-          </material>
-        </visual>
         <visual name="mast">
           <pose>0.3 0 0.48 0 0 0</pose>
           <geometry>
@@ -3130,6 +3782,52 @@
           </lidar>
         </sensor>
       </link>
+      <link name="solar_panel_link">
+        <pose relative_to="base_link">-0.15 0 0.42 0 0 0</pose>
+        <inertial>
+          <mass>0.05</mass>
+          <inertia>
+            <ixx>0.001</ixx>
+            <iyy>0.001</iyy>
+            <izz>0.001</izz>
+          </inertia>
+        </inertial>
+        <visual name="panel_surface">
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.65 0.82 0.025</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.035 0.04 0.07 1</ambient>
+            <diffuse>0.035 0.04 0.07 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <joint name="solar_panel_fixed" type="fixed">
+        <parent>base_link</parent>
+        <child>solar_panel_link</child>
+      </joint>
+      <plugin filename="libRsdisRechargeableBatteryPlugin.so" name="simulation::RechargeableBatteryPlugin">
+        <battery_name>rover2_battery</battery_name>
+        <voltage>24.0</voltage>
+        <open_circuit_voltage_constant_coef>24.0</open_circuit_voltage_constant_coef>
+        <open_circuit_voltage_linear_coef>-2.0</open_circuit_voltage_linear_coef>
+        <initial_charge>0.1375</initial_charge>
+        <capacity>0.25</capacity>
+        <resistance>0.01</resistance>
+        <smooth_current_tau>0.1</smooth_current_tau>
+        <power_load>10.0</power_load>
+        <power_load_topic>/rover2/energy/load_w</power_load_topic>
+        <start_draining>true</start_draining>
+        <power_source>solar_panel_link/solar_panel_output</power_source>
+        <power_source>energy/dock_w</power_source>
+      </plugin>
+      <plugin filename="libRsdisSolarPanelPlugin.so" name="simulation::SolarPanelPlugin">
+        <link_name>solar_panel_link</link_name>
+        <nominal_power>12.0</nominal_power>
+      </plugin>
       <plugin filename="gz-sim-diff-drive-system" name="gz::sim::systems::DiffDrive">
         <left_joint>left_front_wheel_joint</left_joint>
         <left_joint>left_rear_wheel_joint</left_joint>

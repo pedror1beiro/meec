@@ -23,6 +23,10 @@ def main():
     parser.add_argument("--gui", action="store_true")
     parser.add_argument("--model", choices=["lightweight", "viper"], default="lightweight")
     parser.add_argument("--simulation", type=Path)
+    parser.add_argument("--energy-source", choices=["gazebo", "synthetic"], default="gazebo")
+    parser.add_argument(
+        "--network-profile", choices=["config", "ideal", "degraded", "outage"], default="config"
+    )
     args = parser.parse_args()
     if os.name == "nt":
         parser.error(
@@ -67,6 +71,8 @@ def main():
         "strategy:=" + args.strategy,
         "output:=" + str(output),
         "model:=" + args.model,
+        "energy_source:=" + args.energy_source,
+        "network_profile:=" + args.network_profile,
         "upstream_simulation:="
         + str((args.simulation or root / "third_party/simulation").resolve()),
     ]
@@ -74,6 +80,8 @@ def main():
         "config_file": str(config_path),
         "strategy": args.strategy,
         "model": args.model,
+        "energy_source": args.energy_source,
+        "network_profile": args.network_profile,
         "command": command,
         "platform": platform.platform(),
         "machine": platform.machine(),
@@ -161,6 +169,7 @@ def main():
         node.create_client(SetBool, "/" + failure["rover_id"] + "/set_enabled") if failure else None
     )
     disabled = restored = False
+    actual_failure_at = None
     pending = []
     start = time.monotonic()
     outcome = "wall_timeout"
@@ -182,17 +191,22 @@ def main():
                     flush=True,
                 )
             if failure and client.service_is_ready():
-                if not disabled and state["sim"] >= failure["at"]:
+                active = failure.get("trigger") != "active_task" or (
+                    failure["rover_id"] in statuses
+                    and statuses[failure["rover_id"]].mode == "inspecting"
+                )
+                if not disabled and state["sim"] >= failure["at"] and active:
                     future = client.call_async(SetBool.Request(data=False))
                     pending.append(future)
                     metadata["failure_interventions"].append(
                         {"sim_seconds": state["sim"], "enabled": False}
                     )
                     disabled = True
+                    actual_failure_at = state["sim"]
                 if (
                     disabled
                     and not restored
-                    and state["sim"] >= failure["at"] + failure["duration"]
+                    and state["sim"] >= actual_failure_at + failure["duration"]
                 ):
                     future = client.call_async(SetBool.Request(data=True))
                     pending.append(future)

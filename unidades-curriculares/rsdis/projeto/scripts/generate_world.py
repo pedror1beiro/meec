@@ -12,7 +12,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=Path, default=ROOT / "src/rsdis_lunar/config/mission.json")
     parser.add_argument("--output", type=Path, default=ROOT / "worlds/lunar_test_field.sdf")
+    parser.add_argument("--energy-source", choices=["gazebo", "synthetic"], default="gazebo")
     args = parser.parse_args()
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(build_world(load_config(args.config)), encoding="utf-8")
+    config = load_config(args.config)
+    config["energy_source"] = args.energy_source
+    args.output.write_text(build_world(config), encoding="utf-8")
     print(args.output)

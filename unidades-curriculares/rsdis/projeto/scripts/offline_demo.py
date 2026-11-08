@@ -24,6 +24,7 @@ def rehearse(
     output=None,
     seed=0,
     failure_rover=None,
+    failure_on_assignment=False,
 ):
     # Seed rotates the routes, retaining the same world/initial batteries across policies.
     # This varies visit order, not physical terrain or sensor noise.
@@ -49,17 +50,33 @@ def rehearse(
     # Keep a trace suitable for the portable HTML playback.
     trace = []
     failure_started = failure_ended = False
+    wait_for_task = (
+        failure_on_assignment or config.get("failure", {}).get("trigger") == "active_task"
+    )
+    failure_start = None if wait_for_task else failure_at
     return_requested = False
     reason = "time_limit"
     audit = ClearanceAudit(config)
     while now <= config["mission_seconds"]:
         if failure_at is not None:
             failed_id = failure_rover or config["rovers"][0]["id"]
-            rovers[failed_id].enabled = not failure_at <= now < failure_at + failure_duration
-            if now >= failure_at and not failure_started:
+            if (
+                failure_start is None
+                and now >= failure_at
+                and any(t.owner == failed_id for t in coordinator.targets.values())
+            ):
+                failure_start = now
+            rovers[failed_id].enabled = (
+                failure_start is None or not failure_start <= now < failure_start + failure_duration
+            )
+            if failure_start is not None and now >= failure_start and not failure_started:
                 coordinator.event(now, "failure_injected", rover=failed_id)
                 failure_started = True
-            if now >= failure_at + failure_duration and not failure_ended:
+            if (
+                failure_start is not None
+                and now >= failure_start + failure_duration
+                and not failure_ended
+            ):
                 coordinator.event(now, "failure_recovered", rover=failed_id)
                 failure_ended = True
         # This detector reads known target positions to exercise coordination only.
