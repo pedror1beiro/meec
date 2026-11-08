@@ -77,6 +77,9 @@ public:
   /// \brief Connection to the post-render event
 public:
   gz::common::ConnectionPtr postRenderConn;
+public:
+  gz::common::ConnectionPtr teardownConn;
+  unsigned debugRays{0};
 
   /// \brief Protects the data shared between the simulation and render threads
 public:
@@ -202,6 +205,11 @@ void SolarPanelPlugin::Configure(const gz::sim::Entity &_entity,
   // ray cast is done from the post-render event instead.
   this->dataPtr->postRenderConn = _eventMgr.Connect<gz::sim::events::PostRender>(
       std::bind(&SolarPanelPluginPrivate::OnPostRender, this->dataPtr.get()));
+  this->dataPtr->teardownConn = _eventMgr.Connect<gz::sim::events::RenderTeardown>(
+      [this]() {
+        this->dataPtr->rayQuery.reset();
+        this->dataPtr->scene.reset();
+      });
 }
 
 //////////////////////////////////////////////////
@@ -369,6 +377,13 @@ void SolarPanelPluginPrivate::OnPostRender()
   this->rayQuery->SetOrigin(origin);
   this->rayQuery->SetDirection(direction);
   auto result = this->rayQuery->ClosestPoint();
+  if (this->debugRays++ < 3)
+  {
+    auto hit = result ? this->scene->NodeById(result.objectId) : nullptr;
+    gzmsg << "[RSDIS solar ray] " << this->modelName << " hit="
+          << (hit ? hit->Name() : "none") << " expected="
+          << (visualChildren.empty() ? "none" : visualChildren.front()) << std::endl;
+  }
 
   bool inLOS = false;
   if (result)
