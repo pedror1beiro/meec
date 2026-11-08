@@ -21,6 +21,7 @@ from launch_ros.actions import Node
 
 from rsdis_lunar.common import load_config
 from rsdis_lunar.world import build_world
+from rsdis_lunar.power import power_bridges, power_config
 from rsdis_lunar.viper import adapt_urdf, command_bridges, expand_upstream, profile
 
 
@@ -30,6 +31,8 @@ def configure(context):
     headless = LaunchConfiguration("headless").perform(context).lower() == "true"
     output = LaunchConfiguration("output").perform(context)
     config = load_config(config_path)
+    config["energy_source"] = LaunchConfiguration("energy_source").perform(context)
+    config["power"] = power_config(config)
     model = LaunchConfiguration("model").perform(context)
     if strategy not in ("nearest", "energy"):
         raise ValueError("strategy must be nearest or energy")
@@ -86,6 +89,7 @@ def configure(context):
     )
     # Explicit one-way bridges prevent odometry/image feedback and command loops.
     bridges = ["/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock"]
+    bridge_remaps = []
     for rover in config["rovers"]:
         prefix = "/" + rover["id"]
         bridges += [
@@ -99,8 +103,18 @@ def configure(context):
             if model == "lightweight"
             else command_bridges(rover["id"])
         )
+        if config["energy_source"] == "gazebo":
+            extra, remaps = power_bridges(
+                rover["id"], "rear_solar_panel" if model == "viper" else "solar_panel_link"
+            )
+            bridges += extra
+            bridge_remaps += remaps
     bridge = Node(
-        package="ros_gz_bridge", executable="parameter_bridge", arguments=bridges, output="screen"
+        package="ros_gz_bridge",
+        executable="parameter_bridge",
+        arguments=bridges,
+        remappings=bridge_remaps,
+        output="screen",
     )
     nodes = [
         bridge,
@@ -130,6 +144,16 @@ def configure(context):
     )
     for rover in config["rovers"]:
         shared = {"use_sim_time": True, "rover_id": rover["id"]}
+        if config["energy_source"] == "gazebo":
+            nodes.append(
+                Node(
+                    package="rsdis_lunar",
+                    executable="power_governor",
+                    namespace=rover["id"],
+                    parameters=[{**shared, "config": config_path, "output": output}],
+                    output="screen",
+                )
+            )
         nodes += [
             Node(
                 package="rsdis_lunar",
@@ -237,6 +261,9 @@ def generate_launch_description():
             DeclareLaunchArgument("autonomy", default_value="true", choices=["true", "false"]),
             DeclareLaunchArgument("dashboard", default_value="true", choices=["true", "false"]),
             DeclareLaunchArgument("dashboard_port", default_value="8765"),
+            DeclareLaunchArgument(
+                "energy_source", default_value="gazebo", choices=["gazebo", "synthetic"]
+            ),
             DeclareLaunchArgument(
                 "model", default_value="lightweight", choices=["lightweight", "viper"]
             ),

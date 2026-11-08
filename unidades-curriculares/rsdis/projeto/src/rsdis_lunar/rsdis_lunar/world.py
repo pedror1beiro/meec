@@ -2,6 +2,7 @@
 
 import math
 from xml.etree import ElementTree as ET
+from .power import energy_plugins
 
 
 def element(parent, tag, text=None, **attrs):
@@ -95,15 +96,37 @@ def rover(world, spec, config):
         element(inertia, axis, value)
     colour = "0.52 0.62 0.72 1" if config["rovers"][0]["id"] == name else "0.70 0.63 0.52 1"
     solid(base, "body", "0 0 0.22 0 0 0", "box", "0.9 0.58 0.3", colour)
-    solid(
-        base,
-        "solar_panel",
-        "-0.15 0 0.42 0 0 0",
-        "box",
-        "0.65 0.82 0.025",
-        "0.035 0.04 0.07 1",
-        False,
-    )
+    if config.get("energy_source") == "gazebo":
+        panel = element(model, "link", name="solar_panel_link")
+        element(panel, "pose", "-0.15 0 0.42 0 0 0", relative_to="base_link")
+        pi = element(panel, "inertial")
+        element(pi, "mass", 0.05)
+        inertia = element(pi, "inertia")
+        for axis in ("ixx", "iyy", "izz"):
+            element(inertia, axis, 0.001)
+        solid(
+            panel,
+            "panel_surface",
+            "0 0 0 0 0 0",
+            "box",
+            "0.65 0.82 0.025",
+            "0.035 0.04 0.07 1",
+            False,
+        )
+        fixed = element(model, "joint", name="solar_panel_fixed", type="fixed")
+        element(fixed, "parent", "base_link")
+        element(fixed, "child", "solar_panel_link")
+        energy_plugins(model, spec, config, "solar_panel_link")
+    else:
+        solid(
+            base,
+            "solar_panel",
+            "-0.15 0 0.42 0 0 0",
+            "box",
+            "0.65 0.82 0.025",
+            "0.035 0.04 0.07 1",
+            False,
+        )
     solid(base, "mast", "0.3 0 0.48 0 0 0", "cylinder", (0.025, 0.5), "0.7 0.7 0.7 1", False)
     solid(
         base,
@@ -201,6 +224,18 @@ def build_world(config, include_rovers=True):
     element(light, "diffuse", "0.8 0.8 0.8 1")
     element(light, "direction", "0.6 0.3 -0.5")
     element(light, "cast_shadows", "true")
+    for i, canopy in enumerate(config.get("shade_canopies", [])):
+        roof = element(world, "model", name=f"shade_canopy_{i}")
+        element(roof, "static", "true")
+        link = element(roof, "link", name="roof")
+        solid(
+            link,
+            "shade",
+            " ".join(map(str, [*canopy["position"], 0, 0, 0])),
+            "box",
+            " ".join(map(str, canopy["size"])),
+            "0.24 0.24 0.25 1",
+        )
     ground = element(world, "model", name="regolith")
     element(ground, "static", "true")
     ground_link = element(ground, "link", name="ground")
