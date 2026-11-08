@@ -1,0 +1,2 @@
+{"time": 0.12, "event": "discovered", "target": "red", "rover": "rover1"}
+{"time": 0.5, "event": "assigned", "target": "red", "rover": "rover1", "task": "red-1"}

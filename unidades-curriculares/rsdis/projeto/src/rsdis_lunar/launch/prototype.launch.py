@@ -22,6 +22,7 @@ from launch_ros.actions import Node
 from rsdis_lunar.common import load_config
 from rsdis_lunar.world import build_world
 from rsdis_lunar.power import power_bridges, power_config
+from rsdis_lunar.communications import link_config
 from rsdis_lunar.viper import adapt_urdf, command_bridges, expand_upstream, profile
 
 
@@ -33,6 +34,8 @@ def configure(context):
     config = load_config(config_path)
     config["energy_source"] = LaunchConfiguration("energy_source").perform(context)
     config["power"] = power_config(config)
+    config["network"] = link_config(config, LaunchConfiguration("network_profile").perform(context))
+    config["record_video"] = LaunchConfiguration("record_video").perform(context).lower() == "true"
     model = LaunchConfiguration("model").perform(context)
     if strategy not in ("nearest", "energy"):
         raise ValueError("strategy must be nearest or energy")
@@ -90,6 +93,8 @@ def configure(context):
     # Explicit one-way bridges prevent odometry/image feedback and command loops.
     bridges = ["/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock"]
     bridge_remaps = []
+    if config["record_video"]:
+        bridges.append("/mission/overview/image@sensor_msgs/msg/Image[gz.msgs.Image")
     for rover in config["rovers"]:
         prefix = "/" + rover["id"]
         bridges += [
@@ -118,6 +123,13 @@ def configure(context):
     )
     nodes = [
         bridge,
+        Node(
+            package="rsdis_lunar",
+            executable="mission_network",
+            condition=IfCondition(LaunchConfiguration("autonomy")),
+            parameters=[{"use_sim_time": True, "config": config_path, "output": output}],
+            output="screen",
+        ),
         Node(
             package="rsdis_lunar",
             executable="mission_manager",
@@ -189,6 +201,15 @@ def configure(context):
                 )
             )
     actions = [gazebo, *nodes, *spawn_nodes]
+    if config["record_video"]:
+        actions.append(
+            Node(
+                package="rsdis_lunar",
+                executable="mission_recorder",
+                parameters=[{"use_sim_time": True, "config": config_path, "output": output}],
+                output="screen",
+            )
+        )
     actions.append(
         Node(
             package="rsdis_lunar",
@@ -261,8 +282,14 @@ def generate_launch_description():
             DeclareLaunchArgument("autonomy", default_value="true", choices=["true", "false"]),
             DeclareLaunchArgument("dashboard", default_value="true", choices=["true", "false"]),
             DeclareLaunchArgument("dashboard_port", default_value="8765"),
+            DeclareLaunchArgument("record_video", default_value="false", choices=["true", "false"]),
             DeclareLaunchArgument(
                 "energy_source", default_value="gazebo", choices=["gazebo", "synthetic"]
+            ),
+            DeclareLaunchArgument(
+                "network_profile",
+                default_value="config",
+                choices=["config", "ideal", "degraded", "outage"],
             ),
             DeclareLaunchArgument(
                 "model", default_value="lightweight", choices=["lightweight", "viper"]

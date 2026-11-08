@@ -1,0 +1,42 @@
+{
+  "repository": "https://github.com/space-ros/simulation",
+  "revision": "13226b067d921ca88f40cd643a7b3ce4ae8de903",
+  "license": "Apache-2.0",
+  "files": [
+    {
+      "filename": "gz_compat.hh",
+      "upstream_path": "plugins/gz_compat.hh",
+      "source_url": "https://github.com/space-ros/simulation/blob/13226b067d921ca88f40cd643a7b3ce4ae8de903/plugins/gz_compat.hh",
+      "upstream_sha256": "367891df93b9f49b49a72f3c9a4e94a88e2761d76d0781923cad6129bc3fff27",
+      "adapted_sha256": "367891df93b9f49b49a72f3c9a4e94a88e2761d76d0781923cad6129bc3fff27"
+    },
+    {
+      "filename": "RechargeableBatteryPlugin.cc",
+      "upstream_path": "plugins/RechargeableBatteryPlugin.cc",
+      "source_url": "https://github.com/space-ros/simulation/blob/13226b067d921ca88f40cd643a7b3ce4ae8de903/plugins/RechargeableBatteryPlugin.cc",
+      "upstream_sha256": "e129b0f28e111ec7cd24239d948ad6bbef5ecb02259ef11eb81b948c2dea71a0",
+      "adapted_sha256": "dd2cdeb80b382fc5a9435d875a01ebb00069c58dec391fa537c79f78dac91dfd"
+    },
+    {
+      "filename": "RechargeableBatteryPlugin.hh",
+      "upstream_path": "plugins/RechargeableBatteryPlugin.hh",
+      "source_url": "https://github.com/space-ros/simulation/blob/13226b067d921ca88f40cd643a7b3ce4ae8de903/plugins/RechargeableBatteryPlugin.hh",
+      "upstream_sha256": "9ed538689889a3a0290ae02ed9b23cd29bdc372dc5da597624ea03467f979ee8",
+      "adapted_sha256": "9ed538689889a3a0290ae02ed9b23cd29bdc372dc5da597624ea03467f979ee8"
+    },
+    {
+      "filename": "SolarPanelPlugin.cc",
+      "upstream_path": "plugins/SolarPanelPlugin.cc",
+      "source_url": "https://github.com/space-ros/simulation/blob/13226b067d921ca88f40cd643a7b3ce4ae8de903/plugins/SolarPanelPlugin.cc",
+      "upstream_sha256": "86d4f8f3b2becf3ed5a870a09dd3120798cb4692cbc8f5da443bfa8210cd3edc",
+      "adapted_sha256": "9133895c8a030cffcb38693a25577f1ddae2b68fb6a7dacc8640cb1f6bdd6d21"
+    },
+    {
+      "filename": "SolarPanelPlugin.hh",
+      "upstream_path": "plugins/SolarPanelPlugin.hh",
+      "source_url": "https://github.com/space-ros/simulation/blob/13226b067d921ca88f40cd643a7b3ce4ae8de903/plugins/SolarPanelPlugin.hh",
+      "upstream_sha256": "f68850c7058370ba6eb877f1dbe4ecbbadff9071fd1ba6ee184bfa7db55a1021",
+      "adapted_sha256": "f68850c7058370ba6eb877f1dbe4ecbbadff9071fd1ba6ee184bfa7db55a1021"
+    }
+  ]
+}

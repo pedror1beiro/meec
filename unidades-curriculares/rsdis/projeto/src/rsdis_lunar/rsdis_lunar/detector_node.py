@@ -10,6 +10,7 @@ from rsdis_interfaces.msg import Detection
 
 from .common import pose_tuple, stamp_seconds
 from .vision import detect, to_world
+from .qos import mission_qos
 
 
 class TargetDetector(Node):
@@ -23,7 +24,7 @@ class TargetDetector(Node):
         self.poses = deque(maxlen=100)
         self.intrinsics = None
         prefix = "/" + self.rover_id
-        self.pub = self.create_publisher(Detection, "/mission/detections", 10)
+        self.pub = self.create_publisher(Detection, prefix + "/local/detections", mission_qos())
         self.create_subscription(Odometry, prefix + "/odom", self.on_odom, qos_profile_sensor_data)
         self.create_subscription(
             CameraInfo, prefix + "/camera/info", self.on_info, qos_profile_sensor_data

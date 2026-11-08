@@ -50,7 +50,9 @@ class PowerGovernor(Node):
             lambda m: setattr(self, "supply", m.data),
             qos_profile_sensor_data,
         )
-        self.create_subscription(RoverStatus, "/mission/status", self.on_status, 10)
+        self.create_subscription(
+            RoverStatus, prefix + "/local/status", self.on_status, qos_profile_sensor_data
+        )
         self.create_service(SetBool, prefix + "/set_dock_enabled", self.on_dock)
         self.file = None
         output = self.get_parameter("output").value

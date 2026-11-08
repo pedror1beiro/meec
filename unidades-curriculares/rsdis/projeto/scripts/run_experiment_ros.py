@@ -2,6 +2,7 @@
 """Run one real Gazebo experiment and inject any configured temporary failure."""
 
 import argparse
+import csv
 from datetime import datetime, timezone
 import json
 import os
@@ -21,8 +22,14 @@ def main():
     parser.add_argument("--output", type=Path)
     parser.add_argument("--wall-timeout", type=float, default=1800)
     parser.add_argument("--gui", action="store_true")
+    parser.add_argument("--record-video", action="store_true")
+    parser.add_argument("--record-bag", action="store_true")
     parser.add_argument("--model", choices=["lightweight", "viper"], default="lightweight")
     parser.add_argument("--simulation", type=Path)
+    parser.add_argument("--energy-source", choices=["gazebo", "synthetic"], default="gazebo")
+    parser.add_argument(
+        "--network-profile", choices=["config", "ideal", "degraded", "outage"], default="config"
+    )
     args = parser.parse_args()
     if os.name == "nt":
         parser.error(
@@ -35,7 +42,7 @@ def main():
     from std_msgs.msg import Bool, String
     from std_srvs.srv import SetBool
     from nav_msgs.msg import Odometry
-    from rsdis_interfaces.msg import RoverStatus, TaskGoal, TaskResult
+    from rsdis_interfaces.msg import Detection, RoverStatus, TaskGoal, TaskResult
     from rsdis_lunar.common import load_config, stamp_seconds
     from rsdis_lunar.provenance import source_fingerprint
     from rsdis_lunar.safety_audit import ClearanceAudit
@@ -57,6 +64,9 @@ def main():
     output.mkdir(parents=True, exist_ok=False)
     log = (output / "launch.log").open("w", encoding="utf-8")
     navigation_log = (output / "navigation.jsonl").open("w", encoding="utf-8")
+    perception_log = (output / "perception.csv").open("w", newline="", encoding="utf-8")
+    perception_writer = csv.writer(perception_log)
+    perception_writer.writerow(["stamp", "rover", "target", "error_m", "confidence"])
     command = [
         "ros2",
         "launch",
@@ -67,6 +77,9 @@ def main():
         "strategy:=" + args.strategy,
         "output:=" + str(output),
         "model:=" + args.model,
+        "record_video:=" + str(args.record_video).lower(),
+        "energy_source:=" + args.energy_source,
+        "network_profile:=" + args.network_profile,
         "upstream_simulation:="
         + str((args.simulation or root / "third_party/simulation").resolve()),
     ]
@@ -74,6 +87,8 @@ def main():
         "config_file": str(config_path),
         "strategy": args.strategy,
         "model": args.model,
+        "energy_source": args.energy_source,
+        "network_profile": args.network_profile,
         "command": command,
         "platform": platform.platform(),
         "machine": platform.machine(),
@@ -98,6 +113,37 @@ def main():
     process = subprocess.Popen(
         command, stdout=log, stderr=subprocess.STDOUT, start_new_session=True
     )
+    bag_process, bag_log = None, None
+    if args.record_bag:
+        topics = [
+            "/clock",
+            "/mission/state",
+            "/mission/network",
+            "/mission/detections",
+            "/mission/goals",
+            "/mission/accepted_results",
+        ]
+        topics += [
+            f"/{r['id']}/{suffix}"
+            for r in config["rovers"]
+            for suffix in ("odom", "battery", "cmd_vel")
+        ]
+        bag_log = (output / "rosbag.log").open("w")
+        bag_process = subprocess.Popen(
+            [
+                "ros2",
+                "bag",
+                "record",
+                "--storage",
+                "sqlite3",
+                "--output",
+                str(output / "rosbag"),
+                *topics,
+            ],
+            stdout=bag_log,
+            stderr=subprocess.STDOUT,
+            start_new_session=True,
+        )
     rclpy.init()
     node = Node("experiment_supervisor")
     statuses, task_targets, confirmed = {}, {}, set()
@@ -117,6 +163,23 @@ def main():
     def on_goal(msg):
         task_targets[msg.task_id] = msg.target_id
 
+    def on_detection(msg):
+        truth = next((t["position"] for t in config["targets"] if t["id"] == msg.target_id), None)
+        if truth and msg.confidence >= 0.65:
+            import math
+
+            error = math.hypot(msg.position.x - truth[0], msg.position.y - truth[1])
+            perception_writer.writerow(
+                [
+                    stamp_seconds(msg.header.stamp),
+                    msg.observer,
+                    msg.target_id,
+                    error,
+                    msg.confidence,
+                ]
+            )
+            perception_log.flush()
+
     def on_result(msg):
         if msg.success and msg.task_id in task_targets:
             confirmed.add(task_targets[msg.task_id])
@@ -127,7 +190,8 @@ def main():
                 RoverStatus, "/mission/status", lambda m: statuses.__setitem__(m.rover_id, m), 10
             ),
             node.create_subscription(TaskGoal, "/mission/goals", on_goal, 10),
-            node.create_subscription(TaskResult, "/mission/results", on_result, 10),
+            node.create_subscription(TaskResult, "/mission/accepted_results", on_result, 10),
+            node.create_subscription(Detection, "/mission/detections", on_detection, 100),
         ]
     )
 
@@ -161,6 +225,7 @@ def main():
         node.create_client(SetBool, "/" + failure["rover_id"] + "/set_enabled") if failure else None
     )
     disabled = restored = False
+    actual_failure_at = None
     pending = []
     start = time.monotonic()
     outcome = "wall_timeout"
@@ -182,17 +247,22 @@ def main():
                     flush=True,
                 )
             if failure and client.service_is_ready():
-                if not disabled and state["sim"] >= failure["at"]:
+                active = failure.get("trigger") != "active_task" or (
+                    failure["rover_id"] in statuses
+                    and statuses[failure["rover_id"]].mode == "inspecting"
+                )
+                if not disabled and state["sim"] >= failure["at"] and active:
                     future = client.call_async(SetBool.Request(data=False))
                     pending.append(future)
                     metadata["failure_interventions"].append(
                         {"sim_seconds": state["sim"], "enabled": False}
                     )
                     disabled = True
+                    actual_failure_at = state["sim"]
                 if (
                     disabled
                     and not restored
-                    and state["sim"] >= failure["at"] + failure["duration"]
+                    and state["sim"] >= actual_failure_at + failure["duration"]
                 ):
                     future = client.call_async(SetBool.Request(data=True))
                     pending.append(future)
@@ -217,6 +287,16 @@ def main():
                 except subprocess.TimeoutExpired:
                     os.killpg(process.pid, signal.SIGKILL)
                     process.wait()
+        if bag_process is not None:
+            if bag_process.poll() is None:
+                bag_process.send_signal(signal.SIGINT)
+                try:
+                    bag_process.wait(timeout=15)
+                except subprocess.TimeoutExpired:
+                    os.killpg(bag_process.pid, signal.SIGKILL)
+                    bag_process.wait()
+            bag_log.close()
+            metadata["rosbag_recorded"] = (output / "rosbag/metadata.yaml").is_file()
         metadata["supervisor_outcome"] = outcome
         metadata["clearance_audit"] = audit.report()
         metadata["wall_seconds"] = round(time.monotonic() - start, 3)
@@ -233,6 +313,12 @@ def main():
         rclpy.shutdown()
         log.close()
         navigation_log.close()
+        perception_log.close()
+    if args.record_video:
+        from encode_recording import encode
+
+        metadata["video_valid"] = encode(output)
+        (output / "run_metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
     print(output)
     summaries = list(output.glob("*/summary.json"))
     if summaries:

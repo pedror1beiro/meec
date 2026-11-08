@@ -13,7 +13,7 @@ playback is a separate debugging artifact and must be labelled if shown.
 4. **1:20-1:55:** Disable rover1 during an active inspection. Show the task release,
    changed ownership and the remaining rover completing it.
 5. **1:55-2:25:** Show an actual battery decision: infeasible assignment, return or
-   recharge. Keep synthetic energy units explicit.
+   recharge. Identify native electrical units and accelerated model parameters.
 6. **2:25-2:45:** Show all target confirmations and both rovers parked at base.
 7. **2:45-3:00:** Show the measured comparison and state the main limitation.
 
@@ -22,6 +22,22 @@ scenario and state the scenario change. Do not splice footage to imply a single
 continuous run when the clips came from different experiments.
 
 ## Record the ROS data
+
+The supervisor now records genuine Gazebo overhead and rover camera frames,
+adds ROS telemetry and encodes `mission.mp4` after shutdown. It can also
+capture a metrics-only SQLite ROS bag:
+
+```bash
+python3 scripts/create_scenarios.py --count 1 --output results/demo_scenarios
+python3 scripts/run_experiment_ros.py --config results/demo_scenarios/failure_00.json \
+  --strategy energy --record-video --record-bag --wall-timeout 2400
+```
+
+Video metadata records capture/playback rates, frame count and simulation window.
+Playback is nominally 5x simulation time. A recorded overhead camera is distinct
+from the console's schematic map. Keep the entire run and its metadata together.
+
+### Optional separate camera bag
 
 In a sourced terminal on Linux, choose a unique output path:
 
@@ -48,5 +64,6 @@ for large experimental batches. Use the host's screen recorder for Gazebo/RViz.
 7. Matched experiment results, including unsuccessful runs.
 8. Conclusions, limitations, upstream credits and next steps.
 
-The full Space ROS models and solar plugins must be credited as upstream work if
-used. Clearly distinguish implemented prototype components from future plans.
+The Space ROS model and adapted energy plugins are credited in
+`INTEGRATION_SOURCES.md` and the paper. See `ESTUDO_APRESENTACAO_PT.md` for
+the suggested division between the three presenters and defence questions.

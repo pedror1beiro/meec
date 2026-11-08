@@ -7,10 +7,12 @@ flowchart LR
     B -->|Ground-truth odometry| A[Rover agent per rover]
     B -->|Laser scan| A
     B -->|Odometry| D
-    D -->|Shared detections| C[Mission coordinator]
+    D -->|Local detections| N[Mission network gateway]
+    N -->|Shared detections and results| C[Mission coordinator]
     D -->|Local camera confirmation and shared marker positions| A
-    A -->|Rover status and task result| C
-    C -->|Leased inspection goal| A
+    A -->|Local status and result| N
+    C -->|Leased inspection goal| N
+    N -->|Validated inbox goal| A
     A -->|Velocity command| B
     A -->|Velocity for detailed rover| V[Optional four-wheel steering driver]
     V -->|Wheel and steering commands| B
@@ -111,10 +113,24 @@ paths. It does not substitute target truth for camera data. Pause preserves task
 leases and extends deadlines; recall resumes a paused mission, cancels inspections
 and finishes with `operator_returned` once both rovers park.
 
-Battery decreases with measured distance and simulation time. Recharging happens
-at a base with an accelerated synthetic rate. Lunar solar shadowing is not yet
-coupled to these values. The source defaults intentionally differ between rovers
-to exercise different energy conditions. All parameters are saved with each run.
+The default `energy_source:=gazebo` uses adapted Space ROS battery and solar
+plugins in `rsdis_energy_plugins`. A ROS governor converts measured linear/yaw
+motion into load power and grants dock power only while stationary at the
+rover's own pad. Render-thread ray queries test panel exposure to the sun.
+BatteryState is bridged in V/A/Ah and a 0..1 state-of-charge fraction; negative
+current means discharge. Missing battery updates stop the agent. The predictor
+used by the allocator remains an approximate fraction-per-metre/time model,
+while electrical discharge is measured independently in Wh. Capacity and charging
+are deliberately accelerated. `energy_source:=synthetic` selects the legacy model.
+
+The gateway applies seeded application-level loss, delay, retries and blackouts
+only to shared mission traffic. Local sensing/control stays on the rover side.
+Queue bounds, coalesced renewals, absolute expiry and monotonic heartbeat stamps
+prevent stale traffic from reviving old work. `/mission/accepted_results` and
+transient-local `/mission/state` publish coordinator-accepted ownership and
+confirmation. The console and recorder use that state. Operator pause, recall
+and final-stop broadcasts are assumed out-of-band; a complete network partition
+is outside this experiment. See `INTEGRATION_SOURCES.md` for QoS and plugin sources.
 
 ## Offline rehearsal boundary
 

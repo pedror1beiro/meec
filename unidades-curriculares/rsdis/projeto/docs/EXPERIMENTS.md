@@ -16,6 +16,40 @@ Nearest allocation must not be deliberately deprived of return safeguards.
 
 ## Predefined scenarios
 
+### Submission batch, 8 November 2026
+
+The final native-energy batch is frozen in `experiments/submission_20261108/`.
+Runtime revision: `6223585`. Four scenarios and two layout seeds are each run
+under `nearest` and `energy`, giving 16 actual Gazebo runs. Target xy perturbation
+is +/-0.2 m. Nominal initial SOC is 0.95/0.55; asymmetric SOC is 0.30/0.95.
+Failure disables rover1 at fixed world time 30 s and restores it at 60 s under
+both policies. The outage case uses 15% application-attempt loss, 0.12 +/-0.05 s
+delay and rover1's world-time blackout from 20 to 32 s. Deadline: 900 simulated
+seconds. These files were frozen before outcomes were collected.
+
+```bash
+python3 scripts/create_submission_scenarios.py
+for config in experiments/submission_20261108/*.json; do
+  for policy in nearest energy; do
+    python3 scripts/run_experiment_ros.py --config "$config" --strategy "$policy"
+  done
+done
+python3 scripts/collect_submission_results.py --root results
+```
+
+The collector retains failures and rejects mixed runtime fingerprints or
+duplicate cases. It integrates actual V/A telemetry into discharge Wh, solar Wh
+and dock-input Wh over the mission interval. It also records distance, outcome,
+geometry gaps, cross-rover assignments, gateway counters and detection RMSE.
+Do not pool the compact paired batch with expanded-map functional runs or with
+historical synthetic-energy results. The two seeds support descriptive paired
+differences, not a claim of statistical superiority.
+
+### Earlier extension protocol
+
+The larger generator below remains available for future experiments. It uses
+different layouts/interventions and is not the final frozen 16-run dataset.
+
 Generate the configurations once, before the comparison:
 
 ```bash

@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "checks": {
+    "services": true,
+    "actual_sunlight": true,
+    "rendered_shade": true,
+    "ros_units": true,
+    "discharge": true,
+    "recharge": true
+  },
+  "samples": 51,
+  "wall_seconds": 32.24
+}

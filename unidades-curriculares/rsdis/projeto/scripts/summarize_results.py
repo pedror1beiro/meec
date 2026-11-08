@@ -52,7 +52,10 @@ def main():
                 "expected": summary["targets_expected"],
                 "elapsed_sim_seconds": summary["elapsed_sim_seconds"],
                 "distance_m": summary["distance_m"],
-                "synthetic_energy_used": summary["synthetic_energy_used"],
+                "energy_source": summary.get("energy_source", "synthetic"),
+                "energy_used_fraction": summary.get(
+                    "energy_used_fraction", summary.get("synthetic_energy_used")
+                ),
                 "assignments": assignments,
                 "cross_rover_assignments": cross_rover,
             }

@@ -1,8 +1,8 @@
 RSDIS Cooperative Lunar Exploration
 Copyright 2026 RSDIS project contributors
 
-This project includes independently authored mission logic and an optional
-download manifest for these external projects:
+This project includes independently authored mission logic, an optional model
+download manifest, and adapted energy plugin source from these external projects:
 
 Space ROS demos: https://github.com/space-ros/demos
 Space ROS simulation: https://github.com/space-ros/simulation
@@ -10,8 +10,13 @@ Space ROS simulation: https://github.com/space-ros/simulation
 The upstream lunar demo credits Robin Baran and Stevedan Ogochukwu Omodolor
 Omodia. External files remain under their original licences and notices.
 The default cooperative prototype uses its own lightweight SDF models. An optional
-experimental adapter reuses the upstream rover model with namespaced stock Gazebo
-joint controllers. Detailed terrain and power plugins remain reference assets.
+adapter reuses the upstream rover model with namespaced stock Gazebo joint
+controllers. The rsdis_energy_plugins package adapts the upstream rechargeable
+battery and solar plugins, preserving their original Apache-2.0 headers. Headers
+that credit Alexey Simonov retain that attribution as well. Immutable source
+links, source checksums and local modifications are recorded in that package's
+UPSTREAM.md and UPSTREAM.json, with a project-wide integration source table in
+docs/INTEGRATION_SOURCES.md. Detailed upstream terrain remains a reference asset.
 
 Gazebo system interface details were checked against the public Gazebo Harmonic
 documentation and the gz-sim8 source code, licensed by its contributors.

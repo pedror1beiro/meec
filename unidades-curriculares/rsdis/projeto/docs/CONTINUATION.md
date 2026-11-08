@@ -3,12 +3,12 @@
 The project is stored in `pedror1beiro/meec`, under
 `unidades-curriculares/rsdis/projeto`.
 
-The initial project was merged through PR #13. The navigation, enlarged map and
-mission console update is on `rsdis/navigation-world-improvements`. Fetch this
-branch on the other PC before its PR is merged:
+Use `main` for the integrated project. PR #17 added native energy, communication
+and the denser map. The final validation and deliverables follow in PR #18.
+Build after pulling because message definitions and the C++ energy package changed.
 
 ```bash
-git clone --branch rsdis/navigation-world-improvements https://github.com/pedror1beiro/meec.git
+git clone https://github.com/pedror1beiro/meec.git
 cd meec/unidades-curriculares/rsdis/projeto
 bash scripts/setup_ubuntu.sh
 bash scripts/run_demo.sh
@@ -18,7 +18,8 @@ For an existing clone, first save any local work, then:
 
 ```bash
 git fetch origin
-git switch --track origin/rsdis/navigation-world-improvements
+git switch main
+git pull --ff-only
 cd unidades-curriculares/rsdis/projeto
 source /opt/ros/jazzy/setup.bash
 colcon build --symlink-install
@@ -29,7 +30,6 @@ bash scripts/run_demo.sh
 Open `http://localhost:8765` on the simulation PC. Rebuild after pulling this
 update: old installed packages do not have the laser bridge or console files.
 
-After the pull request is merged, use `main` instead of the feature branch.
 Always build and launch from the project directory rather than the course root,
 which also contains the earlier ROS exercises.
 

@@ -39,7 +39,12 @@ def main():
                 config["rovers"][1]["battery"] = 0.95
                 config["energy"]["travel_per_metre"] = 0.012
             if "failure" in scenario:
-                config["failure"] = {"rover_id": "rover1", "at": 20.0, "duration": 30.0}
+                config["failure"] = {
+                    "rover_id": "rover1",
+                    "at": 20.0,
+                    "duration": 30.0,
+                    "trigger": "active_task",
+                }
             path = args.output / f"{scenario}_{seed:02}.json"
             if path.exists():
                 if json.loads(path.read_text(encoding="utf-8")) == config:
