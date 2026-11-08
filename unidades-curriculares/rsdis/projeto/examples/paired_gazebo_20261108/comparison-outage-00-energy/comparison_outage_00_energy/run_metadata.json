@@ -1,0 +1,63 @@
+{
+  "config_file": "/__w/meec/meec/unidades-curriculares/rsdis/projeto/experiments/submission_20261108/outage_00.json",
+  "strategy": "energy",
+  "model": "lightweight",
+  "energy_source": "gazebo",
+  "network_profile": "config",
+  "command": [
+    "ros2",
+    "launch",
+    "rsdis_lunar",
+    "prototype.launch.py",
+    "headless:=true",
+    "config:=/__w/meec/meec/unidades-curriculares/rsdis/projeto/experiments/submission_20261108/outage_00.json",
+    "strategy:=energy",
+    "output:=/__w/meec/meec/unidades-curriculares/rsdis/projeto/results/comparison_outage_00_energy",
+    "model:=lightweight",
+    "record_video:=false",
+    "energy_source:=gazebo",
+    "network_profile:=config",
+    "upstream_simulation:=/__w/meec/meec/unidades-curriculares/rsdis/projeto/third_party/simulation"
+  ],
+  "platform": "Linux-7.0.0-1017-azure-x86_64-with-glibc2.39",
+  "machine": "x86_64",
+  "ros_distro": "jazzy",
+  "ros_domain_id": "44",
+  "failure_interventions": [],
+  "started_utc": "2026-11-08T17:55:34.313791+00:00",
+  "source_sha256": "bd3f663f7f2d88f2fa6cf3e6d581669d5e0f7e4a554f665f8b124257331e4aae",
+  "opencv_version": "4.6.0",
+  "ros_package_versions": {
+    "rclpy": "7.1.12",
+    "ros_gz_sim": "1.0.24",
+    "ros_gz_bridge": "1.0.24",
+    "xacro": "2.1.1"
+  },
+  "upstream_revisions": {
+    "checked_on": "2026-10-29",
+    "repositories": [
+      {
+        "name": "demos",
+        "url": "https://github.com/space-ros/demos.git",
+        "commit": "4b4eb844742307178c80237597b43f7364ddeb5d",
+        "lfs_include": "lunar_pole_exploration_rover/**"
+      },
+      {
+        "name": "simulation",
+        "url": "https://github.com/space-ros/simulation.git",
+        "commit": "13226b067d921ca88f40cd643a7b3ce4ae8de903",
+        "lfs_include": "models/lunar_pole_exploration_rover/**,models/moon_mons_mouton/**"
+      }
+    ]
+  },
+  "supervisor_outcome": "mission_finished",
+  "clearance_audit": {
+    "minimum_obstacle_gap_m": 0.5612,
+    "minimum_peer_gap_m": 3.3114,
+    "footprint_overlap_samples": 0,
+    "method": "conservative planar geometry, not a physics contact measurement"
+  },
+  "wall_seconds": 163.325,
+  "failure_service_results": [],
+  "intervention_valid": true
+}

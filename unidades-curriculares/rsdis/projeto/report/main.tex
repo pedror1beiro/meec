@@ -1,6 +1,6 @@
 \documentclass[conference]{IEEEtran}
 \usepackage[T1]{fontenc}
-\usepackage{amsmath,graphicx,url,booktabs,etoolbox}
+\usepackage{amsmath,graphicx,url,booktabs,etoolbox,balance}
 \patchcmd{\abstract}{---}{:\space}{}{\PackageError{rsdis}{Abstract separator patch failed}{}}
 \patchcmd{\IEEEkeywords}{---}{:\space}{}{\PackageError{rsdis}{Keyword separator patch failed}{}}
 \title{Cooperative Lunar Exploration with ROS 2:\\Energy, Communication and Recoverable Task Allocation}
@@ -22,8 +22,8 @@ Rovers share camera discoveries, inspect allocated sites and return to separate
 bases. A nearest-rover baseline and an energy-aware heuristic use the same
 feasibility and navigation rules. Actual Gazebo validation completes a compact
 mission and an 80 by 60 m obstacle-rich failure scenario, with five confirmations,
-both rovers returned and no conservative footprint overlaps. A frozen paired
-experiment separates policy effects from layout and fault changes. The system
+both rovers returned and no conservative footprint overlaps. All 16 matched
+policy runs complete, with effects varying between scenarios. The system
 demonstrates package integration and observable failure recovery; its accelerated
 power model, known terrain and ground-truth localisation constrain conclusions
 about real lunar operation.
@@ -288,9 +288,12 @@ cross-rover recovery rather than an offline rehearsal.
 The native energy bench verifies exposed-panel production, rendered shade,
 discharge, dock recharge and ROS units. Figure~\ref{fig:power} shows recorded
 electrical telemetry. The exposed panel supplies approximately 7.17 W under the
-configured sun incidence; the covered panel supplies zero. Historical detailed
-rover checks validate its compact motion and camera mission with synthetic
-energy, but do not establish native-energy or expanded-terrain performance.
+configured sun incidence; the covered panel supplies zero. The strengthened
+bench at revision \texttt{6223585} also verifies discharge to zero and recovery.
+The detailed VIPER profile passes its own native-energy compact gate in 157.0 s,
+travelling 72.0 m with minimum obstacle gap 0.5222 m and zero overlap samples.
+This gate does not independently establish VIPER solar occlusion or performance
+on expanded or uneven terrain.
 
 \begin{figure}[t]
 \centering
@@ -333,8 +336,12 @@ OpenCV with custom cooperative mission logic. Actual simulation demonstrates
 camera-based discovery and confirmation, energy telemetry, charging, safe detours
 and reassignment after rover failure. Retained configurations and measurements
 make the implementation reviewable and policy comparison repeatable.
-Conclusions concern this controlled simulation setting and its explicit models.
+Both policies complete all eight predefined layouts. In this batch the energy
+heuristic reduces mean distance by 2.90 m and discharge by 0.102 Wh, with varying
+timing effects between scenarios. These descriptive results concern the controlled
+simulation setting and its explicit models, rather than general superiority.
 
+\balance
 \begin{thebibliography}{9}
 \bibitem{gerkey} B. P. Gerkey and M. J. Matari\'c, ``A formal analysis and taxonomy
 of task allocation in multi-robot systems,'' \emph{Int. J. Robotics Research},

@@ -2,11 +2,31 @@
 
 This record separates portable checks from actual ROS/Gazebo execution.
 
-## Current checkpoint, 8 November 2026
+## Completed paired comparison, 8 November 2026
+
+All 16 predefined Jazzy/Harmonic runs at runtime `6223585` complete successfully:
+five targets confirmed and both rovers returned. All eight layouts are paired
+between `nearest` and `energy`, with a single verified source fingerprint.
+The minimum conservative obstacle gap is 0.5331 m, with zero overlap samples.
+All planned failure interventions succeed. The batch includes 44 cross-rover
+assignment events. The four outage runs finish despite 3,052 lost application
+delivery attempts and 460 retries.
+
+Compared with nearest, energy has mean paired differences of -9.37 simulated
+seconds, -2.90 m and -0.102 Wh discharge in this batch. Effects vary between
+scenarios; two seeds and asynchronous simulation execution do not support a
+statistical-superiority claim. Full individual outcomes, raw measurements and
+the descriptive summary are in `examples/paired_gazebo_20261108/`.
+
+The IEEE paper now includes the complete measured table and limitations.
+Its reviewed PDF is `output/pdf/rsdis_paper.pdf`. Presentation work remains
+deferred in the explicitly labelled PowerPoint working draft.
+
+## Earlier publication checkpoint, 8 November 2026
 
 The code is published so it can be continued from another PC. Presentation work
-is deferred. `report/rsdis_paper_working.pdf` and the editable paper are working
-drafts: the paired-results section will be filled after all frozen runs finish.
+is deferred. At this earlier checkpoint the paper was a working draft and the
+paired-results section was pending. The completed version is linked above.
 The PowerPoint in `report/` is also a working draft, with a pending results table.
 
 - 67 portable tests pass, with Ruff and Python compilation clean.

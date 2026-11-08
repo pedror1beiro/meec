@@ -1,0 +1,95 @@
+{
+  "time": 156.526,
+  "model": "seeded application-channel emulator, not measured DDS/radio loss",
+  "configuration": {
+    "seed": 1,
+    "loss": 0.15,
+    "delay": 0.12,
+    "jitter": 0.05,
+    "range_m": 0.0,
+    "blackouts": [
+      {
+        "rover": "rover1",
+        "start": 20.0,
+        "end": 32.0
+      }
+    ]
+  },
+  "pending": 4,
+  "streams": {
+    "rover2/status": {
+      "offered": 1564,
+      "attempts": 1562,
+      "delivered": 1342,
+      "lost_attempts": 220,
+      "mean_delay_s": 0.1311624441132636,
+      "p95_delay_s": 0.17999999999999972
+    },
+    "rover1/status": {
+      "offered": 1563,
+      "attempts": 1561,
+      "delivered": 1195,
+      "lost_attempts": 366,
+      "mean_delay_s": 0.1321523012552299,
+      "p95_delay_s": 0.17999999999999972
+    },
+    "rover1/detections": {
+      "offered": 357,
+      "attempts": 357,
+      "delivered": 267,
+      "lost_attempts": 90,
+      "mean_delay_s": 0.1302022471910112,
+      "p95_delay_s": 0.1799999999999926
+    },
+    "rover2/detections": {
+      "offered": 252,
+      "attempts": 252,
+      "delivered": 217,
+      "lost_attempts": 35,
+      "mean_delay_s": 0.12737327188940084,
+      "p95_delay_s": 0.17999999999999972
+    },
+    "rover1/goals": {
+      "offered": 207,
+      "attempts": 248,
+      "delivered": 199,
+      "lost_attempts": 49,
+      "retries": 49,
+      "coalesced": 7,
+      "expired": 1,
+      "mean_delay_s": 0.15290452261306525,
+      "p95_delay_s": 0.3400000000000034
+    },
+    "rover2/goals": {
+      "offered": 178,
+      "attempts": 210,
+      "lost_attempts": 36,
+      "retries": 36,
+      "delivered": 174,
+      "coalesced": 4,
+      "mean_delay_s": 0.16027586206896566,
+      "p95_delay_s": 0.35799999999999876
+    },
+    "rover2/results": {
+      "offered": 3,
+      "attempts": 3,
+      "delivered": 3,
+      "mean_delay_s": 0.1280000000000001,
+      "p95_delay_s": 0.18200000000000216
+    },
+    "rover1/results": {
+      "offered": 3,
+      "attempts": 41,
+      "lost_attempts": 39,
+      "retries": 39,
+      "expired": 1,
+      "delivered": 2,
+      "mean_delay_s": 0.1010000000000062,
+      "p95_delay_s": 0.12000000000000455
+    }
+  },
+  "online": {
+    "rover1": true,
+    "rover2": true
+  }
+}

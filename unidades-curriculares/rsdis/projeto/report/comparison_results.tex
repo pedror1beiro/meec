@@ -1,2 +1,43 @@
-The frozen runtime is revision \texttt{6223585}. Matched runs are being collected;
-no policy advantage is inferred from the separate functional checks above.
+The complete batch uses runtime \texttt{6223585} and one verified source
+fingerprint. Table~\ref{tab:comparison} reports the mean of two predefined
+layouts per scenario and policy; individual outcomes are retained in the
+repository. No failed run is removed.
+
+\begin{table}[t]
+\caption{Actual paired Gazebo results. Each row averages two layouts.
+N: nearest rover; E: energy-aware. Energy is cumulative battery discharge.}
+\label{tab:comparison}
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{llrrrr}
+\toprule
+Scenario & Policy & Done & Time (s) & Dist. (m) & Wh\\
+\midrule
+Nominal & N & 2/2 & 126.7 & 54.9 & 1.785\\
+Nominal & E & 2/2 & 107.8 & 53.2 & 1.695\\
+Asymmetric & N & 2/2 & 116.0 & 48.7 & 1.588\\
+Asymmetric & E & 2/2 & 116.5 & 48.1 & 1.574\\
+Rover failure & N & 2/2 & 141.2 & 59.3 & 1.927\\
+Rover failure & E & 2/2 & 125.0 & 49.4 & 1.626\\
+Link outage & N & 2/2 & 139.8 & 55.8 & 1.875\\
+Link outage & E & 2/2 & 137.0 & 56.5 & 1.872\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+16 of 16 runs complete with five confirmations and return. The minimum
+conservative obstacle gap across the batch is 0.5331 m, with
+0 overlap samples. Both failure interventions are valid in each
+failure case. Across the eight matched layouts, the mean E-minus-N difference
+is -9.37 s, -2.90 m and -0.102 Wh.
+These differences describe this small batch. Variation between layouts and
+ROS/Gazebo execution schedules prevents attributing every timing difference
+solely to the heuristic. There are no repeated executions of each fixed case,
+and these data do not establish statistical superiority.
+
+Delivered-detection position RMSE ranges from 0.190 to
+0.328 m per run. Repeated frames are correlated and sample
+counts differ with the routes; this is a descriptive perception check. The outage
+cases record 3052 lost application delivery attempts and
+460 retries across both policies, while all four finish.

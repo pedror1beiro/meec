@@ -1,0 +1,75 @@
+{
+  "time": 127.016,
+  "model": "seeded application-channel emulator, not measured DDS/radio loss",
+  "configuration": {
+    "seed": 0,
+    "loss": 0.0,
+    "delay": 0.0,
+    "jitter": 0.0,
+    "range_m": 0.0,
+    "blackouts": []
+  },
+  "pending": 2,
+  "streams": {
+    "rover1/status": {
+      "offered": 1269,
+      "attempts": 1268,
+      "delivered": 1268,
+      "mean_delay_s": 0.018104100946371812,
+      "p95_delay_s": 0.021999999999998465
+    },
+    "rover2/status": {
+      "offered": 1265,
+      "attempts": 1264,
+      "delivered": 1264,
+      "mean_delay_s": 0.018224683544303212,
+      "p95_delay_s": 0.021999999999998465
+    },
+    "rover1/detections": {
+      "offered": 351,
+      "attempts": 351,
+      "delivered": 351,
+      "mean_delay_s": 0.012387464387464518,
+      "p95_delay_s": 0.020000000000000462
+    },
+    "rover1/goals": {
+      "offered": 92,
+      "attempts": 92,
+      "delivered": 92,
+      "mean_delay_s": 0.016586956521738413,
+      "p95_delay_s": 0.021999999999998465
+    },
+    "rover2/goals": {
+      "offered": 165,
+      "attempts": 165,
+      "delivered": 165,
+      "mean_delay_s": 0.018739393939394163,
+      "p95_delay_s": 0.021999999999998465
+    },
+    "rover2/detections": {
+      "offered": 280,
+      "attempts": 280,
+      "delivered": 280,
+      "mean_delay_s": 0.012335714285714281,
+      "p95_delay_s": 0.020000000000003126
+    },
+    "rover1/results": {
+      "offered": 2,
+      "attempts": 2,
+      "delivered": 2,
+      "mean_delay_s": 0.01099999999999568,
+      "p95_delay_s": 0.02199999999999136
+    },
+    "rover2/results": {
+      "offered": 3,
+      "attempts": 3,
+      "delivered": 3,
+      "mean_delay_s": 0.01933333333333091,
+      "p95_delay_s": 0.01999999999999602
+    }
+  },
+  "online": {
+    "rover1": true,
+    "rover2": true
+  }
+}

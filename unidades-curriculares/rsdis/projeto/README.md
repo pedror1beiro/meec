@@ -16,8 +16,10 @@ allocation under the same safety rules.
 Both map sizes complete with actual Gazebo cameras, rechargeable batteries and
 solar generation. The 80 x 60 m map now has 30 hazards/exclusions, including
 14 additional rocks, and recovers from a temporary rover failure with zero
-conservative footprint overlaps. The final evaluation uses frozen paired cases
-under nearest-rover and energy-aware allocation.
+conservative footprint overlaps. The evaluation includes 16 completed Gazebo
+runs on eight frozen paired cases under nearest-rover and energy-aware allocation.
+Both policies finish all eight cases, with zero conservative footprint overlaps.
+The full per-run data and descriptive analysis are [retained here](examples/paired_gazebo_20261108/).
 See [validation](docs/VALIDATION.md), [integration sources](docs/INTEGRATION_SOURCES.md)
 and [the presentation study guide](docs/ESTUDO_APRESENTACAO_PT.md).
 
@@ -251,13 +253,14 @@ launcher and is not executed by our setup scripts.
 - [Demo recording and presentation plan](docs/DEMO.md)
 - [Local validation record](docs/VALIDATION.md)
 
-The IEEE paper source is under `report/`. It is a draft with explicitly pending
-Gazebo results, not a completed experimental paper. Complete the experimental
-results and conclusions before submission.
+The IEEE paper source is under `report/`, with measured results from the complete
+paired batch, figures, methods, sources and limitations. The reviewed PDF is
+`output/pdf/rsdis_paper.pdf`. The presentation remains a working draft in
+`report/rsdis_presentation_working.pptx`, saved for the team to continue later.
 
 The transfer bundle is `output/rsdis_lunar_project.zip`, with a SHA-256 checksum
-beside it. It contains source, fixed scenarios, the paper draft and labelled
-offline examples. It excludes machine-specific environments, large upstream
+beside it. It contains source, fixed scenarios, the paper and labelled evidence.
+It excludes machine-specific environments, large upstream
 assets and intermediate build folders. Regenerate it with:
 
 ```bash

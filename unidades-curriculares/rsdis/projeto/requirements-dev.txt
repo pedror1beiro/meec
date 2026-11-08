@@ -1,4 +1,5 @@
-# Only needed for image-detector tests on Windows. The offline demo uses stdlib only.
+# Portable tests, upstream model preparation, lint and result figures on Windows.
+# The offline kinematic rehearsal itself uses the standard library only.
 numpy>=1.26,<3
 opencv-python-headless>=4.10,<5
 ruff>=0.9,<1

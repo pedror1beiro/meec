@@ -8,7 +8,8 @@ if [[ ! -f /opt/ros/jazzy/setup.bash ]]; then
 fi
 sudo apt-get update
 sudo apt-get install -y ros-jazzy-ros-gz ros-jazzy-cv-bridge python3-opencv python3-numpy \
-  python3-colcon-common-extensions python3-rosdep python3-pytest ffmpeg python3-matplotlib
+  python3-colcon-common-extensions python3-rosdep python3-pytest ffmpeg python3-matplotlib \
+  ros-jazzy-rosbag2
 source /opt/ros/jazzy/setup.bash
 if [[ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]]; then
   sudo rosdep init

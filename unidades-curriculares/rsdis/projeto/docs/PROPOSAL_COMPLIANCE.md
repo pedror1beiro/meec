@@ -38,9 +38,10 @@ do not require a UAV team, a maritime setting, SLAM, or a specific task allocato
 9. Every experimental run saves its configuration, telemetry, events and outcome.
 10. The paper distinguishes actual Gazebo experiments from offline debugging runs.
 
-The lightweight functional gates and the optional detailed-rover compact mission
-now have retained Linux evidence in
-`examples/gazebo_validation_20261030/`: real images, full missions, failure task
-transfer, return/recharge, telemetry and metadata. Final academic deliverables
-still need the allocation-policy comparison, completed results/conclusions,
-demonstration recording and presentation.
+Functional native-energy and detailed-rover evidence is retained in
+`examples/gazebo_validation_20261108/`. All 16 matched Gazebo runs are retained in
+`examples/paired_gazebo_20261108/`, including individual outcomes, telemetry,
+electrical measurements and network/perception observer data. The IEEE paper
+includes the measured comparison and conclusions. The expanded-map recording
+is finishing separately. Presentation work is deferred at the user's request,
+with a saved PowerPoint draft and study guide.

@@ -1,0 +1,97 @@
+{
+  "runs": 16,
+  "groups": [
+    {
+      "scenario": "nominal",
+      "policy": "nearest",
+      "successes": 2,
+      "time": 126.737,
+      "distance": 54.90552234649658,
+      "discharge": 1.7850960832647602
+    },
+    {
+      "scenario": "nominal",
+      "policy": "energy",
+      "successes": 2,
+      "time": 107.75,
+      "distance": 53.16994762420654,
+      "discharge": 1.694804307333817
+    },
+    {
+      "scenario": "asymmetric",
+      "policy": "nearest",
+      "successes": 2,
+      "time": 116.0,
+      "distance": 48.66977882385254,
+      "discharge": 1.5879455641335463
+    },
+    {
+      "scenario": "asymmetric",
+      "policy": "energy",
+      "successes": 2,
+      "time": 116.497,
+      "distance": 48.10442924499512,
+      "discharge": 1.573699840797588
+    },
+    {
+      "scenario": "failure",
+      "policy": "nearest",
+      "successes": 2,
+      "time": 141.25,
+      "distance": 59.332736015319824,
+      "discharge": 1.9273319071700574
+    },
+    {
+      "scenario": "failure",
+      "policy": "energy",
+      "successes": 2,
+      "time": 124.997,
+      "distance": 49.37453842163086,
+      "discharge": 1.6259444732115294
+    },
+    {
+      "scenario": "outage",
+      "policy": "nearest",
+      "successes": 2,
+      "time": 139.75,
+      "distance": 55.82853412628174,
+      "discharge": 1.8745722250336176
+    },
+    {
+      "scenario": "outage",
+      "policy": "energy",
+      "successes": 2,
+      "time": 137.0,
+      "distance": 56.504265785217285,
+      "discharge": 1.8720607965721627
+    }
+  ],
+  "successes": 16,
+  "pairs": 8,
+  "paired_mean_differences": {
+    "sim_seconds": -9.373249999999999,
+    "distance_m": -2.8958475589752197,
+    "discharge_wh": -0.10210909042172112
+  },
+  "min_gap": 0.5331,
+  "overlaps": 0,
+  "interventions_valid": true,
+  "cross_assignments": 44,
+  "rmse_range": [
+    0.189592606417988,
+    0.3281865774207277
+  ],
+  "source_sha256": "bd3f663f7f2d88f2fa6cf3e6d581669d5e0f7e4a554f665f8b124257331e4aae",
+  "outage_nearest": {
+    "lost": 1565,
+    "retries": 230,
+    "expired": 4,
+    "delay": 0.13364557395135762
+  },
+  "outage_energy": {
+    "lost": 1487,
+    "retries": 230,
+    "expired": 4,
+    "delay": 0.13346191248299338
+  }
+}

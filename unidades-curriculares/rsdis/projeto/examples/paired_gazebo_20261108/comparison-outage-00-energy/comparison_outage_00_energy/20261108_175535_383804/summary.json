@@ -1,0 +1,42 @@
+{
+  "mode": "gazebo",
+  "strategy": "energy",
+  "reason": "all_targets_confirmed_and_returned",
+  "elapsed_sim_seconds": 118.0,
+  "targets_expected": 5,
+  "targets_discovered": 5,
+  "targets_confirmed": 5,
+  "distance_m": 50.26284217834473,
+  "energy_source": "gazebo",
+  "energy_used_fraction": 0.28403598815202713,
+  "world_start_seconds": 0.5,
+  "world_finish_seconds": 118.5,
+  "rovers": {
+    "rover2": {
+      "rover_id": "rover2",
+      "pose": [
+        -7.741439564838786,
+        2.868409199387235,
+        2.6726018922417505
+      ],
+      "battery": 0.3819793462753296,
+      "mode": "parked",
+      "seen_at": 118.3,
+      "travelled": 29.94853401184082,
+      "energy_used": 0.16810917854309082
+    },
+    "rover1": {
+      "rover_id": "rover1",
+      "pose": [
+        -7.769473024528392,
+        -3.052861680240263,
+        2.938344968535028
+      ],
+      "battery": 1.0,
+      "mode": "parked",
+      "seen_at": 118.3,
+      "travelled": 20.314308166503906,
+      "energy_used": 0.11592680960893631
+    }
+  }
+}

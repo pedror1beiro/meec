@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Package source, fixed scenarios, draft paper and labelled examples for transfer."""
+"""Package source, fixed scenarios, paper and labelled evidence for transfer."""
 
 import argparse
 import hashlib
@@ -29,7 +29,8 @@ FILES = (
     "requirements-dev.txt",
     "pyproject.toml",
     "upstream.lock.json",
-    "output/pdf/rsdis_paper_draft.pdf",
+    "output/pdf/rsdis_paper.pdf",
+    "output/mission_demo.mp4",
 )
 
 
