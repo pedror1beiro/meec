@@ -61,9 +61,14 @@ class Metrics:
             "targets_discovered": len(coordinator.targets),
             "targets_confirmed": sum(t.confirmed for t in coordinator.targets.values()),
             "distance_m": sum(r.travelled for r in coordinator.rovers.values()),
-            "synthetic_energy_used": sum(r.energy_used for r in coordinator.rovers.values()),
+            "energy_source": self.config.get("energy_source", "synthetic"),
+            "energy_used_fraction": sum(r.energy_used for r in coordinator.rovers.values()),
+            "world_start_seconds": self.origin,
+            "world_finish_seconds": self.origin + now,
             "rovers": {r.rover_id: asdict(r) for r in coordinator.rovers.values()},
         }
+        if summary["energy_source"] == "synthetic":
+            summary["synthetic_energy_used"] = summary["energy_used_fraction"]
         (self.path / "summary.json").write_text(
             json.dumps(summary, indent=2) + "\n", encoding="utf-8"
         )

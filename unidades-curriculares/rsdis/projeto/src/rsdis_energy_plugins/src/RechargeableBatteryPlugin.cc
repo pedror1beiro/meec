@@ -748,6 +748,8 @@ double RechargeableBatteryPlugin::OnUpdateVoltage(const gz::common::Battery *_ba
                                                           (this->dataPtr->iraw - this->dataPtr->ismooth);
     if (this->dataPtr->q >= this->dataPtr->c && this->dataPtr->ismooth < 0)
         this->dataPtr->ismooth = 0;
+    if (this->dataPtr->q <= 0 && this->dataPtr->ismooth > 0)
+        this->dataPtr->ismooth = 0;
 
     // Convert dt to hours
     this->dataPtr->q = this->dataPtr->q - ((dt * this->dataPtr->ismooth) /

@@ -79,7 +79,6 @@ public:
   gz::common::ConnectionPtr postRenderConn;
 public:
   gz::common::ConnectionPtr teardownConn;
-  unsigned debugRays{0};
 
   /// \brief Protects the data shared between the simulation and render threads
 public:
@@ -200,9 +199,8 @@ void SolarPanelPlugin::Configure(const gz::sim::Entity &_entity,
     return;
   }
 
-  // The line-of-sight check needs the rendering scene, which may only be used
-  // from the render thread. PostUpdate runs on parallel worker threads, so the
-  // ray cast is done from the post-render event instead.
+  // Rendering objects are only accessed on the rendering thread. Physics
+  // PostUpdate hands a directional ray to the SceneUpdate callback.
   // SceneUpdate is on the render thread but does not force rendering at every
   // physics tick, unlike a PostRender subscriber in Harmonic Sensors.
   this->dataPtr->postRenderConn = _eventMgr.Connect<gz::sim::events::SceneUpdate>(
@@ -279,7 +277,7 @@ void SolarPanelPlugin::PostUpdate(const gz::sim::UpdateInfo &_info,
 
   gz::math::Pose3d linkPose = gz::sim::worldPose(this->dataPtr->linkEntity, _ecm);
 
-  // Hand the ray from the sun to the panel over to the render thread and take
+  // Hand the ray from the panel towards the sun over to the render thread and take
   // back its latest line-of-sight result.
   bool isInLOS = false;
   {
@@ -378,18 +376,10 @@ void SolarPanelPluginPrivate::OnPostRender()
     this->rayValid = false;
   }
 
-  // Perform ray cast from the sun to the panel: the panel is lit if it is
-  // the first thing the ray hits.
+  // The panel is lit if no rendered surface occludes the ray towards the sun.
   this->rayQuery->SetOrigin(origin);
   this->rayQuery->SetDirection(direction);
   auto result = this->rayQuery->ClosestPoint();
-  if (this->debugRays++ < 3)
-  {
-    auto hit = result ? this->scene->NodeById(result.objectId) : nullptr;
-    gzmsg << "[RSDIS solar ray] " << this->modelName << " hit="
-          << (hit ? hit->Name() : "none") << " expected="
-          << (visualChildren.empty() ? "none" : visualChildren.front()) << std::endl;
-  }
 
   const bool inLOS = !result || result.distance > 100.0;
 

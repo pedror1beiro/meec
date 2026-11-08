@@ -19,7 +19,7 @@ from sensor_msgs.msg import BatteryState, Image
 from std_msgs.msg import Float32
 from std_msgs.msg import Bool, String
 from std_srvs.srv import SetBool, Trigger
-from rsdis_interfaces.msg import Detection, RoverStatus, TaskGoal, TaskResult
+from rsdis_interfaces.msg import Detection, MissionState, RoverStatus, TaskGoal, TaskResult
 
 from .common import load_config, pose_tuple, stamp_seconds
 
@@ -58,7 +58,7 @@ class MissionDashboard(Node):
         self.create_subscription(RoverStatus, "/mission/status", self.on_status, 10)
         self.create_subscription(Detection, "/mission/detections", self.on_detection, 10)
         self.create_subscription(TaskGoal, "/mission/goals", self.on_goal, 10)
-        self.create_subscription(TaskResult, "/mission/results", self.on_result, 10)
+        self.create_subscription(TaskResult, "/mission/accepted_results", self.on_result, 10)
         self.create_subscription(
             String,
             "/mission/network",
@@ -76,6 +76,7 @@ class MissionDashboard(Node):
         self.create_subscription(
             Bool, "/mission/finished", lambda m: setattr(self, "finished", m.data), latched
         )
+        self.create_subscription(MissionState, "/mission/state", self.on_mission_state, latched)
         self.trails = {r["id"]: deque(maxlen=2500) for r in config["rovers"]}
         for spec in config["rovers"]:
             name = spec["id"]
@@ -222,6 +223,12 @@ class MissionDashboard(Node):
             self.event(f"{msg.observer} discovered {msg.target_id}")
         target = self.targets.setdefault(msg.target_id, dict(confirmed=False))
         target.update(position=[msg.position.x, msg.position.y], observer=msg.observer)
+
+    def on_mission_state(self, msg):
+        self.owners = {t.target_id: t.owner for t in msg.targets if t.owner}
+        for target in msg.targets:
+            item = self.targets.setdefault(target.target_id, dict(observer="shared"))
+            item.update(position=[target.position.x, target.position.y], confirmed=target.confirmed)
 
     def on_goal(self, msg):
         if msg.task_id not in self.tasks:

@@ -6,7 +6,14 @@ from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 from std_msgs.msg import Bool
 from std_srvs.srv import SetBool, Trigger
-from rsdis_interfaces.msg import Detection, RoverStatus, TaskGoal, TaskResult
+from rsdis_interfaces.msg import (
+    Detection,
+    MissionState,
+    RoverStatus,
+    TargetState,
+    TaskGoal,
+    TaskResult,
+)
 
 from .common import load_config, pose_tuple, stamp_seconds
 from .core import Coordinator, Snapshot
@@ -36,6 +43,7 @@ class MissionManager(Node):
         self.paused_seconds = 0.0
         self.operator_return = False
         self.goal_pub = self.create_publisher(TaskGoal, "/mission/goals", 10)
+        self.accepted_pub = self.create_publisher(TaskResult, "/mission/accepted_results", 100)
         latched = QoSProfile(
             depth=1,
             reliability=ReliabilityPolicy.RELIABLE,
@@ -44,6 +52,7 @@ class MissionManager(Node):
         self.finish_pub = self.create_publisher(Bool, "/mission/finished", latched)
         self.return_pub = self.create_publisher(Bool, "/mission/return_home", latched)
         self.pause_pub = self.create_publisher(Bool, "/mission/paused", latched)
+        self.state_pub = self.create_publisher(MissionState, "/mission/state", latched)
         self.create_service(SetBool, "/mission/set_paused", self.on_pause)
         self.create_service(Trigger, "/mission/recall", self.on_recall)
         self.create_subscription(RoverStatus, "/mission/status", self.on_status, 10)
@@ -114,14 +123,37 @@ class MissionManager(Node):
 
     def on_result(self, msg):
         if not self.finished:
-            self.coordinator.result(
+            accepted = self.coordinator.result(
                 msg.rover_id, msg.task_id, msg.success, self.now_seconds(), msg.detail
             )
+            if accepted:
+                self.accepted_pub.publish(msg)
+
+    def publish_state(self):
+        state = MissionState()
+        state.header.stamp = self.get_clock().now().to_msg()
+        state.header.frame_id = "world"
+        state.expected_targets = len(self.expected)
+        state.strategy = self.coordinator.strategy
+        state.returning, state.paused = self.return_requested, self.paused
+        for target in self.coordinator.targets.values():
+            item = TargetState()
+            item.target_id = target.target_id
+            item.position.x, item.position.y = map(float, target.position)
+            item.confirmed, item.owner, item.task_id, item.attempts = (
+                target.confirmed,
+                target.owner,
+                target.task_id,
+                target.attempts,
+            )
+            state.targets.append(item)
+        self.state_pub.publish(state)
 
     def finish(self, reason):
         if self.finished:
             return
         self.finished = True
+        self.publish_state()
         self.metrics.finish(self.coordinator, self.last_elapsed, reason)
         if rclpy.ok():
             self.finish_pub.publish(Bool(data=True))
@@ -134,6 +166,7 @@ class MissionManager(Node):
         if self.finished:
             return
         now = self.now_seconds()
+        self.publish_state()
         if self.start is None:
             if len(self.coordinator.rovers) != len(self.coordinator.homes):
                 return

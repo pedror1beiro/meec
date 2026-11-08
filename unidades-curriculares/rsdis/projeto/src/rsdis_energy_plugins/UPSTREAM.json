@@ -15,7 +15,7 @@
       "upstream_path": "plugins/RechargeableBatteryPlugin.cc",
       "source_url": "https://github.com/space-ros/simulation/blob/13226b067d921ca88f40cd643a7b3ce4ae8de903/plugins/RechargeableBatteryPlugin.cc",
       "upstream_sha256": "e129b0f28e111ec7cd24239d948ad6bbef5ecb02259ef11eb81b948c2dea71a0",
-      "adapted_sha256": "ccd9cf284e2a7c8ea30d5cc60cbe77876ee46fcc0de98b27c086a4c45169f0a9"
+      "adapted_sha256": "dd2cdeb80b382fc5a9435d875a01ebb00069c58dec391fa537c79f78dac91dfd"
     },
     {
       "filename": "RechargeableBatteryPlugin.hh",
@@ -29,7 +29,7 @@
       "upstream_path": "plugins/SolarPanelPlugin.cc",
       "source_url": "https://github.com/space-ros/simulation/blob/13226b067d921ca88f40cd643a7b3ce4ae8de903/plugins/SolarPanelPlugin.cc",
       "upstream_sha256": "86d4f8f3b2becf3ed5a870a09dd3120798cb4692cbc8f5da443bfa8210cd3edc",
-      "adapted_sha256": "ffb306538ec7ee789368f05c814e917b5b2cb57580bf72931c9a84e8cce9bb55"
+      "adapted_sha256": "9133895c8a030cffcb38693a25577f1ddae2b68fb6a7dacc8640cb1f6bdd6d21"
     },
     {
       "filename": "SolarPanelPlugin.hh",

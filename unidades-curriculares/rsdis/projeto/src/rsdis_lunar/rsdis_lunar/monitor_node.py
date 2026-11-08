@@ -35,7 +35,7 @@ class MissionMonitor(Node):
         self.create_subscription(RoverStatus, "/mission/status", self.on_status, 10)
         self.create_subscription(Detection, "/mission/detections", self.on_detection, 10)
         self.create_subscription(TaskGoal, "/mission/goals", self.on_goal, 10)
-        self.create_subscription(TaskResult, "/mission/results", self.on_result, 10)
+        self.create_subscription(TaskResult, "/mission/accepted_results", self.on_result, 10)
         for name in self.ids:
             self.create_subscription(
                 String,

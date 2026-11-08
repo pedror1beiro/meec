@@ -25,7 +25,7 @@ def main():
     # An actual rendered canopy shades rover2; rover1 remains exposed.
     config["shade_canopies"] = [dict(position=[-10, 3, 2.5], size=[6, 4, 0.1])]
     config["rovers"][0]["battery"] = 0.4
-    config["rovers"][1]["battery"] = 0.4
+    config["rovers"][1]["battery"] = 0.001
     config_file = output / "config.json"
     config_file.write_text(json.dumps(config, indent=2))
     log = (output / "launch.log").open("w")
@@ -130,16 +130,20 @@ def main():
         rendered_shade=bool(discharge) and max(f["solar"]["rover2"] for f in discharge) < 0.1,
         ros_units=bool(trace)
         and all(
-            0 <= b["soc"] <= 1 and 0 <= b["charge"] <= b["capacity"] and b["voltage"] > 0
+            0 <= b["soc"] <= 1
+            and 0 <= b["charge"] <= b["capacity"]
+            and b["voltage"] > 0
+            and b["capacity"] > 0
+            and abs(b["soc"] - b["charge"] / b["capacity"]) < 1e-5
             for f in trace
             for b in f["battery"].values()
         ),
         discharge=enough
-        and all(
-            discharge[-1]["battery"][n]["soc"] < discharge[0]["battery"][n]["soc"]
-            and discharge[-1]["battery"][n]["current"] < 0
-            for n in states
-        ),
+        and discharge[-1]["battery"]["rover1"]["soc"] < discharge[0]["battery"]["rover1"]["soc"]
+        and discharge[-1]["battery"]["rover1"]["current"] < 0,
+        empty_battery_recovers=enough
+        and min(f["battery"]["rover2"]["soc"] for f in discharge) < 0.0001
+        and charge[-1]["battery"]["rover2"]["soc"] > 0.05,
         recharge=enough
         and all(
             charge[-1]["battery"][n]["soc"] > discharge[-1]["battery"][n]["soc"] + 0.05

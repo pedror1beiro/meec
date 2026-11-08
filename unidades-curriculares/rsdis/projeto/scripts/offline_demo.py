@@ -31,6 +31,7 @@ def rehearse(
     import copy
 
     config = copy.deepcopy(config)
+    config["energy_source"] = "synthetic"
     if failure_at is None and config.get("failure"):
         failure_at = config["failure"]["at"]
         failure_duration = config["failure"]["duration"]

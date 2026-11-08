@@ -15,11 +15,15 @@ on:
         description: Validate the detailed Space ROS rover instead of the lightweight mission
         type: boolean
         default: false
+      experiments:
+        description: Run the frozen paired allocation and communication experiment matrix
+        type: boolean
+        default: false
 permissions:
   contents: read
 
 concurrency:
-  group: rsdis-lunar-${{ github.ref }}-${{ github.event_name }}
+  group: rsdis-lunar-${{ github.ref }}-${{ github.event_name }}-${{ inputs.viper }}-${{ inputs.experiments }}
   cancel-in-progress: true
 
 defaults:
@@ -28,10 +32,10 @@ defaults:
 
 jobs:
   jazzy:
-    if: github.event_name != 'workflow_dispatch' || !inputs.viper
+    if: github.event_name != 'workflow_dispatch' || (!inputs.viper && !inputs.experiments)
     runs-on: ubuntu-24.04
     container: ros:jazzy-ros-base
-    timeout-minutes: 40
+    timeout-minutes: 50
     env:
       LIBGL_ALWAYS_SOFTWARE: '1'
       ROS_DOMAIN_ID: '42'
@@ -41,7 +45,7 @@ jobs:
         shell: bash
         run: |
           apt-get update
-          apt-get install -y git git-lfs ros-jazzy-ros-gz ros-jazzy-cv-bridge ros-jazzy-xacro ros-jazzy-rosidl-default-generators ros-jazzy-visualization-msgs python3-opencv python3-numpy python3-colcon-common-extensions
+          apt-get install -y git git-lfs ros-jazzy-ros-gz ros-jazzy-cv-bridge ros-jazzy-xacro ros-jazzy-rosidl-default-generators ros-jazzy-visualization-msgs python3-opencv python3-numpy python3-colcon-common-extensions ffmpeg ros-jazzy-rosbag2
       - name: Build ROS packages and run portable tests
         shell: bash
         run: |
@@ -87,7 +91,7 @@ jobs:
           source /opt/ros/jazzy/setup.bash
           source install/setup.bash
           python3 scripts/create_scenarios.py --count 1 --output results/ci_scenarios
-          python3 scripts/run_experiment_ros.py --config results/ci_scenarios/failure_00.json --strategy energy --wall-timeout 1400
+          python3 scripts/run_experiment_ros.py --config results/ci_scenarios/failure_00.json --strategy energy --wall-timeout 1800 --record-video --record-bag
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -134,4 +138,47 @@ jobs:
         if: always()
         with:
           name: viper-integration-logs
+          path: unidades-curriculares/rsdis/projeto/results/
+
+  comparisons:
+    if: github.event_name == 'workflow_dispatch' && inputs.experiments
+    runs-on: ubuntu-24.04
+    container: ros:jazzy-ros-base
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        policy: [nearest, energy]
+        scenario: [nominal, asymmetric, failure, outage]
+        seed: ['00', '01']
+    env:
+      LIBGL_ALWAYS_SOFTWARE: '1'
+      ROS_DOMAIN_ID: '44'
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install simulation dependencies
+        shell: bash
+        run: |
+          apt-get update
+          apt-get install -y ros-jazzy-ros-gz ros-jazzy-cv-bridge ros-jazzy-xacro ros-jazzy-rosidl-default-generators ros-jazzy-visualization-msgs python3-opencv python3-numpy python3-colcon-common-extensions ffmpeg ros-jazzy-rosbag2
+      - name: Build the frozen runtime and verify attribution
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          colcon build
+          source install/setup.bash
+          python3 scripts/check_attributions.py
+          python3 scripts/create_submission_scenarios.py
+      - name: Execute the matched Gazebo case
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          source install/setup.bash
+          python3 scripts/run_experiment_ros.py --config experiments/submission_20261108/${{ matrix.scenario }}_${{ matrix.seed }}.json --strategy ${{ matrix.policy }} --output results/comparison_${{ matrix.scenario }}_${{ matrix.seed }}_${{ matrix.policy }} --wall-timeout 1400
+      - name: Retain outcomes including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: comparison-${{ matrix.scenario }}-${{ matrix.seed }}-${{ matrix.policy }}
           path: unidades-curriculares/rsdis/projeto/results/

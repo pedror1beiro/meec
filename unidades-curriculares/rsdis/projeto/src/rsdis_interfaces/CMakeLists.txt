@@ -6,6 +6,7 @@ find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Detection.msg" "msg/RoverStatus.msg" "msg/TaskGoal.msg" "msg/TaskResult.msg"
+  "msg/TargetState.msg" "msg/MissionState.msg"
   DEPENDENCIES std_msgs geometry_msgs)
 ament_export_dependencies(rosidl_default_runtime)
 ament_package()

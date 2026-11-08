@@ -3,6 +3,7 @@
 import math
 from xml.etree import ElementTree as ET
 from .power import energy_plugins
+from .recording import observer_height
 
 
 def element(parent, tag, text=None, **attrs):
@@ -219,6 +220,24 @@ def build_world(config, include_rovers=True):
         plugin(world, file, name)
     sensors = plugin(world, "sensors", "Sensors")
     element(sensors, "render_engine", "ogre2")
+    if config.get("record_video"):
+        observer = element(world, "model", name="mission_observer")
+        element(observer, "static", "true")
+        link = element(observer, "link", name="observer_link")
+        sensor = element(link, "sensor", name="overview", type="camera")
+        element(sensor, "pose", f"0 0 {observer_height(config)} 0 {math.pi / 2} {math.pi / 2}")
+        element(sensor, "topic", "/mission/overview/image")
+        element(sensor, "always_on", "true")
+        element(sensor, "update_rate", 2)
+        camera = element(sensor, "camera")
+        element(camera, "horizontal_fov", 1.4)
+        image = element(camera, "image")
+        element(image, "width", 960)
+        element(image, "height", 720)
+        element(image, "format", "R8G8B8")
+        clip = element(camera, "clip")
+        element(clip, "near", 0.1)
+        element(clip, "far", 150)
     light = element(world, "light", name="sun", type="directional")
     element(light, "pose", "0 0 20 0 0 0")
     element(light, "diffuse", "0.8 0.8 0.8 1")
