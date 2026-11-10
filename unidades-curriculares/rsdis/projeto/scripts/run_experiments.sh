@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+# The ROS setup scripts read unset variables, which `set -u` rejects.
+set +u
 source /opt/ros/jazzy/setup.bash
 source "$ROOT_DIR/install/setup.bash"
+set -u
 cd "$ROOT_DIR"
 CONFIG_DIR="${1:-experiments/generated}"
 MODEL="${2:-lightweight}"

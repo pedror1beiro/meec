@@ -10,7 +10,10 @@ sudo apt-get update
 sudo apt-get install -y ros-jazzy-ros-gz ros-jazzy-cv-bridge python3-opencv python3-numpy \
   python3-colcon-common-extensions python3-rosdep python3-pytest ffmpeg python3-matplotlib \
   ros-jazzy-rosbag2
+# The ROS setup script reads unset variables, which `set -u` rejects.
+set +u
 source /opt/ros/jazzy/setup.bash
+set -u
 if [[ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]]; then
   sudo rosdep init
 fi
