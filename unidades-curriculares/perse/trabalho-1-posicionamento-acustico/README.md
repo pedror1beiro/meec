@@ -10,6 +10,7 @@ processamento e aplicações, com exemplos didáticos em MATLAB.
 ```text
 trabalho-1-posicionamento-acustico/
 ├── README.md
+├── apresentacao/              slides v0 (DESATUALIZADOS, vão ser alterados)
 ├── docs/
 │   ├── base-tecnica.md        documento técnico completo (com referências)
 │   └── img/                   diagrama da arquitetura USBL e captura da demo
@@ -33,6 +34,12 @@ trabalho-1-posicionamento-acustico/
 5. LBL · 6. SBL · 7. USBL (arquitetura, modelo de medida, geometria, calibração, erros)
 8. Processamento e fusão com INS/DVL (filtro de Kalman, rejeição de outliers)
 9. Comparação · 10. Aplicações · 11. Exemplos MATLAB · 12. Perguntas prováveis
+
+## Apresentação
+
+Os slides em [`apresentacao/`](apresentacao/) são uma **versão antiga e
+desatualizada** (v0), que vai ser alterada para refletir o documento técnico
+atual.
 
 ## Demo interativa
 
