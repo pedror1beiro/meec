@@ -1,0 +1,3 @@
+# Exceção à regra global (*.csv): estes perfis Argo são pequenos (< 30 KB cada)
+# e são necessários para a demo interativa correr sem internet.
+!*.csv
